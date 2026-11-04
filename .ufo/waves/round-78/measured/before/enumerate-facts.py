@@ -63,7 +63,8 @@ def scores() -> None:
         except ValueError:
             continue
     ok = got == DECLARED_SCORES
-    record("F1-scores", ok, f"axes={got}")
+    vals = "/".join(f"{a}:{got.get(a, '?')}" for a in DECLARED_SCORES)
+    record("F1-scores", ok, f"scores={vals}")
 
 
 def capabilities() -> None:
@@ -82,7 +83,7 @@ def capabilities() -> None:
         except (IndexError, ValueError):
             rounds.append(-1)
     ok = len(rows) == DECLARED_CAP_ROWS and (max(rounds) if rounds else -1) == DECLARED_CAP_MAX_ROUND
-    record("F2-capability-count", ok, f"rows={len(rows)} max_round={max(rounds) if rounds else None}")
+    record("F2-capability-count", ok, f"capabilities={len(rows)}/max-round={max(rounds) if rounds else '?'}")
 
 
 def gate_shape() -> None:
@@ -122,18 +123,16 @@ def gate_shape() -> None:
     record(
         "F3-gate-shape",
         ok,
-        f"module_arms={len(arms)} newest={newest} row_token={token.group(1) if token else None}"
-        f" row_word={word.group(1) if word else None} row_tally={tally.group(1) if tally else None}"
-        f" receipt_tally={want_tally} newest_named={bool(newest and newest in cells[1])}",
+        f"gate=arms:{token.group(1) if token else '?'}/word:{word.group(1) if word else '?'}"
+        f"/newest:{newest}/tally:{tally.group(1) if tally else '?'}"
+        f" (module arms={len(arms)}, newest named={bool(newest and newest in cells[1])}, receipt tally={want_tally})",
     )
 
 
 def closure_pointer() -> None:
     text = (REPO / "SCORECARD.md").read_text(encoding="utf-8")
-    line = next(
-        (l for l in text.splitlines() if "documented in `corpus/lessons/round-77.md`" in l),
-        None,
-    )
+    hits = [l for l in text.splitlines() if "documented in `corpus/lessons/round-77.md`" in l]
+    line = hits[-1] if hits else None
     lesson = (REPO / "corpus/lessons/round-77.md").read_text(encoding="utf-8")
     has_section = "## Freeze divergences" in lesson
     item3 = re.search(r"\n3\. \*\*C3 correction scope", lesson) is not None
@@ -142,7 +141,7 @@ def closure_pointer() -> None:
         m = re.search(r"§([^.\n]+)", line)
         pointed = m.group(1).strip() if m else None
     ok = pointed is not None and pointed.startswith("Freeze divergences item 3") and has_section and item3
-    record("F4-closure-pointer", ok, f"pointed_at={pointed!r} section={has_section} item3={item3}")
+    record("F4-closure-pointer", ok, f"pointer=section:{pointed} (lesson section={has_section}, item3={item3})")
 
 
 def round77_entries() -> list[str]:
@@ -154,14 +153,14 @@ def knowledge_provenance() -> None:
     entries = round77_entries()
     missing = []
     for rel in entries:
-        head = "\n".join((REPO / rel).read_text(encoding="utf-8").splitlines()[:6])
-        src = next((l for l in head.splitlines() if l.startswith("source:")), "")
-        if not re.search(r"\bS\d{3,}\b", src):
+        head = "\n".join((REPO / rel).read_text(encoding="utf-8").splitlines()[:8])
+        src = [l for l in head.splitlines() if l.startswith(("source:", "source-correction:"))]
+        if not any(re.search(r"\bS\d{3,}\b", l) for l in src):
             missing.append(rel)
     record(
         "F5-knowledge-provenance",
         not missing,
-        f"entries={len(entries)} missing_source_id={missing}",
+        f"provenance=missing:{','.join(missing) if missing else 'none'}",
     )
 
 
@@ -172,7 +171,7 @@ def coverage_map() -> None:
     record(
         "F6-coverage-map",
         not unmapped,
-        f"entries={len(entries)} unmapped={unmapped}",
+        f"coverage-map=missing:{','.join(unmapped) if unmapped else 'none'}",
     )
 
 

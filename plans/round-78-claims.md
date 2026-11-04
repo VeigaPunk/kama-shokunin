@@ -57,13 +57,14 @@ receipt label):**
 > of six declared facts of the round-77 self-record re-derives from the tree — F1 the `## Axes`
 > score vector equals the record's declared vector `operability 8, freshness 8, depth 7,
 > coverage 9, calibration 7, adjacency 7`; F2 the canonical capability table carries 34 data
-> rows and its highest first-working round is 77; F3 `SKILL.md`'s pre-report-gate row names the
-> same arms as the gate module's `ARM_SPECS` (including `round77-instruments`), carries that
-> count's `arms=` token and the self-test tally of the round-77 gate-selftest receipt; F4 the
-> round-77 C3 freeze-divergence sentence names `corpus/lessons/round-77.md` §Freeze divergences
-> item 3; F5 every knowledge entry added by round 77 carries a `source:` line citing at least
-> one `S###` row id; F6 every knowledge entry added by round 77 has a coverage-map row in
-> `corpus/README.md` — and each fact that does not re-derive is answered by a committed
+> rows and its highest first-working round is 77; F3 `SKILL.md`'s pre-report-gate row carries the
+> gate module's own arm count in prose and in its `arms=` token, names the newest arm
+> `round77-instruments`, and carries the self-test tally of the round-77 gate-selftest receipt;
+> F4 the record's last freeze-divergence sentence points the C3 predicate/ruling divergence at
+> `corpus/lessons/round-77.md` §Freeze divergences item 3; F5 every knowledge entry added by
+> round 77 carries a `source:` or `source-correction:` line citing at least one `S###` row id;
+> F6 every knowledge entry added by round 77 has a coverage-map row in `corpus/README.md` — and
+> each fact that does not re-derive is answered by a committed
 > correction block naming the fact id, the old value re-derived at the sealed revision
 > `6c1550a14babaca092cfcc3106f792d695652200`, the new value and the date; it exits 1 naming
 > `SELFRECORD_R77_FINDING <mismatch|unbacked|cheat> <fact>` for a non-re-deriving fact with no
@@ -71,14 +72,27 @@ receipt label):**
 > whose ground the counter ignores; and 2 on could-not-evaluate (missing self-record or lesson,
 > unreadable gate module, CLI misuse).
 
+- Fact values are fixed single strings so every correction is value-bound:
+  F1 `scores=operability:8/freshness:8/depth:7/coverage:9/calibration:7/adjacency:7`,
+  F2 `capabilities=34/max-round=77`,
+  F3 `gate=arms:9/word:nine/newest:round77-instruments/tally:22`,
+  F4 `pointer=section:Freeze divergences item 3` (old `pointer=section:Mistakes 4`),
+  F5 `provenance=missing:none` (old `provenance=missing:corpus/knowledge/register-cutoff-split.md`),
+  F6 `coverage-map=missing:none` (old `coverage-map=missing:corpus/knowledge/baseline-receipt-binding.md,corpus/knowledge/register-cutoff-split.md`).
+- Correction-block format (the counter parses exactly this shape in
+  `corpus/lessons/round-78.md` §Corrections, one block per fact): a bullet
+  `- \`corrected <fact>\` old=\`<old value>\` new=\`<new value>\` at=\`<40-hex>\` date=\`YYYY-MM-DD\``
+  followed by one prose line. `at` names the sealed revision and `old` must re-derive there.
 - Scope rulings declared here, before data: (a) the sealed revision is the round-77 tip
-  `6c1550a14babaca092cfcc3106f792d695652200`, not the base, because the record's own values
-  were written there; (b) `corrected` counts facts, not correction blocks: two blocks naming one
-  fact are one correction and the second is reported `duplicate`; (c) F3's self-test tally is
-  read from the round-77 committed receipt `measured/after/gate-selftest.out`, never by running
-  `pre-report-gate.py` (seat rule); (d) the correction blocks live in `SCORECARD.md`
-  §Round 78 §Corrections and in `corpus/lessons/round-78.md` §Corrections — the counter reads
-  both and grades one block per fact.
+  `6c1550a14babaca092cfcc3106f792d695652200` (resolved with `git rev-parse`; round 77's own
+  record cites a 41-character variant that no object answers, so no cited hash is trusted
+  without `git cat-file -e`), not the base, because the record's own values were written there;
+  (b) `corrected` counts facts, not correction blocks: two blocks naming one fact are one
+  correction and the second is reported `duplicate`; (c) F3's self-test tally is read from the
+  round-77 committed receipt `measured/after/gate-selftest.out`, never by running
+  `pre-report-gate.py` (seat rule); (d) F4 reads the **last** record sentence naming the
+  divergence's location, so an appended correction supersedes the stale pointer without deleting
+  filed bytes; F5/F6 likewise read an appended provenance correction line, never a rewrite.
 - Counting command: `python3 tools/round78-selfrecord-round77.py --repo .`
 - Before → after: exit 1 `SELFRECORD_R77_ENUM claims=6 stale=4` → exit 0
   `SELFRECORD_R77 claims=6 mismatches=0 corrected=4 unbacked=0`.
@@ -124,9 +138,11 @@ receipt label):**
   register's own introduction cutoff" is superseded by C2's own sentence and its text is not
   rewritten — routed defect D6); (b) **register** introduction is separate provenance: each
   register's first commit is discovered from history, a reintroduced path with new rows fails
-  `rotation-reintroduced`, and the read is the committed blob at the audited revision, never the
-  worktree (routed defect D7); (c) a row committed in the same commit as the damage it blesses
-  is rejected when the row's named event is not ancestral to that commit (routed defect D8);
+  `rotation-reintroduced`, and the row set's committed identity is checked against
+  `--commit-at` so a worktree-only row never counts (round-77 F2, routed defects D7/D8); rows
+  outside the audited population are reported and change no bucket, which is what keeps the
+  frozen command stable under later appends; (c) a row committed in the same commit as the
+  damage it blesses is rejected when the row's named event is not ancestral to that commit;
   (d) `permitted` and `out_of_region` keep round 77's `permitted == deleted`-with-zero-graded
   and every-deletion-outside-all-declared-regions readings, unchanged.
 - Counting command: `python3 tools/round78-append-registers.py --repo . --to c62ffd3aea930b98375f805cc3dfb821a703148b`
