@@ -30,13 +30,22 @@ base_green=3 killed=0`, exit 1).
 gate's arm-6 docstring and the receipt label):**
 
 > `python3 tools/round72-round-scope.py --repo <lane> --round <N> --tip <rev>` prints one
-> `ROUND_SCOPE round=<N> cases=3 findings=<f>` line and exits 0 only when the round prompt
-> `.ufo/prompts/<lane>-round-<N>.md` exists at `<rev>`, no path outside the declared record
-> allow-list is uncommitted, and no path under `.ufo/waves/round-<N>/` is git-ignored; it exits
-> 1 naming every finding as `ROUND_SCOPE_FINDING <case> <detail>`.
+> `ROUND_SCOPE round=<N> cases=3 findings=<f>` line and exits 0 only when the round's frozen
+> claims plan `plans/round-<N>-claims.md` exists at `<rev>` with a first heading naming round
+> `<N>`, no path outside the declared record allow-list is uncommitted, and no path under
+> `.ufo/waves/round-<N>/` is git-ignored; it exits 1 naming every finding as
+> `ROUND_SCOPE_FINDING <case> <detail>`.
 
-- cases: `prompt` (A), `stray` (B), `ignored` (C). `findings` counts named findings; `cases=3` is
-  the fixed case population.
+- cases: `label` (A), `stray` (B), `ignored` (C). `findings` counts named findings; `cases=3` is
+  the fixed case population. Case A anchors on the lane's own `plans/round-<N>-claims.md` rather
+  than the fleet prompt `.ufo/prompts/kama-round-<N>.md`: the prompt lives in the fleet repo, is
+  not a lane path, and cannot be read at a lane tip.
+- **Freeze amendment, 2026-11-03T22:45 -03, before any seat returned a score**: case A's anchor
+  was first frozen as the fleet prompt path, which does not exist in this repo
+  (`git cat-file -e master:.ufo/prompts/kama-round-72.md` -> exit 128 at the freeze commit). The
+  predicate was unexecutable as first written; the anchor moved to the lane-owned freeze plan,
+  nothing else changed, and the pre-score control receipt was re-taken against the amended
+  fixture set. Mined as a mistake in `corpus/lessons/round-72.md`.
 - exit map: `0` clean, `1` findings, `2` could-not-evaluate (CLI misuse, not a git repository,
   unevaluable fixture).
 - The arm enters the pre-report gate as arm 6 `round-scope`; the gate's verdict becomes

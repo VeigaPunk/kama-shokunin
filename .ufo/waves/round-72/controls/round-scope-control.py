@@ -2,7 +2,7 @@
 """round-scope-control.py - round-72 C1 control (frozen; plans/round-72-claims.md section C1).
 
 Scores the BASE state with the frozen C1 counter's target: build the three defect fixtures the
-claim names (missing round prompt, one uncommitted path outside the wave dir, one git-ignored
+claim names (missing round freeze plan, one uncommitted path outside the wave dir, one git-ignored
 path inside the wave dir), run the base pre-report gate's cleanliness-arm command on each, and
 report how many the base state catches.
 
@@ -33,10 +33,10 @@ WAVE_PATHS = {
     "PROVINCE.md": "# province\n",
     "corpus/SOURCES.md": "# sources\n",
     ".gitignore": ".ufo/waves/round-72/*.log\n",
-    ".ufo/prompts/kama-round-72.md": "# prompt\n",
+    "plans/round-72-claims.md": "# kama round 72 \u2014 frozen claims\n\nbody\n",
     ".ufo/waves/round-72/evidence.txt": "committed evidence\n",
 }
-EXPECTED = {"prompt": "skip-prompt", "stray": "skip-whole-repo", "ignored": "skip-ignored"}
+EXPECTED = {"label": "skip-label-anchor", "stray": "skip-whole-repo", "ignored": "skip-ignored"}
 
 
 def run(argv, cwd):
@@ -52,8 +52,8 @@ def fixture(work: Path, case: str) -> Path:
         path = root / rel
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(body, encoding="utf-8")
-    if case == "prompt":
-        (root / ".ufo/prompts/kama-round-72.md").unlink()
+    if case == "label":
+        (root / "plans/round-72-claims.md").unlink()
     run(["git", "init", "-q"], root)
     run(["git", "-C", str(root), "config", "user.name", "control"], root)
     run(["git", "-C", str(root), "config", "user.email", "control@invalid"], root)
@@ -80,7 +80,7 @@ def main(argv=None) -> int:
     work.mkdir(parents=True, exist_ok=True)
     green = killed = 0
     try:
-        for case in ("prompt", "stray", "ignored"):
+        for case in ("label", "stray", "ignored"):
             try:
                 root = fixture(work, case)
             except SystemExit as exc:
