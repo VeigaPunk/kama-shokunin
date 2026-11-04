@@ -1720,3 +1720,20 @@ Derivation enumerates `git -C /home/vgpnk/Projects/shokunin/kama-shokunin ls-tre
 ```sh
 python3 -c 'import subprocess,re; L="/home/vgpnk/Projects/shokunin/kama-shokunin"; tree=subprocess.check_output(["git","-C",L,"ls-tree","-r","--name-only","c2aa7fb2","corpus/knowledge/"],text=True).splitlines(); text=subprocess.check_output(["git","-C",L,"show","c2aa7fb2:corpus/README.md"],text=True); mapped=set(re.findall(r"^\| `((?:knowledge/)[^`]+)`[^|]*\|",text,re.M)); missing=sorted(set(p.removeprefix("corpus/") for p in tree)-mapped); print("COVERAGE_AT_C2AA7FB2 files=%d mapped=%d unmapped=%d"%(len(tree),len(mapped),len(missing))); print("\n".join(missing)); current=open(L+"/corpus/README.md").read(); now=set(re.findall(r"^\| `((?:knowledge/)[^`]+)`[^|]*\|",current,re.M)); print("COVERAGE_INDEX_AFTER unmapped=%d selfrecord_rows=%d"%(len(set(p.removeprefix("corpus/") for p in tree)-now),current.count("| `knowledge/selfrecord-fact-binding.md` |")))'
 ```
+
+## Coverage map — round 78 addition
+
+| Entry | Covers | Round |
+|---|---|---|
+| `corpus/knowledge/baseline-receipt-binding.md` | Round-77 baseline receipt introduction ancestry and introduction-to-tip byte identity, distinguished from ordinary at-the-tip receipt binding | 78 |
+| `corpus/knowledge/register-cutoff-split.md` | Round-77 independent register introductions, audited-event ancestry, exclusive carriage classes and rotation rejection; policy documentation is not counter-execution evidence | 78 |
+| `corpus/knowledge/append-registers-at-the-tip.md` | Round-78 register-row boundaries: an event is admissible by ancestry to the audited revision, a row counts only from a committed blob, and rows outside the population move no bucket | 78 |
+| `corpus/knowledge/live-reconcile-trial.md` | Round-78 live reconcile trial: the probe's MODEL_OK / MODEL_MISMATCH / DEAD verdicts on a pinned child, the runtime-evidence guard, and the registered-port refusal | 78 |
+
+Frontier: the round-78 instruments `tools/round78-selfrecord-round77.py`,
+`tools/round78-append-registers.py` and `tools/round78-live-reconcile.py`
+address self-record calibration, register accounting freshness and a bounded
+live reconciliation trial respectively; indexing them here does not certify
+their execution. Registered consumers remain `DEAD`; K05 declared-versus-served
+context capacity across real consumers remains open. No consumer restoration
+or new serving-runtime integration is asserted by these coverage-map rows.

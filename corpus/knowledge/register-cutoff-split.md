@@ -72,3 +72,5 @@ It does not certify a landed round77 implementation, observed accounting totals,
 a green rotation test, correct human exemption intent or endpoint freshness.
 The exact-once partition and failure classes must be re-derived through the
 real counter and audit, not inferred from this prose or from TSV row presence.
+
+source-correction: S073 — git-log `--diff-filter` added-path selection (https://git-scm.com/docs/git-log, opened 2026-10-21, `corpus/SOURCES.md:85`) supplies the introduction-discovery mechanics this entry describes; correcting the earlier "no external source is asserted" scoping, appended 2026-11-04.
