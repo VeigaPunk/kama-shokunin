@@ -70,6 +70,17 @@ re-anchored to `corpus/lessons/round-80-verifier-spotcheck.md`.
 |---|---|---|---|
 | `number-drift` (self-record states a pre-hardening tally as the post-hardening one) | `SCORECARD.md:4781` and `:4783` at `a2af1af5` state `pass=9` and `pass=6`, while `.ufo/waves/round-80/measured/after/{c1,c3}-selftest.out` print `pass=11` and `pass=12`; `SCORECARD.md:4795-4796` asserts "the C1/C2/C3 tallies above are the post-hardening measurements" | none in round 80 — the round's own report used the correct tallies, so the *record* drifted while the prose did not; the round-80 closure routed it as R80V1 | `tools/round81-selfrecord-round80.py` grades each declared tally against its cited receipt, and `corpus/QUALITY.md` KQ133 makes the receipt's printed token the only admissible value in a record row |
 
+| `SOURCES.md` rows outside the registry | The four round-81 rows (S558-S561) were first appended at the end of the file, after the round-46 section; `scripts/sources-census.sh validate --root … kama` printed `E12 S558 row outside Registry section` (exit 1) for all four | the census `E12` rule (a row is only a row inside `## Registry`); the append pattern of previous rounds was copied without checking the section boundary | rows moved into the registry table (after S557) in the same round; validate now exits 0, and the receipt `.ufo/waves/round-81/measured/after/census-validate.out` records it |
+
+## Assimilation (considerthese)
+
+`considerthese/2026-10-26.md` proposal 1 — "flag deletions in append-only files the morning after they
+happen" — is taken up by C2 rather than deferred: `tools/round81-append-debt.py` grades every undeclared
+deletion event the frozen audit reports (not only the five record files the proposal names) and its
+`pending` line names the graded round's own edits, which is the read-only morning-after check the
+proposal asks for. Proposal 4 (a one-line pin gap per engine each morning) stays pending: no `pin-watch`
+run this round; the next freshness round owns it.
+
 ## Freeze divergences (recorded, not rewritten)
 
 1. **C1's F6 is tip-bound.** The plan grades F6's "newest non-author closure" claim at the graded tip

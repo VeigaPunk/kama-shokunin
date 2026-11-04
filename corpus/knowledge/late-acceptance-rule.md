@@ -61,7 +61,8 @@ the base population.
 - base, red: `APPEND_DEBT round=81 base=e7d2fd729cf8 events=63 accepted=53 late=0 pending=0
   unaccepted=10 bad_rows=0 bad_declarations=0 out_of_population=0`, exit 1
   (`.ufo/waves/round-81/measured/before/debt-base.out`).
-- tip, green: `APPEND_DEBT round=81 base=e7d2fd729cf8 events=63 accepted=53 late=10 pending=0
-  unaccepted=0 bad_rows=0 bad_declarations=0 out_of_population=0`, exit 0
-  (`.ufo/waves/round-81/measured/after/debt-green.out`), with 88 rows re-derived by
+- tip, green: `APPEND_DEBT round=81 base=e7d2fd729cf8 events=63 accepted=53 late=10 pending=1
+  unaccepted=0 bad_rows=0 bad_declarations=0 out_of_population=0`, exit 0 at `1b96317f`
+  (`.ufo/waves/round-81/measured/after/debt-green.out`); `pending=1` is the round's own first
+  post-base record edit, which round 82 must accept. 88 rows re-derived by
   `tools/round81-late-rows.py --check` → `LATE_ROWS check=ok rows=88`.
