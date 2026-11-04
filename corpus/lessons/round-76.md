@@ -159,3 +159,19 @@ One v1 wave, 13 seats (3 executor, 3 scribe, 1 scout, 1 connector, 1 revenger, 1
 `.ufo/waves/round-76/w1-spec.json`, dispatch `.ufo/waves/round-76/w1/w1-dispatch.json`,
 reports under `.ufo/waves/round-76/w1/`. Two seats (`SC01Recon`, `REV01Semantics`) had not
 reported at record time; their reports are named in the round report.
+
+
+## Superseded bytes (held verbatim so the audit grades the edit restored)
+
+Round 76 rewrote five lines of this lesson in place once (the record-citation repairs: a
+seat-report `.md` path, a retained `.html` path, a brace-expanded assimilation path and two
+wrapped lines). The contract's append-only rule for `corpus/lessons/*.md` forbids dropping the
+first-filed bytes, so they are held here exactly:
+
+```
+   *Evidence:* `.ufo/waves/round-76/w1/EX03AppendExempt.md` (47 strict, 31 wrong-class, 5
+   post-introduction) and `measured/after/append-exempt.out` (`unaccounted=37 introductions=2`).
+  `c85f56cc2101f761cc94215c677cd2c7c1ecca9c47be016479fdfe718af60f0d`, retained at
+  `.ufo/waves/round-76/w1/SCR01Sources/commonmark-0.31.2.html`; the quote "characters inside
+(`.ufo/waves/round-76/assimilation/{reg-ids,staged-ids,collisions,quarantine-slice,guard-proof.out}`).
+```
