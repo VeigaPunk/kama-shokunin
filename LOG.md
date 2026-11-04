@@ -3317,3 +3317,12 @@ Wave: one v1 wave, 13 seats (4 executor, 2 scribe, 2 scout, 1 connector, 1 revie
 Owed by round 81: decide the append-only register debt the gate's arm 8 carries, re-run
 `pin-watch` on the next release cadence, and keep K05 blocked until an authorized serving runtime
 exists.
+
+## Round-80 erratum (appended; the entry above is not rewritten)
+
+The round-80 frontier line says the registry moved 293 → 296 rows. After that measurement S557 was opened
+and added (Ollama's OpenAI-compatible `/v1/models` at v0.40.11 — the route the probe actually reads to
+decide a model-API listener), so the measured tip census is **297** rows (A 282 / B 11 / C 4; mined 267,
+queued 8, rejected 22; `sources-census.sh validate` exit 0). The knowledge entry
+`unregistered-class-second-engine` carries a `## Round-80 addendum` citing S557. No claim's predicate,
+counter or target moves.

@@ -41,3 +41,12 @@ model list is evidence that something serves a model API at that port — the cl
 input — and says nothing about which model is resident, whether a load is in progress, or
 whether any declared consumer can use it. `/api/tags` inherits exactly that limit: it lists
 what the store has, loaded or not.
+
+## Round-80 addendum — the route the probe reads is documented at the pinned tag
+
+`corpus/SOURCES.md` S557 adds the other half: at v0.40.11 the OpenAI-compatible surface is documented
+too (`docs/api/openai-compatibility.mdx`, `### /v1/models` line 290), so the probe's `/v1/models` fetch
+is not an undocumented side door. The response notes put `created` at the model's last modification and
+`owned_by` at the Ollama username defaulting to `"library"` — inventory fields, no residency field. The
+limit above is therefore the same on both routes: a models list is an inventory, and residency lives on
+`/api/ps` (`GET /v1/models` never claims a model is loaded).
