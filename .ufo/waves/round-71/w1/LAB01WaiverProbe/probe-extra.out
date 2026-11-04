@@ -1,0 +1,74 @@
+## parsing equivalence: --waive=NAME vs --waive NAME
+=== E1 equals-form exact name ===
+$ python3 census-probe.py --waive=syn-refusal
+pass [A] syn-pass
+refused [A] syn-refusal: fail-closed refusal: synthetic missing dependency (probe fixture) (marker 'missing dependency') [waived]
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 waived=1 total=2 tierA_fail=0 tierB_fail=0
+[exit] 0
+
+=== E1b equals-form prefix (must not cover) ===
+$ python3 census-probe.py --waive=syn-ref
+pass [A] syn-pass
+refused [A] syn-refusal: fail-closed refusal: synthetic missing dependency (probe fixture) (marker 'missing dependency')
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 total=2 tierA_fail=0 tierB_fail=0
+CENSUS_NOT_EVALUATED 1 member(s) without a waiver: syn-refusal — exit 1
+[stderr] warning: --waive 'syn-ref' is not a census member name
+[exit] 1
+
+=== E2 duplicate --waive of the same name (waived must be 1, not 2) ===
+$ python3 census-probe.py --waive syn-refusal --waive syn-refusal
+pass [A] syn-pass
+refused [A] syn-refusal: fail-closed refusal: synthetic missing dependency (probe fixture) (marker 'missing dependency') [waived]
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 waived=1 total=2 tierA_fail=0 tierB_fail=0
+[exit] 0
+
+=== E3 extra positional arg is ignored, waiver still parsed ===
+$ python3 census-probe.py --waive syn-refusal extra-positional
+pass [A] syn-pass
+refused [A] syn-refusal: fail-closed refusal: synthetic missing dependency (probe fixture) (marker 'missing dependency') [waived]
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 waived=1 total=2 tierA_fail=0 tierB_fail=0
+[exit] 0
+
+## C2-relevant discriminators
+=== D1 refusal classified 'refused'+not_evaluated, fail stays 0 (s4 refusal-as-fail) ===
+$ python3 census-probe.py 
+pass [A] syn-pass
+refused [A] syn-refusal: fail-closed refusal: synthetic missing dependency (probe fixture) (marker 'missing dependency')
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 total=2 tierA_fail=0 tierB_fail=0
+CENSUS_NOT_EVALUATED 1 member(s) without a waiver: syn-refusal — exit 1
+[exit] 1
+
+=== D1b same two members, one waiver (s5t total derived) ===
+$ python3 census-probe.py --waive syn-refusal
+pass [A] syn-pass
+refused [A] syn-refusal: fail-closed refusal: synthetic missing dependency (probe fixture) (marker 'missing dependency') [waived]
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 waived=1 total=2 tierA_fail=0 tierB_fail=0
+[exit] 0
+
+=== D1c same table, failing member waived (s6w) ===
+$ python3 census-probe.py --waive syn-fail
+pass [A] syn-pass
+FAIL [A] syn-fail: exit=1 tail='SYN-FAIL'
+HOST_CENSUS pass=1 fail=1 not_evaluated=0 total=2 tierA_fail=1 tierB_fail=0
+[stderr] warning: --waive 'syn-fail' unused: member was evaluated (fail); a waiver covers only not-evaluated members
+[exit] 1
+
+=== D2 two not-evaluated members, one waived (partial waiver must still exit 1) ===
+$ python3 census-probe.py --waive syn-refusal
+pass [A] syn-pass
+refused [A] syn-refusal: fail-closed refusal: synthetic missing dependency (probe fixture) (marker 'missing dependency') [waived]
+refused [B] syn-refusal-b: fail-closed refusal: synthetic missing dependency (probe fixture) (marker 'missing dependency')
+HOST_CENSUS pass=1 fail=0 not_evaluated=2 waived=1 total=3 tierA_fail=0 tierB_fail=0
+CENSUS_NOT_EVALUATED 1 member(s) without a waiver: syn-refusal-b — exit 1
+[exit] 1
+
+=== D2b both not-evaluated members waived ===
+$ python3 census-probe.py --waive syn-refusal --waive syn-refusal-b
+pass [A] syn-pass
+refused [A] syn-refusal: fail-closed refusal: synthetic missing dependency (probe fixture) (marker 'missing dependency') [waived]
+refused [B] syn-refusal-b: fail-closed refusal: synthetic missing dependency (probe fixture) (marker 'missing dependency') [waived]
+HOST_CENSUS pass=1 fail=0 not_evaluated=2 waived=2 total=3 tierA_fail=0 tierB_fail=0
+[exit] 0
+
+## module identity of the copy
+LANE=/fast/scratch/hyaku/kama-r71  BUDGET=600  len(MEMBERS real table)=3

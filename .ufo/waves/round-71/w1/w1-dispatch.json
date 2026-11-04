@@ -1,0 +1,227 @@
+{
+  "schema": "ufo-swarm-wave-dispatch-v1",
+  "wave": "kama-r71-w1",
+  "policy": {
+    "source": "config",
+    "maxLanes": 12,
+    "minLanes": 8,
+    "waveMinLanes": 8,
+    "waveMaxLanes": 16,
+    "declaredMaxLanes": 12,
+    "hardCeiling": 256,
+    "rampBatchSize": 5,
+    "rampIntervalMs": 700,
+    "globalRunnerCeiling": 1056
+  },
+  "counts": {
+    "spawn": 12,
+    "resume": 0,
+    "total": 12
+  },
+  "registry": {
+    "schema": "ufo-swarm-registry-v1",
+    "path": ".ufo/waves/round-71/w1/swarm-registry.json",
+    "reportDir": ".ufo/waves/round-71/w1",
+    "members": {
+      "EX01PreReportGate": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": null,
+        "axes": [
+          "calibration"
+        ],
+        "milestone": "kama r71 w1"
+      },
+      "EX02CensusBoundary": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": null,
+        "axes": [
+          "operability"
+        ],
+        "milestone": "kama r71 w1"
+      },
+      "EX03ProvinceClaims": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": null,
+        "axes": [
+          "freshness"
+        ],
+        "milestone": "kama r71 w1"
+      },
+      "SCR01KnowledgeEntry": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "scribe",
+        "item": null,
+        "axes": [
+          "calibration"
+        ],
+        "milestone": "kama r71 w1"
+      },
+      "SCR02SourceRow": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "scribe",
+        "item": null,
+        "axes": [
+          "freshness"
+        ],
+        "milestone": "kama r71 w1"
+      },
+      "SCT01HostCensus": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "scout",
+        "item": null,
+        "axes": [
+          "freshness"
+        ],
+        "milestone": "kama r71 w1"
+      },
+      "CON01OverlapInventory": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "connector",
+        "item": null,
+        "axes": [
+          "adjacency"
+        ],
+        "milestone": "kama r71 w1"
+      },
+      "RVW01C2Attack": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "reviewer",
+        "item": null,
+        "axes": [
+          "operability",
+          "calibration"
+        ],
+        "milestone": "kama r71 w1"
+      },
+      "CRT01ClaimsAttack": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "critic",
+        "item": null,
+        "axes": [
+          "calibration",
+          "freshness"
+        ],
+        "milestone": "kama r71 w1"
+      },
+      "MT01MutantGates": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "mutation-tester",
+        "item": null,
+        "axes": [
+          "operability",
+          "calibration"
+        ],
+        "milestone": "kama r71 w1"
+      },
+      "SEN01BoundaryAudit": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "sentinel",
+        "item": null,
+        "axes": [
+          "adjacency",
+          "operability"
+        ],
+        "milestone": "kama r71 w1"
+      },
+      "LAB01WaiverProbe": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "revenger",
+        "item": null,
+        "axes": [
+          "operability"
+        ],
+        "milestone": "kama r71 w1"
+      }
+    }
+  },
+  "compaction": {
+    "applied": false,
+    "mechanism": null,
+    "reason": null,
+    "savedBytes": 0,
+    "payloadBytesBefore": 0,
+    "payloadBytesAfter": 0
+  },
+  "taskCall": {
+    "context": "# Goal\nkama lane, round 71: ONE v1 wave of 12 seats (build + attack). You are ONE seat. The round's three claims are FROZEN in /home/vgpnk/Projects/shokunin/kama-shokunin/plans/round-71-claims.md (read it first, in full). Predicates, counters, kill rules and control receipts are fixed there. A rule changed after a seat scored is not the claim's rule: report a disagreement, never edit the freeze.\n\n# Paths (absolute)\n- L = /home/vgpnk/Projects/shokunin/kama-shokunin (lane repo; tooling under L/tools, corpus under L/corpus).\n- W = /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-71 (wave dir; your report dir is /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-71/w1).\n- S = /fast/scratch/hyaku/kama-r71/<your-item-name>/ (create with mkdir -p; all fixtures, clones, mutants and catalogs live under S; copy receipts you want kept into W, then delete S on exit).\nEvery `Report:` trailer path this wave shows is relative to /home/vgpnk/Projects/shokunin/kama-shokunin — write it at /home/vgpnk/Projects/shokunin/kama-shokunin/<that path>.\n\n# Frozen base\nRound-start lane tip f3ee44f4; freeze commit b43e71a8 carries plans/round-71-claims.md, the two controls and the base receipts under .ufo/waves/round-71/measured/before/. Claims: C1 calibration `pre-report-gate`; C2 operability `census-waiver-boundary`; C3 freshness `province-host-claims`. Counters and kill rules are in the freeze file.\n\n# Constraints\n- Leaf seat: never dispatch subagents, never run a swarm.\n- NEVER commit, push or run a mutating git/jj command (no add/commit/stash/checkout/switch/reset/pull/push in the lane; no jj commit/new/describe/squash/rebase/abandon/bookmark/undo). Read-only git is fine (log, show, diff, status, ls-files, rev-parse, merge-base). Only the L1 commits.\n- Never write in the fleet root, sibling lane repos, /home/vgpnk/Projects/shokuknow, .ufo/state, .ufo/watchdog.log, MANIFEST.json, fleet scripts/ or templates/, .ufo/l0-questions.md.\n- kama write boundary: never write ~/.config, ~/.omp, or systemd; never start/stop a serving process; never contact 8080/34113/11434; no credential, token, cookie or session material anywhere.\n- Fixture git repos: `D=$(mktemp -d -p \"$S\")` and every later git call names `-C \"$D\"`; verify `git -C \"$D\" rev-parse --show-toplevel` equals `$D` before committing.\n- Tools may be installed/upgraded when they help: read /home/vgpnk/.omp/agent/RULES.md first (official channels; record tool/version/channel/reason in your report). pacman transactions are PAUSED host-wide: install via uv tool / npx / an official binary in ~/.local/bin, or report the need; never pacman -S/-Sy/-Syu/-U/-R.\n- Disk: /tmp only for files <50 MB; the reaper deletes idle trees under /tmp and S.\n\n# Return\nWrite your report at your Report path (findings, exact commands, exact outputs, file paths, what you could not verify; ≤200 lines) and return a short final summary (≤15 lines).\n",
+    "tasks": [
+      {
+        "name": "EX01PreReportGate",
+        "agent": "executor",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# C1 — build `/home/vgpnk/Projects/shokunin/kama-shokunin/tools/pre-report-gate.py`\nRead plans/round-71-claims.md §C1. Implement the tool exactly to the frozen predicate:\n- CLI: `--repo PATH` (default `.`), `--round N` (required), `--tip REV` (default `master`), `--selftest`, `--json`.\n- Five arms, run from the repo: (1) `tools/round42-selfdesc-reconcile.py --repo <repo> --tip <tip>`; (2) `tools/round69-newest-closure-counter.py --repo <repo> --rev <tip> --since-round 63`; (3) `tools/round68-receipt-pointer-audit.py --repo <repo> --rev <tip>`; (4) `tools/round67-worktree-landing-check.py --repo <repo>`; (5) round-clean: `git -C <repo> status --porcelain -uall -- .ufo/waves/round-<N>` must be empty.\n- Final line exactly `PRE_REPORT round=<N> arms=5 failed=<f> uncommitted=<u>` (u = file count from arm 5), preceded by one `PRE_REPORT_ARM <name> exit=<e> ok|FAIL <detail>` per arm. Exit 0 iff `failed==0 and uncommitted==0`, else 1. Use subprocess, capture stdout+stderr, honour `TMPDIR`.\n- `--selftest`: build fixtures under S: (a) green repo (stub instrument scripts via a `--tools-dir` override, or generated stubs — your choice, but document it) → exit 0; (b) one uncommitted file under `.ufo/waves/round-<N>/` → exit 1 naming `round-clean`; (c) red newest-closure stub → exit 1 naming the arm; (d) missing declared path in the WLC stub → exit 1; (e) dirty declared path → exit 1; (f) a file CRLF-translated → exit 1. Print `PRE_REPORT_SELFTEST pass=<n> fail=0`, exit 0.\n- Receipts in `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-71/w1/EX01PreReportGate/`: selftest output; the tool run on the round-start lane tree (`--round 70`; expect exit 1 and the 26 uncommitted r70 files counted); the tool run on the frozen shortcut fixture `/fast/scratch/hyaku/kama-r71/l1/control-fixture/fixture` (`--round 70`; instruments green there, 26 uncommitted → exit 1 with `failed=1 uncommitted=26`), and one fully-green fixture clone (build it yourself; do not rely on the lane's current red closure pointer).\n- Do not edit SKILL.md, SCORECARD.md, LOG.md or corpus/. The L1 adds the registry row. Report the exact commands and outputs the L1 must paste.\n\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: calibration\nMilestone: kama r71 w1\n\nReport: write your scoped findings to .ufo/waves/round-71/w1/EX01PreReportGate.md"
+      },
+      {
+        "name": "EX02CensusBoundary",
+        "agent": "executor",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# C2 — build `/home/vgpnk/Projects/shokunin/kama-shokunin/tools/census-waiver-boundary.py`\nRead plans/round-71-claims.md §C2 and the round-70 lesson's five named shims. Implement the frozen boundary:\n- CLI: `--census PATH` (default `tools/round65-host-census.py`), `--shims DIR`, `--selftest`, `--json`.\n- Seven cases: (1) refused fixture exits nonzero AND its verdict line carries `not_evaluated=1`; (2) all-pass fixture exits 0 with `not_evaluated=0`; (3) `--waive` on the not-evaluated member exits 0 and the verdict carries `waived=1`; (4) `--waive` on an evaluated failing member exits nonzero with no `waived=1`; (5) an unknown waiver name warns on stderr and does not change the exit; (6) each of the five named shims (`s4-refusal-as-fail`, `s5t-hardcoded-total`, `s6w-waiver-swallows-failure`, `s8r-second-call-silent`, `s10d-refusal-branch-deleted`) is REJECTED, with the check that rejects it named; (7) the landed census bytes on the real host are accepted (exit 0, `not_evaluated=0 total=22`, no waiver token).\n- Generate the shims with `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-70/w1/out/CRT01ClaimC2/counterexamples.py --dir <S>/shims` (do not re-author them); fall back to copying from `/fast/scratch/hyaku/kama-r71/l1/shim-control/shims` if present.\n- Output `BOUNDARY cases=7 killed=5 survivors=0` plus one `BOUNDARY_CASE <id> <held|FAIL> <detail>` line per case; exit 0 iff survivors=0 and cases 1-5,7 hold. `--selftest` prints `BOUNDARY_SELFTEST pass=<n> fail=0` and must include a specificity arm: the landed census bytes are not killed.\n- Receipts in `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-71/w1/EX02CensusBoundary/`: selftest; the real run at the current lane bytes; the five shim verdicts with exact rejection reasons; the fail-waiver probe output.\n- Do not edit SKILL.md or the census tool. The L1 adds the registry row.\n\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: operability\nMilestone: kama r71 w1\n\nReport: write your scoped findings to .ufo/waves/round-71/w1/EX02CensusBoundary.md"
+      },
+      {
+        "name": "EX03ProvinceClaims",
+        "agent": "executor",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# C3 — build `/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round71-province-host-claims.py`\nRead plans/round-71-claims.md §C3 and PROVINCE.md's round-65/67 host notes. Implement the frozen counter:\n- CLI: `--repo PATH` (default `.`), `--base REV` (optional rewrite check), `--corrections PATH` (default the repo's PROVINCE.md), `--json`.\n- Parse every `province-host:TAG` occurrence inside a paragraph that opens `- absent-on-this-host (DATE)` (one line names two tags across a wrap: count both). Declared SURFACES table maps each tag to a live probe: path existence for `omp-binary`, `llama-b11755-install`, `llama-server-link`, `kama-cache-gguf`, `llama-b11755-archive`, `qwen-coder-unit`, `opencode-json`, `janitor-md`, `ollama-v04011-install`, `fixture-gguf-model`; `ufo-src` = a ufo-fsd checkout resolves (declared search order: `$UFO_SRC`, `~/Projects/ufo-fsd-alpha`); `python3-interpreter` = `python3 -c \"import sys\"` exits 0.\n- Declared EXTRA claims (4, documented in the tool): host-identity (Windows claim vs `uname -s`), python3-alias (Store alias claim vs a real run), ntfs-path (the `|`-path claim vs a scratch repo checkout carrying that filename), ss-flock (`ss`/`flock` absence vs `command -v`).\n- Corrections: a line matching `- correction-on-host (YYYY-MM-DD) \\`province-host:TAG\\` — present|absent: <evidence>`. A correction covers a contradicted claim only when its claimed verdict equals the live probe verdict; a wrong-tag or flipped-verdict correction covers nothing.\n- Output `PROVINCE_HOST_CLAIMS markers=<m> tags=<t> extra=<e> contradicted=<c> uncovered=<u> exit=<x>`; exit 0 iff uncovered=0. With `--base`, every base marker tag must still occur at the tip, else print `PROVINCE_HOST_CLAIMS_REWRITTEN <tag>` and exit 1.\n- Do NOT edit PROVINCE.md: write the draft correction block for the contradicted claims to `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-71/w1/EX03ProvinceClaims/corrections-draft.md` with one line per tag, each carrying the probe command and its live output; the L1 appends it.\n- `--selftest` under S: base → uncovered>0 exit 1; correct corrections → uncovered=0 exit 0; flipped verdict → uncovered>0; wrong tag → uncovered>0; deleted marker with --base → REWRITTEN exit 1; a no-contradiction fixture → exit 0. Print `PROVINCE_HOST_CLAIMS_SELFTEST pass=<n> fail=0`.\n- Receipts in `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-71/w1/EX03ProvinceClaims/`. Do not edit SCORECARD/SKILL/corpus.\n\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: freshness\nMilestone: kama r71 w1\n\nReport: write your scoped findings to .ufo/waves/round-71/w1/EX03ProvinceClaims.md"
+      },
+      {
+        "name": "SCR01KnowledgeEntry",
+        "agent": "scribe",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# C1 knowledge entry — `/home/vgpnk/Projects/shokunin/kama-shokunin/corpus/knowledge/pre-report-gate.md`\nRead plans/round-71-claims.md §C1 and (once landed) `/home/vgpnk/Projects/shokunin/kama-shokunin/tools/pre-report-gate.py`. Write the entry:\n- Provenance trio: `source:` cites the new SOURCES row SCR02 lands (git-status porcelain stability) plus `plans/round-71-claims.md`; `verified-at: b43e71a8`; `recheck:` the selftest command with its expected `PRE_REPORT_SELFTEST pass=` line.\n- Body (≤80 lines): why one pre-report verdict exists (the round-70 closure's defect 1: 14 status entries / 26 files uncommitted at a reported tip while every existing instrument exited 0), the exact five arms and their failure classes, the CLI/output contract (`PRE_REPORT round= arms= failed= uncommitted=`), a decision table (each output shape → meaning → next action), and the limits: the instruments verify token presence/exits at one revision, the cleanliness arm reads `git status -uall` under the round's wave dir only, and the gate says nothing about report prose or registry truth.\n- Every claim must be one you verified: run the landed tool once if it exists; if it is absent at read time, mark each unverifiable sentence `[PENDING tool not landed at read time]` instead of asserting it.\n- Do not edit SCORECARD/LOG/SKILL/PROVINCE. Report the exact command output you used.\n\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: calibration\nMilestone: kama r71 w1\n\nReport: write your scoped findings to .ufo/waves/round-71/w1/SCR01KnowledgeEntry.md"
+      },
+      {
+        "name": "SCR02SourceRow",
+        "agent": "scribe",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# Frontier — open the git-status source and register it; re-open S052\nRead plans/round-71-claims.md (the sourced grounding) and CORPUS.md §SOURCES.md contract v1.\n1. Fetch `https://git-scm.com/docs/git-status` live (curl, TLS verify; proxy-free if needed), retain the bytes at `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-71/w1/SCR02SourceRow/source/git-status.html` and record `sha256sum`. Find the PORCELAIN FORMAT section's sentence stating the short format is script-stable / will not change in a backwards-incompatible way (use the exact wording on the page) and copy a ≤25-word located quote with its anchor and the Git version named on the page.\n2. Derive the next unused id from registry content, not a counter: extract all ids with `grep -oE '^ {0,3}\\|[[:space:]]*S[0-9]{3,}' /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md | grep -oE 'S[0-9]+' | sort -u`. Compute the collision set against `/home/vgpnk/Projects/shokuknow/merge/kama/SOURCES.append.md` (same 0-3-space pattern) and paste both lists and the count.\n3. Build ONE row in the 11-column schema (`kind docs`, `tier A`, scope = the pre-report cleanliness arm's porcelain parsing, `status mined`, `opened 2026-11-03`, `recheck` a cadence or date, `used-by corpus/knowledge/pre-report-gate.md, corpus/lessons/round-71.md`). No cell may contain a literal or escaped `|` — rewrite the quote without one. Append it as the last row of the registry table in `/home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md` (append-only; never insert mid-table). Validate on a scratch mirror first: copy `corpus/` to S, insert the row there, run `/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --file <mirror>/corpus/SOURCES.md` → must exit 0; only then apply to the lane file.\n4. Re-open `https://docs.pytest.org/en/stable/reference/exit-codes.html` (S052) live and change ONLY S052's `used-by` cell to append `, corpus/lessons/round-71.md` (KQ22 in place change), logging old→new in your report.\n5. Run the full census `/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama` before and after; both outputs and exits in your report.\nReport: id derivation, collision count, quote + anchor + access date + retained sha256, both census outputs, the S052 old→new used-by.\n\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: freshness\nMilestone: kama r71 w1\n\nReport: write your scoped findings to .ufo/waves/round-71/w1/SCR02SourceRow.md"
+      },
+      {
+        "name": "SCT01HostCensus",
+        "agent": "scout",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# Reconnaissance — re-derive every `province-host:` claim on this host\nRead-only. Read PROVINCE.md §Round-65/67 notes. Enumerate every `province-host:TAG` (12 tags: the llama line carries two) and evaluate each against THIS host with a declared command each: path existence for path tags, a checkout search for `ufo-src`, a real `python3 -c \"import sys\"` run for the interpreter, plus the four prose claims (host identity vs `uname -s`; the `python3` Microsoft-Store-alias claim; the `|`-containing path's NTFS checkout claim — test by creating a scratch git repo under S that tracks a filename containing `|` and checking it out; the `ss`/`flock` absence claim — `command -v`).\nProduce `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-71/w1/SCT01HostCensus/host-census.tsv` (tag, marker verdict, live verdict, contradicted yes/no, probe command) and `host-census.md` with each command's exact output and the host identity (`uname -a`). Name any tag whose surface is ambiguous (e.g. `ufo-src` is two conditions) and how you scored it. Do not edit PROVINCE.md, tools or corpus.\n\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: freshness\nMilestone: kama r71 w1\n\nReport: write your scoped findings to .ufo/waves/round-71/w1/SCT01HostCensus.md"
+      },
+      {
+        "name": "CON01OverlapInventory",
+        "agent": "connector",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# Cross-lane overlap scan + inherited-defect inventory (read-only)\n(a) Scan `/home/vgpnk/Projects/shokunin/*-shokunin/tools/` and each lane's `SKILL.md` registry for instruments with the same purpose as this round's three: a pre-report aggregation gate, a census not-evaluated/waiver boundary, a host-surface claim reconciler. Name the closest instruments, their lanes, and whether the overlap is contested ground or adjacent scope (write the overlap rule in one line each). (b) For each of the five status-neutral defects in `/home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-70-verifier-spotcheck.md` §7, state its status at tip b43e71a8 with a command (`git log --oneline`, `test -f`, `git ls-tree`), and which round-71 claim closes it (C1/C2/C3) or that it stays open. Save `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-71/w1/CON01OverlapInventory/overlap.md` and `defects.md`. Never edit any lane.\n\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: adjacency\nMilestone: kama r71 w1\n\nReport: write your scoped findings to .ufo/waves/round-71/w1/CON01OverlapInventory.md"
+      },
+      {
+        "name": "RVW01C2Attack",
+        "agent": "reviewer",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# Attack C2 — try to survive the waiver boundary\nRead plans/round-71-claims.md §C2 and the round-70 shim set (`counterexamples.py`). If `/home/vgpnk/Projects/shokunin/kama-shokunin/tools/census-waiver-boundary.py` exists, use it; if it does not yet, wait in bounded steps (60 s sleeps, max 20 minutes) and then record its absence honestly.\n1. Verify each of the five named shims is rejected by the landed tool; paste exact commands and outputs.\n2. Build at least one NEW shim (sixth) designed to satisfy every printed boundary case while violating the frozen C2 predicate — candidate holes: a waiver that covers a passing member and is reported as `waived=1`; a forged `waived=` token with no waiver; a `total` that matches the synthetic fixture but not the registered population; a second call that is silent only on the fail-waiver fixture; refusal accounting that prints `not_evaluated` from a different counter. Run it and report HELD or SURVIVED with the exact output.\n3. Check the boundary against the landed census bytes for false positives (specificity).\nSave the shim and receipts under `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-71/w1/RVW01C2Attack/`. Never edit the lane tools or census.\n\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability, calibration\nMilestone: kama r71 w1\n\nReport: write your scoped findings to .ufo/waves/round-71/w1/RVW01C2Attack.md"
+      },
+      {
+        "name": "CRT01ClaimsAttack",
+        "agent": "critic",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# Attack C1 and C3 — falsify the pre-report gate and the province counter\nRead plans/round-71-claims.md §§C1, C3. If the tools are absent at first read, wait in bounded steps (60 s sleeps, max 20 minutes) and record absence.\nC1: try to make `tools/pre-report-gate.py` print `failed=0 uncommitted=0` while the round work is unclean or an instrument is red. Candidate routes: an uncommitted file outside `.ufo/waves/round-<N>/` that still belongs to the round (e.g. `.ufo/waves/round-<N>-notes.md`, a corpus/SCORECARD edit); a committed-but-CRLF file; an instrument whose failure is masked by a pipe inside the arm command; a missing tool binary; a `--tip` that is not the branch tip while `--round` names another. Run each and report HELD/SURVIVED with exact commands/outputs.\nC3: try to clear `uncovered` without re-deriving the host: (i) a correction naming the right tag with the wrong verdict; (ii) a correction dated before the marker; (iii) two corrections, a false one first and a true one after; (iv) a duplicated tag; (v) deleting a marker line (must print REWRITTEN with `--base`); (vi) an extra claim whose probe is a stub that always says present. Report each.\nSave repro fixtures and receipts under `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-71/w1/CRT01ClaimsAttack/`. Never edit the lane tools, PROVINCE.md or the freeze.\n\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: calibration, freshness\nMilestone: kama r71 w1\n\nReport: write your scoped findings to .ufo/waves/round-71/w1/CRT01ClaimsAttack.md"
+      },
+      {
+        "name": "MT01MutantGates",
+        "agent": "mutation-tester",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# Mutation test the three round-71 gates\nRead plans/round-71-claims.md. Copy (never edit) the landed tools `tools/pre-report-gate.py`, `tools/round71-province-host-claims.py`, `tools/census-waiver-boundary.py` into S; if one is absent at first read, wait in bounded steps (60 s sleeps, max 20 minutes) and report absence honestly.\nFor each tool build at least four mutants that should be killed, e.g.: exit 0 unconditionally; ignore the uncommitted count; count an arm as failed only when it prints nothing; accept any correction that mentions the tag; ignore verdict equality; skip the `REWRITTEN` check; treat an accepted shim as a killed shim; drop the fail-waiver case; hard-code `survivors=0`. Run each tool's `--selftest` (and its defect fixtures) against each mutant and report KILLED/SURVIVED per mutant with the check that kills it and the exact output of a survivor. A survivor is a finding: name the missing check, do not fix the tool.\nSave mutants, logs and `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-71/w1/MT01MutantGates/mutants.tsv` under `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-71/w1/MT01MutantGates/`.\n\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability, calibration\nMilestone: kama r71 w1\n\nReport: write your scoped findings to .ufo/waves/round-71/w1/MT01MutantGates.md"
+      },
+      {
+        "name": "SEN01BoundaryAudit",
+        "agent": "sentinel",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# Boundary and secret audit of round 71 (read-only)\n1. Waiver path: prove no committed `--waive` usage exists in the lane (`git -C /home/vgpnk/Projects/shokunin/kama-shokunin grep -n -- '--waive' -- ':!.ufo'` and `git -C /home/vgpnk/Projects/shokunin/kama-shokunin grep -n -- '--waive' bs`), and that the landed census accepts only exact member names (read the code, quote the lines).\n2. Secret scan: scan the new wave artifacts under `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-71` and the 26 inherited round-70 files for secret-shaped strings (`sk-`, `ghp_`, `op://`, `Bearer `, `Authorization:`, `cookie`, `session token`, private-key headers). Report hits (path:line, redacted) or a count of 0 with the scan command.\n3. Write scope: `git -C /home/vgpnk/Projects/shokunin/kama-shokunin status --porcelain -uall` and classify every path (lane-expected vs out-of-scope). Name anything outside `.ufo/waves/round-71/`, `tools/`, `plans/`, `corpus/`, `registry/`, `SKILL.md`, `SCORECARD.md`, `LOG.md`, `PROVINCE.md`.\n4. Service/consumer boundary: grep the new artifacts for any process start, unit action or request to 8080/34113/11434; report 0 hits with the command.\n5. Read the freeze's C2 predicate against the landed boundary tool: does the tool enforce the same sentence? Quote both.\nSave `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-71/w1/SEN01BoundaryAudit/audit.md` with commands and outputs.\n\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: adjacency, operability\nMilestone: kama r71 w1\n\nReport: write your scoped findings to .ufo/waves/round-71/w1/SEN01BoundaryAudit.md"
+      },
+      {
+        "name": "LAB01WaiverProbe",
+        "agent": "revenger",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# Bounded probe — census waiver semantics on this host\nRead plans/round-71-claims.md §C2. Copy `/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round65-host-census.py` to S (never edit the lane file). Probe four falsifiable hypotheses with the real module (import it or run its CLI with a small synthetic MEMBERS set in a copied module — document which):\nH1 a waiver on an evaluated FAILING member exits 0 (expect refuted);\nH2 a waiver name that is a prefix or glob of a member covers it (expect refuted: exact names only);\nH3 a waived not-evaluated member still counts in `not_evaluated` and prints `waived=1` (expect confirmed);\nH4 two invocations in one process are not silent (no cached early return) (expect confirmed).\nFor each: exact command, exact output, verdict confirmed/refuted, and what a refutation would mean for C2. Save `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-71/w1/LAB01WaiverProbe/probe.md`. Never edit lane files or start services.\n\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: kama r71 w1\n\nReport: write your scoped findings to .ufo/waves/round-71/w1/LAB01WaiverProbe.md"
+      }
+    ]
+  },
+  "resumeSends": [],
+  "note": "Issue exactly one batched task call with taskCall ({context, tasks}); never split a wave into multiple task calls (one-swarm-per-wave). Then one hub send per resumeSends entry: hub send --to <entry.resume> --message <entry.message> (entry.name is bookkeeping, not a hub field)."
+}

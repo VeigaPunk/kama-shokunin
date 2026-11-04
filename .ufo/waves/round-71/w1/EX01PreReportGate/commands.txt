@@ -1,0 +1,28 @@
+# Paste block for the L1 (round-71 C1)
+
+## 1. SKILL.md registry row (L1 adds; five-column table, model: SKILL.md:1721)
+| Round-71 pre-report gate | measurement: `python3 tools/pre-report-gate.py --repo DIR --round N --tip REV` (five arms, cwd = repo: `tools/round42-selfdesc-reconcile.py --repo DIR --tip REV`; `tools/round69-newest-closure-counter.py --repo DIR --rev REV --since-round 63`; `tools/round68-receipt-pointer-audit.py --repo DIR --rev REV`; `tools/round67-worktree-landing-check.py --repo DIR`; then `git -C DIR status --porcelain -uall -- .ufo/waves/round-N`; defaults repo `.`, tip `master`; `--json`; `--tools-dir DIR` selects the instrument directory; `--selftest` builds throwaway fixtures under `--work` or a fresh TMPDIR directory) | 0 iff the four instruments all exit 0 AND the round worktree is clean (`PRE_REPORT round=N arms=5 failed=0 uncommitted=0`); 1 naming every failed arm (`PRE_REPORT_ARM <name> exit=<e> ok|FAIL <detail>`); 2 CLI misuse (missing `--round`, `--repo` not a directory) or an unevaluable selftest fixture | selftest: six arms -- green, one uncommitted wave file, red newest-closure stub, missing declared path, byte-dirty declared path, CRLF-translated declared path -- prints `PRE_REPORT_SELFTEST pass=6 fail=0`; pinned: `arms=5`, `failed` counts failing arms including arm 5 (four green instruments + 26 uncommitted prints `failed=1 uncommitted=26`), `uncommitted` counts `-uall` porcelain records | writes nothing in the graded repo (`PYTHONDONTWRITEBYTECODE=1` for children); fixtures only under `--work`/TMPDIR |
+
+## 2. Counter at the report tip (freeze D1: pick one N and record it)
+$ python3 tools/pre-report-gate.py --repo . --round 70 --tip master; echo EXIT=$?
+PRE_REPORT round=70 arms=5 failed=0 uncommitted=0
+EXIT=0
+$ python3 tools/pre-report-gate.py --repo . --round 71 --tip master; echo EXIT=$?
+PRE_REPORT round=71 arms=5 failed=0 uncommitted=0
+EXIT=0
+
+## 3. Selftest
+$ python3 tools/pre-report-gate.py --selftest; echo EXIT=$?
+PRE_REPORT_SELFTEST pass=6 fail=0
+EXIT=0
+
+## 4. JSON (optional)
+$ python3 tools/pre-report-gate.py --repo . --round 71 --json | tail -4
+  "failed": 0,
+  "uncommitted": 0,
+  "exit": 0,
+  "line": "PRE_REPORT round=71 arms=5 failed=0 uncommitted=0"
+
+## Preconditions for the green after-line (L1): SCORECARD calibration row names
+## corpus/lessons/round-70-verifier-spotcheck.md; every .ufo/waves/round-71/ file committed
+## (for --round 71, including this seat's report + receipts); declared self-record set byte-clean.

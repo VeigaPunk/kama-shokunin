@@ -77,3 +77,25 @@ exit 0), `measured/after/refused-member-control-new.out` (`refused_fixture_exit=
 allpass_fixture_exit=0`, control exit 0), `measured/after/newest-closure-at-tip.out`
 (`row_current=true`, exit 0), `measured/after/receipt-pointer-audit-at-73597158.out`
 (`unresolved=0`, exit 0).
+
+## L1 corrections — round 71 (appended 2026-11-03; the bytes above stay as written)
+
+Three of the round-70 closure's five status-neutral defects are corrected here, by append only.
+
+1. **Routed defect 2 — stale receipt called "final".** The §L1 integration addendum's "final green
+   receipts at the landing tips" names `measured/after/census-at-tip.out` (it still carries
+   `waived=0`). That receipt was measured at `73597158`, **before** the `af6eb6c2` readability
+   landing removed the unused token; the post-landing receipts are
+   `measured/after/census-at-af6eb6c2.out` and `measured/final/census.out`, and the round-71
+   pre-report gate now records its own tip in every receipt line (`PRE_REPORT` prints `tip=<rev>`).
+2. **Routed defect 3 — unreceipted final-tip re-run claim.** The claim that the reconciler and the
+   receipt audit were "re-run by the L1 at `61f3ec42` and `380ac279`" is supported by invariance,
+   not by a receipt at those tips: `git diff --stat 61f3ec42 380ac279` → only
+   `.ufo/waves/round-70/w1.ready.dispatched` (2 lines) and `.ufo/waves/round-70/w1/w1-results.json`
+   (86 lines) change, so the `a8df1af5` receipt remains valid at both later tips. Round 71's C1
+   replaces this manual claim class with one gate receipt at the report tip.
+3. **Routed defect 5 — supplementary receipts cite scratch tips.** `measured/after/reconciler-record-only-dry.out`
+   names `af6e1c84…` and the kill-probe pair names `a7ae13ab…`; both are scratch/fixture revisions
+   that never existed in the lane repo (`git cat-file -t` → `fatal: Not a valid object name` for
+   both, 2026-11-03). Provenance: they are dry-run/fixture receipts of the r70 tooling, not claim
+   evidence; the claim evidence is `measured/after/reconciler-at-af6eb6c2.out`.

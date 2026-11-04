@@ -85,3 +85,34 @@ verified-at: original observations 2026-09-28 and 2026-10-19; metadata review 20
 recheck: from the lane root, `python3 .ufo/waves/round-11/measure.py provenance` rechecks retained prefixes/fields without endpoint I/O; reopen fleet report `.ufo/reports/round-3/kagi.md` lines 23–27 and `.ufo/reports/round-4/kengaku.md` lines 18–25 using ranged file reads. `wc -l corpus/knowledge/consumer-registry.md SKILL.md PROVINCE.md` supplies current bounds, not fixed expected lengths. Current endpoint-state revalidation needs a separate authorized scope; no such probe ran here.
 
 *[provenance supplement appended 2026-10-20 (round-11 wave; steered label 2026-10-19): no byte above is rewritten and no observation above is refreshed by this supplement.]*
+
+## Overlap rules — round 71 (2026-11-03; sibling instruments re-scanned read-only)
+
+Source of this section: `.ufo/waves/round-71/w1/CON01OverlapInventory.md` (connector seat, scan at
+`b43e71a8`; every claim below is that seat's read-only header/registry scan, no sibling gate executed).
+The rules are recorded here because no in-lane file named a sibling instrument before this round.
+
+- **Pre-report aggregation** — souji (`tools/souji-pre-report-gate.sh`, `SKILL.md:256-257`) and kasegi
+  (`corpus/instruments/r46-landing-gate.py --pre-report/--post-report`, `SKILL.md:1163`) hold
+  contested *purpose* with disjoint populations: souji grades whole-lane status/report hygiene, kasegi
+  grades landing evidence and cited-hash ancestry. kama's `tools/pre-report-gate.py` grades four kama
+  instruments plus a round-scoped uncommitted class. Rule: a pre-report gate aggregates the instruments
+  of its own lane and is never cited as another lane's evidence.
+- **Waiver policy** — mado (`quality/check-session-material.py`, `SKILL.md:771`) enforces the same
+  waiver discipline where waivers are consumed (honoured waivers printed, real values not waivable,
+  sha-bound waivers void on tamper); tameshi (`tools/arm-liveness.py`) holds arm liveness
+  (`ARM_DEAD` vs a do-nothing baseline). kama's `tools/census-waiver-boundary.py` grades shims over the
+  *census's own bytes*. Rule: waiver policy belongs to the consuming gate; kama's `killed=5` is not
+  comparable to tameshi's `ARM_LIVE` counts.
+- **Host-surface claim reconciliation** — kengaku (`plans/round51_surfaces.py`, `SKILL.md:661`) is the
+  closest instrument: manifest-driven PROVINCE-surface checks with `STALE`/`DRIFT`/`NUMBER-DRIFT` and
+  `ABSENT <ISO date>` rows. kama's `tools/round71-province-host-claims.py` differs by a base→tip marker
+  set, a dated correction whose verdict is re-probed, and `REWRITTEN` detection. Rule: a lane grades
+  only its own PROVINCE.md; neither gate is the other's evidence.
+- **Receipt-tip binding** — tameshi `tools/receipt-revision-gate.py` (`SKILL.md:1547`) already binds a
+  receipt's `rev=` to the certified revision (or a byte-identical `--paths` list); it is the prior art
+  for the round-70 defect-3 class in kama. A future kama arm that adds tip binding names tameshi's gate
+  as prior art, not new repertoire.
+
+Caveat: the connector read sibling headers and registry rows, not their current green/red state; this
+section records adjacency and attribution, not sibling evidence.

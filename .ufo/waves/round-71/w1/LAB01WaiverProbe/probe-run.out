@@ -1,0 +1,91 @@
+### H1 — a waiver on an evaluated FAILING member
+=== H1a waiver on evaluated fail ===
+$ python3 census-probe.py --waive syn-fail
+pass [A] syn-pass
+FAIL [A] syn-fail: exit=1 tail='SYN-FAIL'
+HOST_CENSUS pass=1 fail=1 not_evaluated=0 total=2 tierA_fail=1 tierB_fail=0
+[stderr] warning: --waive 'syn-fail' unused: member was evaluated (fail); a waiver covers only not-evaluated members
+[exit] 1
+
+=== H1b waiver on evaluated pass (control substrate) ===
+$ python3 census-probe.py --waive syn-pass
+pass [A] syn-pass
+HOST_CENSUS pass=1 fail=0 not_evaluated=0 total=1 tierA_fail=0 tierB_fail=0
+[stderr] warning: --waive 'syn-pass' unused: member was evaluated (pass); a waiver covers only not-evaluated members
+[exit] 0
+
+### H2 — waiver matched by prefix or glob
+=== H2a prefix 'syn-ref' vs member 'syn-refusal' ===
+$ python3 census-probe.py --waive syn-ref
+pass [A] syn-pass
+refused [A] syn-refusal: fail-closed refusal: synthetic missing dependency (probe fixture) (marker 'missing dependency')
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 total=2 tierA_fail=0 tierB_fail=0
+CENSUS_NOT_EVALUATED 1 member(s) without a waiver: syn-refusal — exit 1
+[stderr] warning: --waive 'syn-ref' is not a census member name
+[exit] 1
+
+=== H2b glob 'syn-ref*' vs member 'syn-refusal' ===
+$ python3 census-probe.py --waive syn-ref*
+pass [A] syn-pass
+refused [A] syn-refusal: fail-closed refusal: synthetic missing dependency (probe fixture) (marker 'missing dependency')
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 total=2 tierA_fail=0 tierB_fail=0
+CENSUS_NOT_EVALUATED 1 member(s) without a waiver: syn-refusal — exit 1
+[stderr] warning: --waive 'syn-ref*' is not a census member name
+[exit] 1
+
+=== H2c glob '*' vs member 'syn-refusal' ===
+$ python3 census-probe.py --waive *
+pass [A] syn-pass
+refused [A] syn-refusal: fail-closed refusal: synthetic missing dependency (probe fixture) (marker 'missing dependency')
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 total=2 tierA_fail=0 tierB_fail=0
+CENSUS_NOT_EVALUATED 1 member(s) without a waiver: syn-refusal — exit 1
+[stderr] warning: --waive '*' is not a census member name
+[exit] 1
+
+### H3 — waived not-evaluated member still counted, waived=1 printed
+=== H3 exact-name waiver on not-evaluated member ===
+$ python3 census-probe.py --waive syn-refusal
+pass [A] syn-pass
+refused [A] syn-refusal: fail-closed refusal: synthetic missing dependency (probe fixture) (marker 'missing dependency') [waived]
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 waived=1 total=2 tierA_fail=0 tierB_fail=0
+[exit] 0
+
+### H4 — two invocations in one process
+=== H4a same argv twice in one process ===
+$ python3 -c 'import census_probe as m; m.main(); m.main()'  # argv ['--waive', 'syn-refusal']
+call1 exit=0 call2 exit=0 stdout_identical=True stderr_identical=True
+call1 stdout:
+pass [A] syn-pass
+refused [A] syn-refusal: fail-closed refusal: synthetic missing dependency (probe fixture) (marker 'missing dependency') [waived]
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 waived=1 total=2 tierA_fail=0 tierB_fail=0
+call2 stdout:
+pass [A] syn-pass
+refused [A] syn-refusal: fail-closed refusal: synthetic missing dependency (probe fixture) (marker 'missing dependency') [waived]
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 waived=1 total=2 tierA_fail=0 tierB_fail=0
+
+=== H4b call 1 (waiver) ===
+$ python3 census-probe.py --waive syn-refusal
+pass [A] syn-pass
+refused [A] syn-refusal: fail-closed refusal: synthetic missing dependency (probe fixture) (marker 'missing dependency') [waived]
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 waived=1 total=2 tierA_fail=0 tierB_fail=0
+[exit] 0
+
+=== H4c call 2 (no waiver, same process) ===
+$ python3 census-probe.py 
+pass [A] syn-pass
+refused [A] syn-refusal: fail-closed refusal: synthetic missing dependency (probe fixture) (marker 'missing dependency')
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 total=2 tierA_fail=0 tierB_fail=0
+CENSUS_NOT_EVALUATED 1 member(s) without a waiver: syn-refusal — exit 1
+[exit] 1
+
+### machine summary
+'H1a waiver on evaluated fail': exit=1 HOST_CENSUS pass=1 fail=1 not_evaluated=0 total=2 tierA_fail=1 tierB_fail=0 | stderr="warning: --waive 'syn-fail' unused: member was evaluated (fail); a waiver covers only not-evaluated members"
+'H1b waiver on evaluated pass (control substrate)': exit=0 HOST_CENSUS pass=1 fail=0 not_evaluated=0 total=1 tierA_fail=0 tierB_fail=0 | stderr="warning: --waive 'syn-pass' unused: member was evaluated (pass); a waiver covers only not-evaluated members"
+"H2a prefix 'syn-ref' vs member 'syn-refusal'": exit=1 HOST_CENSUS pass=1 fail=0 not_evaluated=1 total=2 tierA_fail=0 tierB_fail=0 | stderr="warning: --waive 'syn-ref' is not a census member name"
+"H2b glob 'syn-ref*' vs member 'syn-refusal'": exit=1 HOST_CENSUS pass=1 fail=0 not_evaluated=1 total=2 tierA_fail=0 tierB_fail=0 | stderr="warning: --waive 'syn-ref*' is not a census member name"
+"H2c glob '*' vs member 'syn-refusal'": exit=1 HOST_CENSUS pass=1 fail=0 not_evaluated=1 total=2 tierA_fail=0 tierB_fail=0 | stderr="warning: --waive '*' is not a census member name"
+'H3 exact-name waiver on not-evaluated member': exit=0 HOST_CENSUS pass=1 fail=0 not_evaluated=1 waived=1 total=2 tierA_fail=0 tierB_fail=0
+'H4b call 1 (waiver)': exit=0 HOST_CENSUS pass=1 fail=0 not_evaluated=1 waived=1 total=2 tierA_fail=0 tierB_fail=0
+'H4c call 2 (no waiver, same process)': exit=1 HOST_CENSUS pass=1 fail=0 not_evaluated=1 total=2 tierA_fail=0 tierB_fail=0
+H4a identical-repeat: exit1=0 exit2=0 same_stdout=True
+H4b/H4c same-process leak check: call1_exit=0 call2_exit=1 call2_has_waived_token=False

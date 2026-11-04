@@ -1,0 +1,32 @@
+=== H2d exact member name 'syn-ref' also a prefix of 'syn-refusal' (leak must not happen) ===
+$ python3 census-probe.py --waive syn-ref
+pass [A] syn-pass
+refused [A] syn-ref: fail-closed refusal: synthetic missing dependency (marker 'missing dependency') [waived]
+refused [A] syn-refusal: fail-closed refusal: synthetic missing dependency (marker 'missing dependency')
+HOST_CENSUS pass=1 fail=0 not_evaluated=2 waived=1 total=3 tierA_fail=0 tierB_fail=0
+CENSUS_NOT_EVALUATED 1 member(s) without a waiver: syn-refusal — exit 1
+[exit] 1
+
+=== H2e space-named member, prefix only ===
+$ python3 census-probe.py --waive test-snapshot
+pass [A] syn-pass
+refused [A] test-snapshot harness: fail-closed refusal: synthetic missing dependency (marker 'missing dependency')
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 total=2 tierA_fail=0 tierB_fail=0
+CENSUS_NOT_EVALUATED 1 member(s) without a waiver: test-snapshot harness — exit 1
+[stderr] warning: --waive 'test-snapshot' is not a census member name
+[exit] 1
+
+=== H2f space-named member, exact quoted name ===
+$ python3 census-probe.py --waive test-snapshot harness
+pass [A] syn-pass
+refused [A] test-snapshot harness: fail-closed refusal: synthetic missing dependency (marker 'missing dependency') [waived]
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 waived=1 total=2 tierA_fail=0 tierB_fail=0
+[exit] 0
+
+=== H2g space-named member, equals form ===
+$ python3 census-probe.py --waive=test-snapshot harness
+pass [A] syn-pass
+refused [A] test-snapshot harness: fail-closed refusal: synthetic missing dependency (marker 'missing dependency') [waived]
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 waived=1 total=2 tierA_fail=0 tierB_fail=0
+[exit] 0
+

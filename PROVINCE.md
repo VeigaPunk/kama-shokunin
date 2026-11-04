@@ -268,3 +268,41 @@ host instead. A tracked wave-artifact path
 out under NTFS, so instruments that clone the lane (the round-42
 self-description reconciler selftest) refuse fail-closed on this host; that
 path question is filed at `.ufo/l0-questions.md` (kama round-65).
+
+## Host re-derivation — round 71 (2026-11-03; the round-65/67 notes above stay as written)
+
+The markers above were recorded on the 2026-10-31 Windows host. This lane now runs on a different
+host: `uname -s` → `Linux`, `uname -r` → `7.2.11-arch1-1` (2026-11-03). Each surface below was
+re-derived read-only on this host; the counter `tools/round71-province-host-claims.py` grades these
+corrections against live probes and rejects a correction whose claimed verdict disagrees.
+
+- correction-on-host (2026-11-03) `province-host:omp-binary` — present: `test -e ~/.local/bin/omp` exit 0; `command -v omp` → `/home/vgpnk/.local/bin/omp`.
+- correction-on-host (2026-11-03) `province-host:llama-b11755-install` — present: `test -d ~/.local/opt/llama-b11755` exit 0 (`LICENSE`, `llama-server`, `libggml-base.so` present).
+- correction-on-host (2026-11-03) `province-host:llama-server-link` — present: `readlink -f ~/.local/bin/llama-server` → `/home/vgpnk/.local/opt/llama-b11755/llama-server`.
+- correction-on-host (2026-11-03) `province-host:kama-cache-gguf` — present: `test -d ~/.cache/kama-shokunin` exit 0; it holds `models/`.
+- correction-on-host (2026-11-03) `province-host:llama-b11755-archive` — present: `test -f ~/.local/opt/llama-b11755-bin-ubuntu-x64.tar.gz` exit 0; sha256 begins `753bfa73…`.
+- correction-on-host (2026-11-03) `province-host:qwen-coder-unit` — absent: `systemctl --user show qwen-coder.service -p LoadState -p ActiveState` → `LoadState=not-found`, `ActiveState=inactive`; the marker's "no systemd on this host" reason is itself false (systemd is present), but the unit surface is absent.
+- correction-on-host (2026-11-03) `province-host:opencode-json` — present: `test -f ~/.config/opencode/opencode.json` exit 0; the file holds only `$schema` and `autoupdate` (no provider block, no baseURL pin).
+- correction-on-host (2026-11-03) `province-host:janitor-md` — absent: `test -d ~/.config/opencode/agents` exit 1.
+- correction-on-host (2026-11-03) `province-host:ufo-src` — present: `test -d ~/Projects/ufo-fsd-alpha` exit 0 and `~/Projects/ufo-fsd-alpha/config/the-tick.machine.json` exists; `UFO_SRC` is still unset, so the probe's `$UFO_SRC` step is empty but its declared checkout fallback resolves.
+- correction-on-host (2026-11-03) `province-host:ollama-v04011-install` — present: `test -d ~/.local/opt/ollama-v0.40.11` exit 0 (`bin/`, `lib/` present).
+- correction-on-host (2026-11-03) `province-host:fixture-gguf-model` — present: `test -f ~/.cache/kama-shokunin/models/stories260K.gguf` exit 0 (1,185,376 bytes).
+- correction-on-host (2026-11-03) `province-host:python3-interpreter` — present: `python3 -c 'import sys;print(sys.version.split()[0])'` → `3.14.8`, exit 0; the Store-alias stub is not this host's `python3`.
+
+The four prose claims the same notes make are corrected here against live probes (the counter
+carries them as declared extra surfaces; the correction tag namespace is the same):
+
+- correction-on-host (2026-11-03) `province-host:host-identity` — absent: `uname -s` → `Linux`, `uname -r` → `7.2.11-arch1-1`; the 2026-10-31 note describes a Windows host this lane no longer runs on.
+- correction-on-host (2026-11-03) `province-host:python3-alias` — absent: `python3 -c "import sys;print(sys.version.split()[0])"` → `3.14.8`, exit 0; `python3` is a real interpreter on this host, not the Microsoft Store alias.
+- correction-on-host (2026-11-03) `province-host:ntfs-path` — absent: a scratch repo under `/fast/scratch/hyaku/kama-r71/` commits and checks out `pipe|name.txt` (`git checkout -- .` exit 0), so the NTFS-invalid-path limitation does not apply here; the reconciler's selftest runs on this host.
+- correction-on-host (2026-11-03) `province-host:ss-flock` — absent: `command -v ss flock` → `/usr/bin/ss`, `/usr/bin/flock`; the probe gate's fail-closed refusal class does not apply on this host.
+
+**Round-71 note — the report-time instruments and the host re-derivation (2026-11-03).**
+`tools/pre-report-gate.py` runs the round's four reconciled instruments plus a round-worktree
+cleanliness arm and emits one `PRE_REPORT` verdict; `tools/census-waiver-boundary.py` grades the
+census's waiver/not-evaluated semantics with seven cases and kills the five round-70 shims;
+`tools/round71-province-host-claims.py` re-derives every `province-host:` marker and four declared
+prose claims against this host. All three are lane-local, read-only instruments (the province
+counter runs git and path/spawn probes; the pre-report gate runs the lane's own instruments; the
+boundary tool runs synthetic census fixtures under a scratch dir). No endpoint, consumer or service
+was sampled; the registered consumers keep their last recorded `DEAD` state.

@@ -1,0 +1,30 @@
+=== D3 spawn-error member (OSError branch, s10d) ===
+$ python3 census-probe.py 
+pass [A] syn-pass
+refused [A] syn-spawn-err: spawn error [Errno 2] No such file or directory: '/nonexistent/binary-xyz'
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 total=2 tierA_fail=0 tierB_fail=0
+CENSUS_NOT_EVALUATED 1 member(s) without a waiver: syn-spawn-err — exit 1
+[exit] 1
+
+=== D3b spawn-error waived exactly ===
+$ python3 census-probe.py --waive syn-spawn-err
+pass [A] syn-pass
+refused [A] syn-spawn-err: spawn error [Errno 2] No such file or directory: '/nonexistent/binary-xyz' [waived]
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 waived=1 total=2 tierA_fail=0 tierB_fail=0
+[exit] 0
+
+=== D4 timeout member (budget=1s) ===
+$ python3 census-probe.py 
+pass [A] syn-pass
+refused [A] syn-slow: census budget 1s exceeded (recorded, not a verdict)
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 total=2 tierA_fail=0 tierB_fail=0
+CENSUS_NOT_EVALUATED 1 member(s) without a waiver: syn-slow — exit 1
+[exit] 1
+
+=== D4b timeout waived exactly ===
+$ python3 census-probe.py --waive syn-slow
+pass [A] syn-pass
+refused [A] syn-slow: census budget 1s exceeded (recorded, not a verdict) [waived]
+HOST_CENSUS pass=1 fail=0 not_evaluated=1 waived=1 total=2 tierA_fail=0 tierB_fail=0
+[exit] 0
+

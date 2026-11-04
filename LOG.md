@@ -2687,3 +2687,57 @@ Motivating evidence: the round-69 non-author closure (`corpus/lessons/round-69-v
 - considerthese re-opened (`2026-10-25.md`, `2026-10-26.md`): proposal 4 is already landed as `tools/pin-watch.py`; proposals 1-3 are daily-pass workflow, not lane-round work; nothing adopted. Assimilation: none — the round is sized to its two claims and the frontier step.
 - Wave integration (appended; the bullets above are the pre-wave measurements): `SKILL.md`'s Round-65 census registry row carried the tool's old exit map, so the depth row is re-anchored to `cb8105da…`/1721 lines; the census verdict prints `waived=` only when a waiver was used and names unwaived members on a `CENSUS_NOT_EVALUATED` line (seat CRT01's two reading hazards). Final tips: reconciler `mismatches=0 met=True` and selftest `pass=5 fail=0` at `af6eb6c2` (`measured/after/reconciler-at-af6eb6c2.out`, `measured/after/selfdesc-selftest-at-af6eb6c2.out`), census `HOST_CENSUS pass=22 fail=0 not_evaluated=0 total=22`, exit 0 (`measured/after/census-at-af6eb6c2.out`), control `(1, 0)` exit 0.
 - Wave attack dispositions: RVW01's counter-erasure mutant passes the five-arm selftest (selftest blindness; the check-level evidence is the defect-carrying fixture pair); CRT01 built five census shims that satisfy the frozen control while leaking, so the frozen C2 counter reads only the exit and the waiver scope is review-guaranteed — round 71 item 2 codifies the boundary control; SEN01: `registry/append-only-contract.tsv` and its disclosures ledger are not themselves graded; CON01: kaidoku's `tools/round-44/c2-counter.py` is an adjacent instrument class, not contested ground.
+
+## Round 71 (2026-11-03) — one pre-report verdict, a waiver boundary that kills its shims, the province re-derived on this Linux host
+
+Motivating evidence: at the round-start tip `f3ee44f4` the lane's four reconciled instruments disagreed —
+the selfdesc reconciler `mismatches=1 met=False` (calibration pointer named round 69 while the round-70
+closure was newest) and the newest-closure counter printed `STALE_CALIBRATION`, while the receipt audit
+(`unresolved=0`) and worktree-landing check (`paths=5 clean=5`) were green (`.ufo/waves/round-71/measured/before/`).
+Separately the round-70 report landed with 26 files (14 status entries) uncommitted that every one of
+those instruments passed (`measured/before/pre-report-shortcut.out` → `SHORTCUT_CONTROL arms=4 failed=0
+uncommitted=26`), and PROVINCE.md still described a Windows host: 11 marker lines, 12 tags, 0 corrections,
+14 contradictions on live probes (`measured/before/province-claims.out`).
+- C1 calibration (capability `pre-report-gate`): `tools/pre-report-gate.py` runs the four reconciled
+  instruments plus a round-worktree cleanliness arm (`git status --porcelain -uall -- .ufo/waves/round-N`)
+  and emits one `PRE_REPORT round=<N> arms=5 failed=<f> uncommitted=<u>`; exit 0 only when all five arms
+  are green. Before: tool absent; shortcut control `failed=0 uncommitted=26` exit 0 (the class is
+  invisible). After at the report tip: `PRE_REPORT round=71 arms=5 failed=0 uncommitted=0`, exit 0.
+  Kill fixtures: uncommitted wave file (`failed=1 uncommitted=26`, exit 1), stale closure pointer,
+  missing/dirty/CRLF declared path; `PRE_REPORT_SELFTEST pass=6 fail=0`.
+- C2 operability (registered boundary): `tools/census-waiver-boundary.py` grades seven waiver/not-evaluated
+  cases over the census module in-process and kills the five round-70 shims by name. Before: the round-70
+  control accepts all five holes (`SHIM_CONTROL shims=5 accepted=5 rejected=0`). After:
+  `BOUNDARY cases=7 killed=5 survivors=0`, exit 0; the fail-waiver fixture exits nonzero, the 22-member
+  census stays green (`HOST_CENSUS pass=22 fail=0 not_evaluated=0 total=22`), `BOUNDARY_SELFTEST pass=8 fail=0`.
+- C3 freshness (capability `province-host-claims`): `tools/round71-province-host-claims.py` re-derives
+  every `province-host:` marker and four declared prose claims against this host and requires a later
+  dated correction whose verdict is re-probed; a deleted base marker prints `PROVINCE_HOST_CLAIMS_REWRITTEN`.
+  Before (base bytes): `markers=11 tags=12 extra=4 contradicted=14 uncovered=14 exit=1`. After at the tip:
+  `uncovered=0 exit=0`; `PROVINCE_HOST_CLAIMS_SELFTEST pass=7 fail=0`. `PROVINCE.md` gains a dated host
+  re-derivation block (12 tag corrections + 4 prose corrections).
+- Frontier: S542 added (tier A, Git `git-status` porcelain v1 stability for scripts; retained bytes sha256
+  `22ff28ff…0180` at `.ufo/waves/round-71/w1/SCR02SourceRow/source/git-status.html`, quote and access date
+  in the lesson Gate); S052 re-opened and its `used-by` extended (no new row — duplicate URL). Registry
+  rows 281 → 282; id collision set against the staged shoukuknow package = 9, next unused id derived from
+  the union (S542); census validate exit 0 at round start and round end.
+- Lesson: `corpus/lessons/round-71.md` — Gate (S542 + S052 + two no-row decisions + `Assimilation: none`)
+  and five mistakes (population premise assumed from a filename; an uncommitted-count metric that depended
+  on directory collapsing; a base receipt cannot use the tool's own `--base`; a probe root chosen by the
+  tool rather than the round scratch contract; a self-record row citing its tool before the tool committed).
+- Axes re-anchors: depth row → `SKILL.md` `0b61e118…` (1724 lines, 48 sections); coverage row →
+  `PROVINCE.md` `7fa09fab…` (308 lines) and knowledge count 39 → 40; adjacency row →
+  `corpus/knowledge/cross-lane-scope.md` `436956…` (118 lines) after the round-71 overlap rules landed;
+  calibration row names the round-70 closure and gains the pre-report gate run fact; freshness row gains
+  the province-counter run fact; operability row gains the boundary-control run fact. Scores held
+  operability 8 / calibration 7.
+- Routed carry-in (round-70 closure §7): (1) the 26 uncommitted round-70 files committed at the freeze
+  `b43e71a8` and now graded by C1's fifth arm; (2)/(3)/(5) corrected by an append-only block in
+  `corpus/lessons/round-70.md` §L1 corrections naming the stale "final" receipt, the `61f3ec42`→`380ac279`
+  invariance diff, and the scratch-tip provenance; (4) replaced in kind by C2's registered boundary.
+- considerthese re-opened (`2026-10-26.md`): proposal 3 landed as `QUALITY.md` KQ118 (a counter ships with
+  a shortcut control and a mutant-kill receipt). Assimilation: none — `merge/kama/` exists but nothing was
+  re-grounded; the collision set is recorded in the lesson.
+- L0: the kama round-65 NTFS-path question stays unanswered — routed around (this host checks the `|` path
+  out). The L2 floor rides this round's one v1 wave (12 seats: 3 executors, 2 scribes, 1 scout,
+  1 connector, 1 reviewer, 1 critic, 1 mutation-tester, 1 sentinel, 1 revenger probe).
