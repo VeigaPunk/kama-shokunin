@@ -3133,3 +3133,30 @@ row commit `0e01f32f` postdates the instrument-receipt commit the record named. 
 `git log --first-parent --format='%H %s' 1a85a991fce5b76b60f88a5cab3df98d253b1a4a..35babc5a` and
 the per-commit `git diff-tree --name-only` filter. This is a value-bound correction; the filed
 token stays as history.
+
+## Round 77 — baseline receipts bind, two registers account, the round-76 facts are graded (2026-11-04)
+
+Frozen plan `plans/round-77-claims.md` (base `cc6e1d3cf202ee3e17cd07f42fc63d2dca5f3bb7`, freeze
+`7d60e2ab58866a0366937d61c9712483be57b36e`); work tip `d86ce85b72121617dc79795c8c046ffc94de33a4`;
+receipts commit `59e68a3f8f4c4373c461bb61265f75deae3cd0ef`. Claims C1 operability, C2 freshness,
+C3 calibration. Verdicts: **C1 and C2 verified; C3 an honest miss** on its frozen
+`corrected=2` — the sealed round-76 record carried three stale facts (`work-tip`,
+`knowledge-entries`, `closure-pointer`), not two, and the instrument prints
+`mismatches=0 corrected=3` exit 0.
+
+What landed: `tools/round77-citation-baseline.py` (baseline class + seven arms, imported round-76
+fence/record scope), `tools/round77-append-registers.py` (per-register cutoffs, `permitted` and
+`out_of_region` carriage, rotation detection, seven arms), `tools/round77-selfrecord-round76.py`
+(six sealed round-76 facts, correction grading, four arms), gate arm 10
+(`PRE_REPORT_SELFTEST pass=22 fail=0`) with the superseded round-76 `append-exempt` sub-check
+retired from the gate and the reason recorded in the module, nine strict `exempt-head` rows,
+three value-bound correction blocks, `corpus/knowledge/baseline-receipt-binding.md` and
+`corpus/knowledge/register-cutoff-split.md`, S550 admitted own-work and S549 rejected as a
+duplicate (S073/S085/S093 hold the git-log URL and the `--diff-filter` ground), one Gate rejection
+(PostgreSQL system columns, scope), and the round-76 closure duties D1–D6 closed in
+`corpus/README.md`, `LOG.md`, `corpus/lessons/round-76.md` and `corpus/lessons/round-77.md`.
+Wave: one v1 wave, 13 seats (4 executor, 3 scribe, 1 scout, 1 connector, 1 reviewer, 2 critic,
+1 mutation-tester); attack 4/13 = 31 %. Misses recorded, not prettified: the mutation seat read
+before the three counters landed and its certification is inconclusive (its report says so);
+C1/C2/C3 seat receipts were captured by L1 because the executor seats declined to execute;
+C3's frozen line is missed by one correction.

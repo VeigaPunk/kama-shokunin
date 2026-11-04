@@ -1,0 +1,16 @@
+# command: python3 -c 'import subprocess,re,collections; L="/home/vgpnk/Projects/shokunin/kama-shokunin"; text=subprocess.check_output(["git","-C",L,"show","c2aa7fb2:.ufo/waves/round-76/measured/after/append-exempt.out"],text=True); rows=re.findall(r"^APPEND_EXEMPT_FINDING unaccounted ([0-9a-f]{40}) (\S+)",text,re.M); cutoff="10f37171fb696c542586cbee96ea4a509ab74afc"; post=[(h,p) for h,p in rows if subprocess.run(["git","-C",L,"merge-base","--is-ancestor",h,cutoff]).returncode==1]; print("POSTCUTOFF pre=%d post=%d total=%d sum=%d"%(len(rows)-len(post),len(post),len(rows),len(rows)-len(post)+len(post))); print("\n".join(h+" "+p for h,p in post))'
+fatal: path '.ufo/waves/round-76/measured/after/append-exempt.out' exists on disk, but not in 'c2aa7fb2'
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import subprocess,re,collections; L="/home/vgpnk/Projects/shokunin/kama-shokunin"; text=subprocess.check_output(["git","-C",L,"show","c2aa7fb2:.ufo/waves/round-76/measured/after/append-exempt.out"],text=True); rows=re.findall(r"^APPEND_EXEMPT_FINDING unaccounted ([0-9a-f]{40}) (\S+)",text,re.M); cutoff="10f37171fb696c542586cbee96ea4a509ab74afc"; post=[(h,p) for h,p in rows if subprocess.run(["git","-C",L,"merge-base","--is-ancestor",h,cutoff]).returncode==1]; print("POSTCUTOFF pre=%d post=%d total=%d sum=%d"%(len(rows)-len(post),len(post),len(rows),len(rows)-len(post)+len(post))); print("\n".join(h+" "+p for h,p in post))
+                                                                                            ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 473, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+           ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+               **kwargs).stdout
+               ^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['git', '-C', '/home/vgpnk/Projects/shokunin/kama-shokunin', 'show', 'c2aa7fb2:.ufo/waves/round-76/measured/after/append-exempt.out']' returned non-zero exit status 128.
+exit=1
