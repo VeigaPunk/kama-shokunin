@@ -320,3 +320,12 @@ triple) are lane-local read-only instruments: they read git state, the lane's se
 The host-identity block appended above records this host's triple; a host move is answered by
 appending a later block, never by editing that one. The three registered consumers keep their last
 recorded `DEAD` state.
+
+Round-76 instruments (2026-11-04): `tools/round76-receipt-scope.py` (classifies a self-record's
+citation population under the declared fence and record-path scope; `--all-findings` lists every
+non-record path in each receipt's delta), `tools/round76-selfrecord-facts.py` (re-derives eight
+declared self-record facts at the revisions they name and counts value-bound corrections) and
+`tools/round76-append-exempt.py` (accounts every append-only audit event once across the
+line-bound accepted register, the strict exempt-head class register, restoration and disclosure,
+and preserves the multi-register introduction cutoff). They read committed git state, the lane's
+registers and self-record, execute no endpoint call and write nothing outside their scratch.

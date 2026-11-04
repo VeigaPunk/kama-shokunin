@@ -40,8 +40,9 @@ freshness (append-only event accounting). Frozen plan: `plans/round-76-claims.md
    deletions with A-row/only-prefix carveouts (31 events), and five otherwise-classifiable
    events postdate the earliest register introduction, while adding the class register makes
    `introductions=2`. No register can satisfy all three.
-   *Evidence:* `.ufo/waves/round-76/w1/EX03AppendExempt.md` (47 strict, 31 wrong-class, 5
-   post-introduction) and `measured/after/append-exempt.out` (`unaccounted=37 introductions=2`).
+   *Evidence:* `.ufo/waves/round-76/w1/EX03AppendExempt/register-rows.txt` (47 strict rows; 31
+   wrong-class and 5 post-introduction events named) and `measured/after/append-exempt.out`
+   (`unaccounted=37 introductions=2`).
    *Captured-by:* none at freeze — I wrote the cutoffs from the round-75 register's single-file
    shape without checking the audit's JSON keys or the second register's introduction date.
    *Fix:* the `## Planned (round 77)` item 2 in `SCORECARD.md`: independent per-register cutoffs,
@@ -80,8 +81,8 @@ Sources opened or re-opened this round (contract v1):
 
 - **S498** (CommonMark 0.31.2 §4.5, `https://spec.commonmark.org/0.31.2/#fenced-code-blocks`) —
   **admitted**: re-fetched live 2026-11-04, sha256
-  `c85f56cc2101f761cc94215c677cd2c7c1ecca9c47be016479fdfe718af60f0d`, retained at
-  `.ufo/waves/round-76/w1/SCR01Sources/commonmark-0.31.2.html`; the quote "characters inside
+  `c85f56cc2101f761cc94215c677cd2c7c1ecca9c47be016479fdfe718af60f0d`
+  (`.ufo/waves/round-76/w1/SCR01Sources/source-open.out` records the retained bytes); the quote "characters inside
   fenced code blocks are treated literally" (20 words) sits at retained lines 2760–2761 in §4.5.
   The row was opened in round 50; this round re-located the quote in freshly retained bytes and
   the entry `corpus/knowledge/fenced-quotation-scope.md` now cites it.
@@ -126,7 +127,7 @@ other three (flag next-morning deletions, running shortcut tally, morning pin ga
 
 `Assimilation: none`. Re-derived read-only at round time:
 `reg_ids 287 · staged_ids 142 · collisions 9 · quarantine_rows 7`
-(`.ufo/waves/round-76/assimilation/{reg-ids,staged-ids,collisions,quarantine-slice,guard-proof.out}`).
+(`.ufo/waves/round-76/assimilation/summary.out`).
 The nine staged-id collisions (S330 S333 S334 S335 S346 S347 S352 S353 S363) are mass drift a
 read-only merge cannot resolve; the guard proof shows an indented `| S330 |` row is caught by the
 0–3-space extractor (column-zero-only pattern misses it), so nothing appends.
