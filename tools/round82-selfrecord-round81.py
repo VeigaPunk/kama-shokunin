@@ -545,6 +545,13 @@ def selftest():
     cases.append(("no-corrections", mism == 5 and corrected == 0 and unbacked == 0,
                   mism, unbacked, corrected))
 
+    # a declared token that is a PREFIX of the witness token is stale (kills a startswith
+    # comparison mutant; MT01 escape `selfrecord/startswith-token-compare`)
+    mism, corr, un, _rows = grade([("F1", "sc81c2-pending=1", "sc81c2-pending=14")], [],
+                                  fixture({}), sealed)
+    cases.append(("prefix-token-not-equal", mism == 1 and corr == 0 and un == 0,
+                  mism, un, corr))
+
     # extraction arms: the sealed readers must yield the declared tokens and the witnesses
     read_map = {("closure",): "corpus/lessons/round-81-verifier-spotcheck.md"}
     read_map[("TIP", "corpus/lessons/round-81-verifier-spotcheck.md")] = "closure"
