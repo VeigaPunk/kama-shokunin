@@ -1,0 +1,76 @@
+# D6 C2 predicate/ruling wording
+$ sed -n '125,131p;138,148p' <lane>/plans/round-78-claims.md
+> unaccounted=0 introductions=1/1 rotation_safe=1` line and exits 0 only when every deletion
+> event the append-only audit reports at that revision sits in exactly one of the six buckets
+> (their sum equals `events`), each bucket row is committed at the audited revision or earlier,
+> register rows naming an event commit that is not ancestral to the audited revision are counted
+> on a separate `APPEND_REGISTERS_OUT_OF_POPULATION rows=<n>` line and change no bucket, the two
+> register files' sha256 prefixes are printed on a separate `APPEND_REGISTERS_REGISTERS
+> exempt=<hex12> accepted=<hex12>` line, and rotation detection rejects a reintroduced path
+  register's own introduction cutoff" is superseded by C2's own sentence and its text is not
+  rewritten — routed defect D6); (b) **register** introduction is separate provenance: each
+  register's first commit is discovered from history, a reintroduced path with new rows fails
+  `rotation-reintroduced`, and the row set's committed identity is checked against
+  `--commit-at` so a worktree-only row never counts (round-77 F2, routed defects D7/D8); rows
+  outside the audited population are reported and change no bucket, which is what keeps the
+  frozen command stable under later appends; (c) a row committed in the same commit as the
+  damage it blesses is rejected when the row's named event is not ancestral to that commit;
+  (d) `permitted` and `out_of_region` keep round 77's `permitted == deleted`-with-zero-graded
+  and every-deletion-outside-all-declared-regions readings, unchanged.
+- Counting command: `python3 tools/round78-append-registers.py --repo . --to c62ffd3aea930b98375f805cc3dfb821a703148b`
+exit=0
+
+# D7 register worktree read
+$ grep -n 'APPEND_REGISTERS_REGISTERS\|--commit-at\|uncommitted\|precedes(cells' <lane>/tools/round78-append-registers.py
+32:> register files' sha256 prefixes are printed on a separate `APPEND_REGISTERS_REGISTERS
+35:> <missing-row|wrong-count|wrong-class|inside-region|out-of-population|rotation-reintroduced|uncommitted>
+82:                findings.append({'class': 'uncommitted', 'commit': '-', 'file': path,
+87:                if not precedes(cells[0], data['to']):
+152:             'APPEND_REGISTERS_REGISTERS ' + ' '.join(f'{k}={v}' for k, v in result['registers'].items()),
+167:            'rotation-reintroduced', 'out-of-population-row', 'uncommitted')
+222:            if arm != 'uncommitted':
+254:    parser.add_argument('--commit-at', default='master')
+exit=0
+$ git -C <lane> status --porcelain -- tools/round78-append-registers.py
+?? tools/round78-append-registers.py
+exit=0
+
+# D8 same-commit growth hole
+$ sed -n '143,147p' <lane>/plans/round-78-claims.md
+  outside the audited population are reported and change no bucket, which is what keeps the
+  frozen command stable under later appends; (c) a row committed in the same commit as the
+  damage it blesses is rejected when the row's named event is not ancestral to that commit;
+  (d) `permitted` and `out_of_region` keep round 77's `permitted == deleted`-with-zero-graded
+  and every-deletion-outside-all-declared-regions readings, unchanged.
+exit=0
+$ grep -n 'def ancestor' -A6 <lane>/tools/round77-append-registers.py
+64:def ancestor(repo, commit, revision):
+65-    result = subprocess.run(['git', '-C', str(repo), 'merge-base', '--is-ancestor',
+66-                             commit, revision], capture_output=True, timeout=120)
+67-    if result.returncode not in (0, 1):
+68-        raise CouldNotEvaluate(f'cannot resolve row ancestry: {commit}')
+69-    return result.returncode == 0
+70-
+exit=0
+$ git -C <lane> merge-base --is-ancestor 2bd07a8aeef822bd6b8b9137df4439f1499b08c9 2bd07a8aeef822bd6b8b9137df4439f1499b08c9 ; echo exit
+exit=0
+$ grep -n "arms = ('missing-row'" -A3 <lane>/tools/round78-append-registers.py
+166:    arms = ('missing-row', 'wrong-count', 'wrong-class', 'inside-region',
+167-            'rotation-reintroduced', 'out-of-population-row', 'uncommitted')
+168-    failures = 0
+169-    scratch = Path(os.environ.get('TMPDIR') or tempfile.gettempdir()).resolve()
+exit=0
+
+# D9 stale pointers
+$ sed -n '69p' <fleet>/.ufo/reports/round-77/kama.md
+Every change ties to the LOG §Round 77 entry (`LOG.md:3130`) and to the commit below.
+exit=0
+$ git -C <lane> show 6c1550a1:LOG.md | grep -n '^## Round 77'
+3137:## Round 77 — baseline receipts bind, two registers account, the round-76 facts are graded (2026-11-04)
+exit=0
+$ sed -n '4379p' <lane>/SCORECARD.md
+correction and the miss; it is documented in `corpus/lessons/round-77.md` §Mistakes 4.
+exit=0
+$ grep -c 'Freeze divergences item 3' <lane>/SCORECARD.md
+0
+exit=1

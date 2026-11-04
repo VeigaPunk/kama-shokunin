@@ -1,0 +1,42 @@
+$ git -C <lane> show 6c1550a1:SKILL.md | awk 'NR==309' | fold -w 200   # OLD fact, sealed revision
+| Pre-report gate | gate: `python3 tools/pre-report-gate.py --repo . --round N --tip master` (eight arms, fixed order: selfdesc reconciler, newest-closure counter, receipt-pointer audit, worktree-land
+ing check, round-scope counter, round-worktree cleanliness, arm 7 `round74-v2` composing `tools/round74-selfdesc-canon.py`, `tools/round74-receipt-claim-binding.py` and `tools/round74-province-host-dr
+ift.py`, and arm 8 `round75-instruments` composing `tools/round75-interpretation-pins.py`, `tools/round75-survivor-probe.py` and `tools/round75-append-accepted.py`; an absent module fails its arm clos
+ed, never vacuously green) | 0 iff all eight arms green and `uncommitted=0`, i.e. the line reads `PRE_REPORT round=<N> arms=8 failed=0 uncommitted=0`; 1 names every failed arm; 2 CLI misuse; 3 re-entr
+y refusal | `python3 tools/pre-report-gate.py --selftest` → `PRE_REPORT_SELFTEST pass=18 fail=0` (round-75 measurement; the five-, six- and seven-arm readings `arms=5`/`arms=6`/`arms=7` stay readable 
+as their rounds' records) | Removed temp fixtures only |
+exit=0
+
+$ awk 'NR==309' <lane>/SKILL.md | fold -w 200   # worktree at 2026-11-04T05:08:32-03:00
+| Pre-report gate | gate: `python3 tools/pre-report-gate.py --repo . --round N --tip master` (nine arms, fixed order: selfdesc reconciler, newest-closure counter, receipt-pointer audit, worktree-landi
+ng check, round-scope counter, round-worktree cleanliness, arm 7 `round74-v2` composing `tools/round74-selfdesc-canon.py`, `tools/round74-receipt-claim-binding.py` and `tools/round74-province-host-dri
+ft.py`, arm 8 `round75-instruments` composing `tools/round75-interpretation-pins.py`, `tools/round75-survivor-probe.py` and `tools/round75-append-accepted.py`, and arm 9 `round77-instruments` composin
+g `tools/round77-citation-baseline.py`, `tools/round77-append-registers.py` and `tools/round77-selfrecord-round76.py`; the retired `round76-instruments` arm no longer runs; an absent module fails its 
+arm closed, never vacuously green) | 0 iff all nine arms green and `uncommitted=0`, i.e. the line reads `PRE_REPORT round=<N> arms=9 failed=0 uncommitted=0`; 1 names every failed arm; 2 CLI misuse; 3 
+re-entry refusal | `python3 tools/pre-report-gate.py --selftest` → `PRE_REPORT_SELFTEST pass=22 fail=0` (round-77 measurement, receipt `.ufo/waves/round-77/measured/after/gate-selftest.out`; the five-
+, six-, seven- and eight-arm readings stay readable as their rounds' records) | Removed temp fixtures only |
+exit=0
+
+$ git -C <lane> show 6c1550a1:tools/pre-report-gate.py | grep -n -A3 'ARM_ORDER ='
+223:ARM_ORDER = [name for name, _ in ARM_SPECS] + ["round-clean", "round74-v2",
+224-              "round75-instruments", "round77-instruments"]
+225-VERDICT_RE = {
+226-    "selfdesc": r"mismatches=\d+ met=(?:True|False)",
+exit=0
+
+$ git -C <lane> show 6c1550a1:.ufo/waves/round-77/measured/after/gate-selftest.out
+# rev=ccac5109039842317321d6f821c033a98eb3ebfe
+# cmd: TMPDIR=/fast/scratch/hyaku/kama-r77/gate python3 tools/pre-report-gate.py --selftest
+PRE_REPORT_SELFTEST pass=22 fail=0
+exit=0
+exit=0
+
+$ git -C <lane> show 6c1550a1:.ufo/waves/round-77/measured/after/gate-run.out | tail -2
+PRE_REPORT_ARM round77-instruments exit=0 ok round77-citation-baseline.py exit=0 ok CITATION_BASELINE_SELFTEST pass=7 fail=0 | round77-append-registers.py exit=0 ok APPEND_REGISTERS_SELFTEST pass=7 fail=0 | round77-selfrecord-round76.py exit=0 ok SELFRECORD_R76_SELFTEST pass=4 fail=0
+PRE_REPORT round=77 arms=9 failed=0 uncommitted=0
+exit=0
+
+$ PYTHONDONTWRITEBYTECODE=1 python3 arms.py
+sealed ARM_SPECS 5 ARM_ORDER 9 newest round77-instruments
+worktree ARM_SPECS 5 ARM_ORDER 9 newest round77-instruments
+exit=0

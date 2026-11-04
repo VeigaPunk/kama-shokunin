@@ -1,0 +1,392 @@
+[
+  {
+    "schema": "round78-live-reconcile/v1",
+    "predicate": "`python3 tools/round78-live-reconcile.py --repo <lane>` prints one `LIVE_RECONCILE rows=3 model_ok=1 mismatch=1 dead=1 probe_exit=2 runtime=llama.cpp served=stories260K` line and exits 0 only when it starts the pinned `llama-server` (binary and model sha256 recorded) as a child on a loopback port that is neither a registered consumer port nor currently listening, writes a three-row scratch registry under its own scratch root \u2014 a row whose expected id normalises to the served id, a row whose expected id does not, and a row naming an unserved port \u2014 runs `bash tools/kama-probe.sh check --registry <scratch>` and observes `MODEL_OK` on the first, `MODEL_MISMATCH` on the second and `DEAD` on the third, requires the live row's probe evidence to name `runtime=llama.cpp` and the served id to be the pinned fixture model, refuses any registered consumer port before probing, tears the child down and writes a receipt carrying the child's exit status; it exits 1 naming `LIVE_RECONCILE_FINDING <class> <detail>` when a verdict differs, when a responder without llama.cpp runtime evidence reaches `MODEL_OK`, or when a registered port was probed, and 2 on could-not-evaluate (pinned binary, model or probe absent; CLI misuse).",
+    "arm": "fake-responder",
+    "argv": [
+      "tools/round78-live-reconcile.py",
+      "--self-test"
+    ],
+    "child_exit": 0,
+    "rows": [
+      {
+        "id": "live-match",
+        "consumer_path": "/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-27x1wp_e/live-match.json",
+        "resolver": "json:/baseURL",
+        "declared": "http://127.0.0.1:46715/v1",
+        "resolved_from_file": "http://127.0.0.1:46715/v1",
+        "file_match": "yes",
+        "resolve_kind": "url",
+        "endpoint": "http://127.0.0.1:46715/v1",
+        "port": 46715,
+        "expected_model_id": "stories260K",
+        "verdict": "MODEL_OK",
+        "reason": "matched",
+        "served_model": "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+        "drift": false,
+        "evidence": "GET /v1/models -> 200 application/json (Server: BaseHTTP/0.6 Python/3.14.8) (runtime=other; expected=stories260K; reason=matched); GET /health -> 200|application/json",
+        "notes": "lane-owned fixture"
+      },
+      {
+        "id": "live-mismatch",
+        "consumer_path": "/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-27x1wp_e/live-mismatch.json",
+        "resolver": "json:/baseURL",
+        "declared": "http://127.0.0.1:46715/v1",
+        "resolved_from_file": "http://127.0.0.1:46715/v1",
+        "file_match": "yes",
+        "resolve_kind": "url",
+        "endpoint": "http://127.0.0.1:46715/v1",
+        "port": 46715,
+        "expected_model_id": "definitely-not-the-model",
+        "verdict": "MODEL_MISMATCH",
+        "reason": "served-id-mismatch",
+        "served_model": "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+        "drift": true,
+        "evidence": "GET /v1/models -> 200 application/json (Server: BaseHTTP/0.6 Python/3.14.8) (runtime=other; expected=definitely-not-the-model; reason=served-id-mismatch); GET /health -> 200|application/json",
+        "notes": "lane-owned fixture"
+      },
+      {
+        "id": "dead-row",
+        "consumer_path": "/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-27x1wp_e/dead-row.json",
+        "resolver": "json:/baseURL",
+        "declared": "http://127.0.0.1:49703/v1",
+        "resolved_from_file": "http://127.0.0.1:49703/v1",
+        "file_match": "yes",
+        "resolve_kind": "url",
+        "endpoint": "http://127.0.0.1:49703/v1",
+        "port": 49703,
+        "expected_model_id": "stories260K",
+        "verdict": "DEAD",
+        "reason": "connection-refused",
+        "served_model": "-",
+        "drift": true,
+        "evidence": "rc=7 Failed to connect to 127.0.0.1:49703 after 0 ms: Could not connect to server; GET /v1/models -> 000",
+        "notes": "lane-owned fixture"
+      }
+    ],
+    "sha256s": {
+      "server": "b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804",
+      "model": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+    },
+    "ports": {
+      "live": 46715,
+      "dead": 49703,
+      "registered": [
+        8080,
+        34113
+      ]
+    },
+    "scratch": "/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-27x1wp_e",
+    "child_argv": [
+      "/home/vgpnk/.local/opt/llama-b11755/llama-server",
+      "--model",
+      "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "46715",
+      "-c",
+      "512",
+      "-t",
+      "1",
+      "--no-webui"
+    ],
+    "child_pid": 3640649,
+    "models_body": "{\"models\":[{\"name\":\"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\"model\":\"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\"modified_at\":\"\",\"size\":\"\",\"digest\":\"\",\"type\":\"model\",\"description\":\"\",\"tags\":[\"\"],\"capabilities\":[\"completion\"],\"parameters\":\"\",\"details\":{\"parent_model\":\"\",\"format\":\"gguf\",\"family\":\"\",\"families\":[\"\"],\"parameter_size\":\"\",\"quantization_level\":\"\"}}],\"object\":\"list\",\"data\":[{\"id\":\"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\"aliases\":[\"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\"],\"tags\":[],\"object\":\"model\",\"architecture\":{\"input_modalities\":[\"text\"],\"output_modalities\":[\"text\"]},\"created\":1793782045,\"owned_by\":\"llamacpp\",\"meta\":{\"vocab_type\":1,\"n_vocab\":512,\"n_ctx\":512,\"n_ctx_train\":2048,\"n_embd\":64,\"n_params\":292800,\"size\":1171200,\"ftype\":\"(guessed) all F32\"}}]}",
+    "registry": "live-match\t/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-27x1wp_e/live-match.json\tjson:/baseURL\thttp://127.0.0.1:46715/v1\tstories260K\tlane-owned fixture\nlive-mismatch\t/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-27x1wp_e/live-mismatch.json\tjson:/baseURL\thttp://127.0.0.1:46715/v1\tdefinitely-not-the-model\tlane-owned fixture\ndead-row\t/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-27x1wp_e/dead-row.json\tjson:/baseURL\thttp://127.0.0.1:49703/v1\tstories260K\tlane-owned fixture\n",
+    "probe_argv": [
+      "bash",
+      "/home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-probe.sh",
+      "check",
+      "--registry",
+      "/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-27x1wp_e/consumers.tsv",
+      "--timeout",
+      "2",
+      "--connect-timeout",
+      "1",
+      "--json"
+    ],
+    "probe_stdout": "{\n  \"schema\": \"kama-probe/v1\",\n  \"subcommand\": \"check\",\n  \"registry\": \"/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-27x1wp_e/consumers.tsv\",\n  \"verdict_vocabulary\": \"MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP MODEL_LOADING\",\n  \"exit_codes\": {\n    \"0\": \"every declared consumer reconciles\",\n    \"2\": \"at least one drift\",\n    \"1\": \"probe error\"\n  },\n  \"summary\": {\n    \"registry_rows_evaluated\": 3,\n    \"model_ok\": 1,\n    \"drift\": 2,\n    \"exit\": 2\n  },\n  \"rows\": [\n    {\n      \"id\": \"live-match\",\n      \"consumer_path\": \"/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-27x1wp_e/live-match.json\",\n      \"resolver\": \"json:/baseURL\",\n      \"declared\": \"http://127.0.0.1:46715/v1\",\n      \"resolved_from_file\": \"http://127.0.0.1:46715/v1\",\n      \"file_match\": \"yes\",\n      \"resolve_kind\": \"url\",\n      \"endpoint\": \"http://127.0.0.1:46715/v1\",\n      \"port\": 46715,\n      \"expected_model_id\": \"stories260K\",\n      \"verdict\": \"MODEL_OK\",\n      \"reason\": \"matched\",\n      \"served_model\": \"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\n      \"drift\": false,\n      \"evidence\": \"GET /v1/models -> 200 application/json (Server: BaseHTTP/0.6 Python/3.14.8) (runtime=other; expected=stories260K; reason=matched); GET /health -> 200|application/json\",\n      \"notes\": \"lane-owned fixture\"\n    },\n    {\n      \"id\": \"live-mismatch\",\n      \"consumer_path\": \"/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-27x1wp_e/live-mismatch.json\",\n      \"resolver\": \"json:/baseURL\",\n      \"declared\": \"http://127.0.0.1:46715/v1\",\n      \"resolved_from_file\": \"http://127.0.0.1:46715/v1\",\n      \"file_match\": \"yes\",\n      \"resolve_kind\": \"url\",\n      \"endpoint\": \"http://127.0.0.1:46715/v1\",\n      \"port\": 46715,\n      \"expected_model_id\": \"definitely-not-the-model\",\n      \"verdict\": \"MODEL_MISMATCH\",\n      \"reason\": \"served-id-mismatch\",\n      \"served_model\": \"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\n      \"drift\": true,\n      \"evidence\": \"GET /v1/models -> 200 application/json (Server: BaseHTTP/0.6 Python/3.14.8) (runtime=other; expected=definitely-not-the-model; reason=served-id-mismatch); GET /health -> 200|application/json\",\n      \"notes\": \"lane-owned fixture\"\n    },\n    {\n      \"id\": \"dead-row\",\n      \"consumer_path\": \"/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-27x1wp_e/dead-row.json\",\n      \"resolver\": \"json:/baseURL\",\n      \"declared\": \"http://127.0.0.1:49703/v1\",\n      \"resolved_from_file\": \"http://127.0.0.1:49703/v1\",\n      \"file_match\": \"yes\",\n      \"resolve_kind\": \"url\",\n      \"endpoint\": \"http://127.0.0.1:49703/v1\",\n      \"port\": 49703,\n      \"expected_model_id\": \"stories260K\",\n      \"verdict\": \"DEAD\",\n      \"reason\": \"connection-refused\",\n      \"served_model\": \"-\",\n      \"drift\": true,\n      \"evidence\": \"rc=7 Failed to connect to 127.0.0.1:49703 after 0 ms: Could not connect to server; GET /v1/models -> 000\",\n      \"notes\": \"lane-owned fixture\"\n    }\n  ]\n}\n",
+    "probe_stderr": "",
+    "probe_exit": 2,
+    "summary": {
+      "registry_rows_evaluated": 3,
+      "model_ok": 1,
+      "drift": 2,
+      "exit": 2
+    },
+    "probe_summary_line": "registry_rows_evaluated=3 model_ok=1 drift=2 exit=2",
+    "child_log": "0.00.000.464 I srv  llama_server: initializing ...\n0.00.003.293 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)\n0.00.003.373 I srv  init_listene: The UI is disabled\n0.00.003.374 I srv  init_listene: Use --ui/--no-ui (or deprecated --webui/--no-webui) to enable/disable\n0.00.003.433 W srv  llama_server: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)\n0.00.004.988 I srv    load_model: loading model '/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf'\n0.00.007.042 W load: bad special token: 'tokenizer.ggml.seperator_token_id' = 4294967295, using default id -1\n0.00.007.044 W load: bad special token: 'tokenizer.ggml.padding_token_id' = 4294967295, using default id -1\n0.00.008.079 I cmn          init: llama threadpool init, n_threads = 1\n0.00.008.556 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 512, kv_unified = 'true'\n0.00.009.699 I srv  llama_server: model loaded\n0.00.009.703 I srv  llama_server: listening on http://127.0.0.1:46715\n0.00.101.672 I srv    operator(): operator(): cleaning up before exit...\n",
+    "port_closed": true,
+    "finding": "fake-responder live evidence lacks runtime=llama.cpp",
+    "exit": 1
+  },
+  {
+    "schema": "round78-live-reconcile/v1",
+    "predicate": "`python3 tools/round78-live-reconcile.py --repo <lane>` prints one `LIVE_RECONCILE rows=3 model_ok=1 mismatch=1 dead=1 probe_exit=2 runtime=llama.cpp served=stories260K` line and exits 0 only when it starts the pinned `llama-server` (binary and model sha256 recorded) as a child on a loopback port that is neither a registered consumer port nor currently listening, writes a three-row scratch registry under its own scratch root \u2014 a row whose expected id normalises to the served id, a row whose expected id does not, and a row naming an unserved port \u2014 runs `bash tools/kama-probe.sh check --registry <scratch>` and observes `MODEL_OK` on the first, `MODEL_MISMATCH` on the second and `DEAD` on the third, requires the live row's probe evidence to name `runtime=llama.cpp` and the served id to be the pinned fixture model, refuses any registered consumer port before probing, tears the child down and writes a receipt carrying the child's exit status; it exits 1 naming `LIVE_RECONCILE_FINDING <class> <detail>` when a verdict differs, when a responder without llama.cpp runtime evidence reaches `MODEL_OK`, or when a registered port was probed, and 2 on could-not-evaluate (pinned binary, model or probe absent; CLI misuse).",
+    "arm": "registered-port",
+    "argv": [
+      "tools/round78-live-reconcile.py",
+      "--self-test"
+    ],
+    "child_exit": null,
+    "rows": [],
+    "sha256s": {
+      "server": "b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804",
+      "model": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+    },
+    "ports": {
+      "live": 56583,
+      "dead": 57971,
+      "registered": [
+        8080,
+        34113
+      ]
+    },
+    "finding": "registered-port registry names a registered consumer port",
+    "exit": 1
+  },
+  {
+    "schema": "round78-live-reconcile/v1",
+    "predicate": "`python3 tools/round78-live-reconcile.py --repo <lane>` prints one `LIVE_RECONCILE rows=3 model_ok=1 mismatch=1 dead=1 probe_exit=2 runtime=llama.cpp served=stories260K` line and exits 0 only when it starts the pinned `llama-server` (binary and model sha256 recorded) as a child on a loopback port that is neither a registered consumer port nor currently listening, writes a three-row scratch registry under its own scratch root \u2014 a row whose expected id normalises to the served id, a row whose expected id does not, and a row naming an unserved port \u2014 runs `bash tools/kama-probe.sh check --registry <scratch>` and observes `MODEL_OK` on the first, `MODEL_MISMATCH` on the second and `DEAD` on the third, requires the live row's probe evidence to name `runtime=llama.cpp` and the served id to be the pinned fixture model, refuses any registered consumer port before probing, tears the child down and writes a receipt carrying the child's exit status; it exits 1 naming `LIVE_RECONCILE_FINDING <class> <detail>` when a verdict differs, when a responder without llama.cpp runtime evidence reaches `MODEL_OK`, or when a registered port was probed, and 2 on could-not-evaluate (pinned binary, model or probe absent; CLI misuse).",
+    "arm": "wrong-expect",
+    "argv": [
+      "tools/round78-live-reconcile.py",
+      "--self-test"
+    ],
+    "child_exit": 0,
+    "rows": [
+      {
+        "id": "live-match",
+        "consumer_path": "/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-lg67x9z5/live-match.json",
+        "resolver": "json:/baseURL",
+        "declared": "http://127.0.0.1:47387/v1",
+        "resolved_from_file": "http://127.0.0.1:47387/v1",
+        "file_match": "yes",
+        "resolve_kind": "url",
+        "endpoint": "http://127.0.0.1:47387/v1",
+        "port": 47387,
+        "expected_model_id": "stories260K",
+        "verdict": "MODEL_MISMATCH",
+        "reason": "matched",
+        "served_model": "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+        "drift": false,
+        "evidence": "GET /v1/models -> 200 application/json; charset=utf-8 (Server: llama.cpp) (runtime=llama.cpp; expected=stories260K; reason=matched); GET /health -> 200|application/json; charset=utf-8",
+        "notes": "lane-owned fixture"
+      },
+      {
+        "id": "live-mismatch",
+        "consumer_path": "/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-lg67x9z5/live-mismatch.json",
+        "resolver": "json:/baseURL",
+        "declared": "http://127.0.0.1:47387/v1",
+        "resolved_from_file": "http://127.0.0.1:47387/v1",
+        "file_match": "yes",
+        "resolve_kind": "url",
+        "endpoint": "http://127.0.0.1:47387/v1",
+        "port": 47387,
+        "expected_model_id": "definitely-not-the-model",
+        "verdict": "MODEL_MISMATCH",
+        "reason": "served-id-mismatch",
+        "served_model": "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+        "drift": true,
+        "evidence": "GET /v1/models -> 200 application/json; charset=utf-8 (Server: llama.cpp) (runtime=llama.cpp; expected=definitely-not-the-model; reason=served-id-mismatch); GET /health -> 200|application/json; charset=utf-8",
+        "notes": "lane-owned fixture"
+      },
+      {
+        "id": "dead-row",
+        "consumer_path": "/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-lg67x9z5/dead-row.json",
+        "resolver": "json:/baseURL",
+        "declared": "http://127.0.0.1:47399/v1",
+        "resolved_from_file": "http://127.0.0.1:47399/v1",
+        "file_match": "yes",
+        "resolve_kind": "url",
+        "endpoint": "http://127.0.0.1:47399/v1",
+        "port": 47399,
+        "expected_model_id": "stories260K",
+        "verdict": "DEAD",
+        "reason": "connection-refused",
+        "served_model": "-",
+        "drift": true,
+        "evidence": "rc=7 Failed to connect to 127.0.0.1:47399 after 0 ms: Could not connect to server; GET /v1/models -> 000",
+        "notes": "lane-owned fixture"
+      }
+    ],
+    "sha256s": {
+      "server": "b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804",
+      "model": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+    },
+    "ports": {
+      "live": 47387,
+      "dead": 47399,
+      "registered": [
+        8080,
+        34113
+      ]
+    },
+    "scratch": "/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-lg67x9z5",
+    "child_argv": [
+      "/home/vgpnk/.local/opt/llama-b11755/llama-server",
+      "--model",
+      "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "47387",
+      "-c",
+      "512",
+      "-t",
+      "1",
+      "--no-webui"
+    ],
+    "child_pid": 3641946,
+    "models_body": "{\"models\":[{\"name\":\"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\"model\":\"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\"modified_at\":\"\",\"size\":\"\",\"digest\":\"\",\"type\":\"model\",\"description\":\"\",\"tags\":[\"\"],\"capabilities\":[\"completion\"],\"parameters\":\"\",\"details\":{\"parent_model\":\"\",\"format\":\"gguf\",\"family\":\"\",\"families\":[\"\"],\"parameter_size\":\"\",\"quantization_level\":\"\"}}],\"object\":\"list\",\"data\":[{\"id\":\"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\"aliases\":[\"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\"],\"tags\":[],\"object\":\"model\",\"architecture\":{\"input_modalities\":[\"text\"],\"output_modalities\":[\"text\"]},\"created\":1793782046,\"owned_by\":\"llamacpp\",\"meta\":{\"vocab_type\":1,\"n_vocab\":512,\"n_ctx\":512,\"n_ctx_train\":2048,\"n_embd\":64,\"n_params\":292800,\"size\":1171200,\"ftype\":\"(guessed) all F32\"}}]}",
+    "registry": "live-match\t/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-lg67x9z5/live-match.json\tjson:/baseURL\thttp://127.0.0.1:47387/v1\tstories260K\tlane-owned fixture\nlive-mismatch\t/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-lg67x9z5/live-mismatch.json\tjson:/baseURL\thttp://127.0.0.1:47387/v1\tdefinitely-not-the-model\tlane-owned fixture\ndead-row\t/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-lg67x9z5/dead-row.json\tjson:/baseURL\thttp://127.0.0.1:47399/v1\tstories260K\tlane-owned fixture\n",
+    "probe_argv": [
+      "bash",
+      "/home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-probe.sh",
+      "check",
+      "--registry",
+      "/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-lg67x9z5/consumers.tsv",
+      "--timeout",
+      "2",
+      "--connect-timeout",
+      "1",
+      "--json"
+    ],
+    "probe_stdout": "{\n  \"schema\": \"kama-probe/v1\",\n  \"subcommand\": \"check\",\n  \"registry\": \"/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-lg67x9z5/consumers.tsv\",\n  \"verdict_vocabulary\": \"MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP MODEL_LOADING\",\n  \"exit_codes\": {\n    \"0\": \"every declared consumer reconciles\",\n    \"2\": \"at least one drift\",\n    \"1\": \"probe error\"\n  },\n  \"summary\": {\n    \"registry_rows_evaluated\": 3,\n    \"model_ok\": 1,\n    \"drift\": 2,\n    \"exit\": 2\n  },\n  \"rows\": [\n    {\n      \"id\": \"live-match\",\n      \"consumer_path\": \"/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-lg67x9z5/live-match.json\",\n      \"resolver\": \"json:/baseURL\",\n      \"declared\": \"http://127.0.0.1:47387/v1\",\n      \"resolved_from_file\": \"http://127.0.0.1:47387/v1\",\n      \"file_match\": \"yes\",\n      \"resolve_kind\": \"url\",\n      \"endpoint\": \"http://127.0.0.1:47387/v1\",\n      \"port\": 47387,\n      \"expected_model_id\": \"stories260K\",\n      \"verdict\": \"MODEL_OK\",\n      \"reason\": \"matched\",\n      \"served_model\": \"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\n      \"drift\": false,\n      \"evidence\": \"GET /v1/models -> 200 application/json; charset=utf-8 (Server: llama.cpp) (runtime=llama.cpp; expected=stories260K; reason=matched); GET /health -> 200|application/json; charset=utf-8\",\n      \"notes\": \"lane-owned fixture\"\n    },\n    {\n      \"id\": \"live-mismatch\",\n      \"consumer_path\": \"/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-lg67x9z5/live-mismatch.json\",\n      \"resolver\": \"json:/baseURL\",\n      \"declared\": \"http://127.0.0.1:47387/v1\",\n      \"resolved_from_file\": \"http://127.0.0.1:47387/v1\",\n      \"file_match\": \"yes\",\n      \"resolve_kind\": \"url\",\n      \"endpoint\": \"http://127.0.0.1:47387/v1\",\n      \"port\": 47387,\n      \"expected_model_id\": \"definitely-not-the-model\",\n      \"verdict\": \"MODEL_MISMATCH\",\n      \"reason\": \"served-id-mismatch\",\n      \"served_model\": \"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\n      \"drift\": true,\n      \"evidence\": \"GET /v1/models -> 200 application/json; charset=utf-8 (Server: llama.cpp) (runtime=llama.cpp; expected=definitely-not-the-model; reason=served-id-mismatch); GET /health -> 200|application/json; charset=utf-8\",\n      \"notes\": \"lane-owned fixture\"\n    },\n    {\n      \"id\": \"dead-row\",\n      \"consumer_path\": \"/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-lg67x9z5/dead-row.json\",\n      \"resolver\": \"json:/baseURL\",\n      \"declared\": \"http://127.0.0.1:47399/v1\",\n      \"resolved_from_file\": \"http://127.0.0.1:47399/v1\",\n      \"file_match\": \"yes\",\n      \"resolve_kind\": \"url\",\n      \"endpoint\": \"http://127.0.0.1:47399/v1\",\n      \"port\": 47399,\n      \"expected_model_id\": \"stories260K\",\n      \"verdict\": \"DEAD\",\n      \"reason\": \"connection-refused\",\n      \"served_model\": \"-\",\n      \"drift\": true,\n      \"evidence\": \"rc=7 Failed to connect to 127.0.0.1:47399 after 0 ms: Could not connect to server; GET /v1/models -> 000\",\n      \"notes\": \"lane-owned fixture\"\n    }\n  ]\n}\n",
+    "probe_stderr": "",
+    "probe_exit": 2,
+    "summary": {
+      "registry_rows_evaluated": 3,
+      "model_ok": 1,
+      "drift": 2,
+      "exit": 2
+    },
+    "probe_summary_line": "registry_rows_evaluated=3 model_ok=1 drift=2 exit=2",
+    "child_log": "0.00.000.475 I srv  llama_server: initializing ...\n0.00.003.124 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)\n0.00.003.190 I srv  init_listene: The UI is disabled\n0.00.003.191 I srv  init_listene: Use --ui/--no-ui (or deprecated --webui/--no-webui) to enable/disable\n0.00.003.240 W srv  llama_server: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)\n0.00.004.660 I srv    load_model: loading model '/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf'\n0.00.006.306 W load: bad special token: 'tokenizer.ggml.seperator_token_id' = 4294967295, using default id -1\n0.00.006.308 W load: bad special token: 'tokenizer.ggml.padding_token_id' = 4294967295, using default id -1\n0.00.007.281 I cmn          init: llama threadpool init, n_threads = 1\n0.00.007.758 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 512, kv_unified = 'true'\n0.00.008.873 I srv  llama_server: model loaded\n0.00.008.876 I srv  llama_server: listening on http://127.0.0.1:47387\n0.00.245.698 I srv    operator(): operator(): cleaning up before exit...\n",
+    "port_closed": true,
+    "finding": "verdict three-row reconciliation differs",
+    "exit": 1
+  },
+  {
+    "schema": "round78-live-reconcile/v1",
+    "predicate": "`python3 tools/round78-live-reconcile.py --repo <lane>` prints one `LIVE_RECONCILE rows=3 model_ok=1 mismatch=1 dead=1 probe_exit=2 runtime=llama.cpp served=stories260K` line and exits 0 only when it starts the pinned `llama-server` (binary and model sha256 recorded) as a child on a loopback port that is neither a registered consumer port nor currently listening, writes a three-row scratch registry under its own scratch root \u2014 a row whose expected id normalises to the served id, a row whose expected id does not, and a row naming an unserved port \u2014 runs `bash tools/kama-probe.sh check --registry <scratch>` and observes `MODEL_OK` on the first, `MODEL_MISMATCH` on the second and `DEAD` on the third, requires the live row's probe evidence to name `runtime=llama.cpp` and the served id to be the pinned fixture model, refuses any registered consumer port before probing, tears the child down and writes a receipt carrying the child's exit status; it exits 1 naming `LIVE_RECONCILE_FINDING <class> <detail>` when a verdict differs, when a responder without llama.cpp runtime evidence reaches `MODEL_OK`, or when a registered port was probed, and 2 on could-not-evaluate (pinned binary, model or probe absent; CLI misuse).",
+    "arm": "no-teardown",
+    "argv": [
+      "tools/round78-live-reconcile.py",
+      "--self-test"
+    ],
+    "rows": [
+      {
+        "id": "live-match",
+        "consumer_path": "/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-_x83jcy6/live-match.json",
+        "resolver": "json:/baseURL",
+        "declared": "http://127.0.0.1:35033/v1",
+        "resolved_from_file": "http://127.0.0.1:35033/v1",
+        "file_match": "yes",
+        "resolve_kind": "url",
+        "endpoint": "http://127.0.0.1:35033/v1",
+        "port": 35033,
+        "expected_model_id": "stories260K",
+        "verdict": "MODEL_OK",
+        "reason": "matched",
+        "served_model": "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+        "drift": false,
+        "evidence": "GET /v1/models -> 200 application/json; charset=utf-8 (Server: llama.cpp) (runtime=llama.cpp; expected=stories260K; reason=matched); GET /health -> 200|application/json; charset=utf-8",
+        "notes": "lane-owned fixture"
+      },
+      {
+        "id": "live-mismatch",
+        "consumer_path": "/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-_x83jcy6/live-mismatch.json",
+        "resolver": "json:/baseURL",
+        "declared": "http://127.0.0.1:35033/v1",
+        "resolved_from_file": "http://127.0.0.1:35033/v1",
+        "file_match": "yes",
+        "resolve_kind": "url",
+        "endpoint": "http://127.0.0.1:35033/v1",
+        "port": 35033,
+        "expected_model_id": "definitely-not-the-model",
+        "verdict": "MODEL_MISMATCH",
+        "reason": "served-id-mismatch",
+        "served_model": "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+        "drift": true,
+        "evidence": "GET /v1/models -> 200 application/json; charset=utf-8 (Server: llama.cpp) (runtime=llama.cpp; expected=definitely-not-the-model; reason=served-id-mismatch); GET /health -> 200|application/json; charset=utf-8",
+        "notes": "lane-owned fixture"
+      },
+      {
+        "id": "dead-row",
+        "consumer_path": "/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-_x83jcy6/dead-row.json",
+        "resolver": "json:/baseURL",
+        "declared": "http://127.0.0.1:58311/v1",
+        "resolved_from_file": "http://127.0.0.1:58311/v1",
+        "file_match": "yes",
+        "resolve_kind": "url",
+        "endpoint": "http://127.0.0.1:58311/v1",
+        "port": 58311,
+        "expected_model_id": "stories260K",
+        "verdict": "DEAD",
+        "reason": "connection-refused",
+        "served_model": "-",
+        "drift": true,
+        "evidence": "rc=7 Failed to connect to 127.0.0.1:58311 after 0 ms: Could not connect to server; GET /v1/models -> 000",
+        "notes": "lane-owned fixture"
+      }
+    ],
+    "sha256s": {
+      "server": "b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804",
+      "model": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+    },
+    "ports": {
+      "live": 35033,
+      "dead": 58311,
+      "registered": [
+        8080,
+        34113
+      ]
+    },
+    "scratch": "/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-_x83jcy6",
+    "child_argv": [
+      "/home/vgpnk/.local/opt/llama-b11755/llama-server",
+      "--model",
+      "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "35033",
+      "-c",
+      "512",
+      "-t",
+      "1",
+      "--no-webui"
+    ],
+    "child_pid": 3642520,
+    "models_body": "{\"models\":[{\"name\":\"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\"model\":\"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\"modified_at\":\"\",\"size\":\"\",\"digest\":\"\",\"type\":\"model\",\"description\":\"\",\"tags\":[\"\"],\"capabilities\":[\"completion\"],\"parameters\":\"\",\"details\":{\"parent_model\":\"\",\"format\":\"gguf\",\"family\":\"\",\"families\":[\"\"],\"parameter_size\":\"\",\"quantization_level\":\"\"}}],\"object\":\"list\",\"data\":[{\"id\":\"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\"aliases\":[\"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\"],\"tags\":[],\"object\":\"model\",\"architecture\":{\"input_modalities\":[\"text\"],\"output_modalities\":[\"text\"]},\"created\":1793782046,\"owned_by\":\"llamacpp\",\"meta\":{\"vocab_type\":1,\"n_vocab\":512,\"n_ctx\":512,\"n_ctx_train\":2048,\"n_embd\":64,\"n_params\":292800,\"size\":1171200,\"ftype\":\"(guessed) all F32\"}}]}",
+    "registry": "live-match\t/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-_x83jcy6/live-match.json\tjson:/baseURL\thttp://127.0.0.1:35033/v1\tstories260K\tlane-owned fixture\nlive-mismatch\t/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-_x83jcy6/live-mismatch.json\tjson:/baseURL\thttp://127.0.0.1:35033/v1\tdefinitely-not-the-model\tlane-owned fixture\ndead-row\t/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-_x83jcy6/dead-row.json\tjson:/baseURL\thttp://127.0.0.1:58311/v1\tstories260K\tlane-owned fixture\n",
+    "probe_argv": [
+      "bash",
+      "/home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-probe.sh",
+      "check",
+      "--registry",
+      "/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-_x83jcy6/consumers.tsv",
+      "--timeout",
+      "2",
+      "--connect-timeout",
+      "1",
+      "--json"
+    ],
+    "probe_stdout": "{\n  \"schema\": \"kama-probe/v1\",\n  \"subcommand\": \"check\",\n  \"registry\": \"/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-_x83jcy6/consumers.tsv\",\n  \"verdict_vocabulary\": \"MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP MODEL_LOADING\",\n  \"exit_codes\": {\n    \"0\": \"every declared consumer reconciles\",\n    \"2\": \"at least one drift\",\n    \"1\": \"probe error\"\n  },\n  \"summary\": {\n    \"registry_rows_evaluated\": 3,\n    \"model_ok\": 1,\n    \"drift\": 2,\n    \"exit\": 2\n  },\n  \"rows\": [\n    {\n      \"id\": \"live-match\",\n      \"consumer_path\": \"/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-_x83jcy6/live-match.json\",\n      \"resolver\": \"json:/baseURL\",\n      \"declared\": \"http://127.0.0.1:35033/v1\",\n      \"resolved_from_file\": \"http://127.0.0.1:35033/v1\",\n      \"file_match\": \"yes\",\n      \"resolve_kind\": \"url\",\n      \"endpoint\": \"http://127.0.0.1:35033/v1\",\n      \"port\": 35033,\n      \"expected_model_id\": \"stories260K\",\n      \"verdict\": \"MODEL_OK\",\n      \"reason\": \"matched\",\n      \"served_model\": \"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\n      \"drift\": false,\n      \"evidence\": \"GET /v1/models -> 200 application/json; charset=utf-8 (Server: llama.cpp) (runtime=llama.cpp; expected=stories260K; reason=matched); GET /health -> 200|application/json; charset=utf-8\",\n      \"notes\": \"lane-owned fixture\"\n    },\n    {\n      \"id\": \"live-mismatch\",\n      \"consumer_path\": \"/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-_x83jcy6/live-mismatch.json\",\n      \"resolver\": \"json:/baseURL\",\n      \"declared\": \"http://127.0.0.1:35033/v1\",\n      \"resolved_from_file\": \"http://127.0.0.1:35033/v1\",\n      \"file_match\": \"yes\",\n      \"resolve_kind\": \"url\",\n      \"endpoint\": \"http://127.0.0.1:35033/v1\",\n      \"port\": 35033,\n      \"expected_model_id\": \"definitely-not-the-model\",\n      \"verdict\": \"MODEL_MISMATCH\",\n      \"reason\": \"served-id-mismatch\",\n      \"served_model\": \"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\n      \"drift\": true,\n      \"evidence\": \"GET /v1/models -> 200 application/json; charset=utf-8 (Server: llama.cpp) (runtime=llama.cpp; expected=definitely-not-the-model; reason=served-id-mismatch); GET /health -> 200|application/json; charset=utf-8\",\n      \"notes\": \"lane-owned fixture\"\n    },\n    {\n      \"id\": \"dead-row\",\n      \"consumer_path\": \"/fast/scratch/hyaku/kama-r78/EX03C3Live/trial-_x83jcy6/dead-row.json\",\n      \"resolver\": \"json:/baseURL\",\n      \"declared\": \"http://127.0.0.1:58311/v1\",\n      \"resolved_from_file\": \"http://127.0.0.1:58311/v1\",\n      \"file_match\": \"yes\",\n      \"resolve_kind\": \"url\",\n      \"endpoint\": \"http://127.0.0.1:58311/v1\",\n      \"port\": 58311,\n      \"expected_model_id\": \"stories260K\",\n      \"verdict\": \"DEAD\",\n      \"reason\": \"connection-refused\",\n      \"served_model\": \"-\",\n      \"drift\": true,\n      \"evidence\": \"rc=7 Failed to connect to 127.0.0.1:58311 after 0 ms: Could not connect to server; GET /v1/models -> 000\",\n      \"notes\": \"lane-owned fixture\"\n    }\n  ]\n}\n",
+    "probe_stderr": "",
+    "probe_exit": 2,
+    "summary": {
+      "registry_rows_evaluated": 3,
+      "model_ok": 1,
+      "drift": 2,
+      "exit": 2
+    },
+    "probe_summary_line": "registry_rows_evaluated=3 model_ok=1 drift=2 exit=2",
+    "child_log": "0.00.000.459 I srv  llama_server: initializing ...\n0.00.003.221 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)\n0.00.003.289 I srv  init_listene: The UI is disabled\n0.00.003.290 I srv  init_listene: Use --ui/--no-ui (or deprecated --webui/--no-webui) to enable/disable\n0.00.003.342 W srv  llama_server: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)\n0.00.004.799 I srv    load_model: loading model '/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf'\n0.00.006.482 W load: bad special token: 'tokenizer.ggml.seperator_token_id' = 4294967295, using default id -1\n0.00.006.484 W load: bad special token: 'tokenizer.ggml.padding_token_id' = 4294967295, using default id -1\n0.00.007.484 I cmn          init: llama threadpool init, n_threads = 1\n0.00.008.019 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 512, kv_unified = 'true'\n0.00.009.139 I srv  llama_server: model loaded\n0.00.009.142 I srv  llama_server: listening on http://127.0.0.1:35033\n0.00.249.787 I srv    operator(): operator(): cleaning up before exit...\n",
+    "port_closed": true,
+    "finding": "no-teardown child exit status absent",
+    "exit": 1
+  }
+]

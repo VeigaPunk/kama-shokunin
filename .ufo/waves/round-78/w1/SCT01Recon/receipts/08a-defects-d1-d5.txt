@@ -1,0 +1,55 @@
+# D1 gate registry row
+$ awk 'NR==309' <lane>/SKILL.md | grep -o 'nine arms|arms=9|pass=22|round77-instruments|round76-instruments'
+nine arms
+round77-instruments
+round76-instruments
+nine arms
+arms=9
+pass=22
+exit=0
+$ git -C <lane> diff --stat -- SKILL.md
+ SKILL.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+exit=0
+
+# D2 gate tip run
+$ ls <lane>/.ufo/waves/round-78/measured/after
+ls: cannot access '/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-78/measured/after': No such file or directory
+exit=2
+$ find <lane>/.ufo/waves/round-78 -name '*gate*' -o -name '*pre-report*'
+exit=0
+$ git -C <lane> show 6c1550a1:.ufo/waves/round-77/measured/after/gate-run.out | head -2
+# rev=f9b0ab6c672ec476a4ca58ebc27c41b49ec4bfe7
+# cmd: TMPDIR=/fast/scratch/hyaku/kama-r77/gate python3 tools/pre-report-gate.py --round 77 --tip master
+exit=0
+
+# D3 append-exempt-class capability row
+$ grep -n 'append-exempt-class' <lane>/SCORECARD.md
+162:| append-exempt-class | Account every audit event once and preserve a multi-register introduction cutoff | `tools/round76-append-exempt.py` | 76 |
+4188:| C3 — every append-only audit event is accounted for exactly once (register row, exempt-head class row, restoration, disclosure) and the introduction cutoff cannot be re-opened | freshness (held 8; capability `append-exempt-class`) | before `rev=b06cc612`: audit `events=232 restored=91 unrestored=53 ungraded=83 disclosed=5`, register grading 53 (`measured/before/c3-audit.out`, `measured/before/c3-register.out`); after `rev=c2aa7fb2`: exit 1 `APPEND_EXEMPT events=233 register=53 exempt=47 restored=91 disclosed=5 unaccounted=37 cutoff=10f37171 introductions=2 rotation_safe=1` (`measured/after/append-exempt.out`) — **MISS against the frozen line `exempt=83 unaccounted=0 introductions=1`** | `python3 tools/round76-append-exempt.py --repo .` | the strict frozen class rule admits 47 rows; 31 events are wrong-class (the audit's `ungraded` bucket also carries A-row/only-prefix carveouts and exposes no class key) and 5 postdate the earliest register introduction — both are the frozen predicate's own contradictions, not counter slack |
+4241:| append-exempt-class | Account every append-only audit event once — register row, strict exempt-head class row, restoration, disclosure — and preserve a multi-register introduction cutoff | `tools/round76-append-exempt.py` | 76 |
+4250:| C3 — every append-only audit event is accounted for exactly once (register row, exempt-head class row, restoration, disclosure) and the introduction cutoff cannot be re-opened | freshness (held 8; capability `append-exempt-class`) | before `rev=b06cc612`: audit `events=232 restored=91 unrestored=53 ungraded=83 disclosed=5`, register grading 53 (`measured/before/c3-audit.out`, `c3-register.out`); after `rev=c2aa7fb2`: exit 1 `APPEND_EXEMPT events=233 register=53 exempt=47 restored=91 disclosed=5 unaccounted=37 cutoff=10f37171 introductions=2 rotation_safe=1` (`measured/after/append-exempt.out`) — **MISS against the frozen line `exempt=83 unaccounted=0 introductions=1`** | `python3 tools/round76-append-exempt.py --repo .` | the strict frozen class rule admits 47 rows; 31 events are wrong-class (the audit's `ungraded` bucket also carries A-row/only-prefix carveouts and exposes no class key) and 5 postdate the earliest register introduction — both are the frozen predicate's own contradictions, not counter slack |
+4348:| append-exempt-class | Account every append-only audit event once — register row, strict exempt-head class row, restoration, disclosure — and preserve a multi-register introduction cutoff | `tools/round76-append-exempt.py` | 76 |
+exit=0
+$ sed -n '162p;4241p;4348p' <lane>/SCORECARD.md | cut -c1-220
+| append-exempt-class | Account every audit event once and preserve a multi-register introduction cutoff | `tools/round76-append-exempt.py` | 76 |
+| append-exempt-class | Account every append-only audit event once — register row, strict exempt-head class row, restoration, disclosure — and preserve a multi-register introduction cutoff | `tools/round76-append-exe
+| append-exempt-class | Account every append-only audit event once — register row, strict exempt-head class row, restoration, disclosure — and preserve a multi-register introduction cutoff | `tools/round76-append-exe
+exit=0
+
+# D4 coverage-map rows
+$ grep -n 'baseline-receipt-binding\|register-cutoff-split' <lane>/corpus/README.md
+1728:| `corpus/knowledge/baseline-receipt-binding.md` | Round-77 baseline receipt introduction ancestry and introduction-to-tip byte identity, distinguished from ordinary at-the-tip receipt binding | 78 |
+1729:| `corpus/knowledge/register-cutoff-split.md` | Round-77 independent register introductions, audited-event ancestry, exclusive carriage classes and rotation rejection; policy documentation is not counter-execution evidence | 78 |
+exit=0
+$ git -C <lane> diff --stat -- corpus/README.md
+ corpus/README.md | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+exit=0
+
+# D5 register-cutoff-split source
+$ head -1 <lane>/corpus/knowledge/register-cutoff-split.md
+source: own-work — plans/round-77-claims.md:84-138 (frozen C2 design); tools/round76-append-exempt.py:76-94,97-174 (prior shared cutoff); tools/append-only-audit.py:9-14,67-68,477-486,512-532,719-722 (carriage and contract regions). No external source is asserted for lane policy.
+exit=0
+$ grep -n 'source-correction' <lane>/corpus/knowledge/register-cutoff-split.md
+exit=1

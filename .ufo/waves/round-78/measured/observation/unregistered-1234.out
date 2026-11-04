@@ -1,0 +1,10 @@
+# command: bash tools/kama-probe.sh check --port 1234 --expect '*' --id host-unregistered --timeout 3 --connect-timeout 1
+# captured: 2026-11-04 by L1 (kama r78); read-only probe of an unregistered host listener
+# listener: LISTEN 0 512 127.0.0.1:1234 0.0.0.0:* users:(("llama-server",pid=1505,fd=18))
+id                | consumer | declared                 | verdict  | reason            | served_model                                           | evidence
+host-unregistered | -        | http://127.0.0.1:1234/v1 | MODEL_OK | expected-wildcard | LFM3-1.7B,LFM3-1.7B-Uncensored,LFM3-Omni-2B,LFM3-VL-2B | file=cli-override via cli-override @1234; GET /v1/models -> 200 application/json; charset=utf-8 (Server: llama.cpp) (runtime=llama.cpp; expected=*; reason=expected-wildcard); GET /health -> 200|application/json; charset=utf-8
+registry_rows_evaluated=1 model_ok=1 drift=0 exit=0
+EXIT=0
+# served ids:
+LFM3-1.7B, LFM3-1.7B-Uncensored, LFM3-Omni-2B, LFM3-VL-2B
+LFM3-1.7B, LFM3-1.7B-Uncensored, LFM3-Omni-2B, LFM3-VL-2B (served ids, read from /v1/models)

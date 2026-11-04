@@ -1,0 +1,52 @@
+$ PYTHONDONTWRITEBYTECODE=1 python3 three.py   # audit event fields + derived exempt sections
+{"commit": "05a039805ba5dcca3e14091a447c88c07c971664", "deleted": 3, "ungraded": 3, "graded": 0, "permitted": 0, "status": "ungraded", "undisclosed": [], "parents": ["## Axes", "## Capabilities", "## Planned"], "eligible": true}
+{"commit": "0fca5e18d408ab92717bbd9e26e7a4b4a1bcd7ac", "deleted": 2, "ungraded": 2, "graded": 0, "permitted": 0, "status": "ungraded", "undisclosed": [], "parents": ["## Axes"], "eligible": true}
+{"commit": "21458716fbf3961312455ff78a12c9ca3a241a9e", "deleted": 1, "ungraded": 1, "graded": 0, "permitted": 0, "status": "ungraded", "undisclosed": [], "parents": ["## Planned"], "eligible": true}
+exit=0
+
+$ python3 -c 'json.load(audit-base.json) events for the three commits'
+{"commit": "05a039805ba5dcca3e14091a447c88c07c971664", "deleted": 3, "disclosed": 0, "file": "SCORECARD.md", "graded": 0, "held_at_to": 0, "permitted": 0, "restored_best": null, "restored_by": null, "restored_max": 0, "status": "ungraded", "undisclosed": [], "ungraded": 3}
+{"commit": "0fca5e18d408ab92717bbd9e26e7a4b4a1bcd7ac", "deleted": 2, "disclosed": 0, "file": "SCORECARD.md", "graded": 0, "held_at_to": 0, "permitted": 0, "restored_best": null, "restored_by": null, "restored_max": 0, "status": "ungraded", "undisclosed": [], "ungraded": 2}
+{"commit": "21458716fbf3961312455ff78a12c9ca3a241a9e", "deleted": 1, "disclosed": 0, "file": "SCORECARD.md", "graded": 0, "held_at_to": 0, "permitted": 0, "restored_best": null, "restored_by": null, "restored_max": 0, "status": "ungraded", "undisclosed": [], "ungraded": 1}
+exit=0
+
+$ sed -n '96,110p' <lane>/plans/round-78-claims.md   # frozen C2 predicate phrase
+- Counting command: `python3 tools/round78-selfrecord-round77.py --repo .`
+- Before → after: exit 1 `SELFRECORD_R77_ENUM claims=6 stale=4` → exit 0
+  `SELFRECORD_R77 claims=6 mismatches=0 corrected=4 unbacked=0`.
+- Kill rule: `cheat-constant` (a counter printing the target line regardless of tree state),
+  `stale-uncorrected` (one sealed value reverted in a scratch clone), `correction-wrong-value`
+  (a correction stating a value that does not re-derive), `unbacked` (a correction naming the
+  right value with no derivation of the old one), `pointer-wrong` (F4 pointing at §Mistakes 4)
+  and `duplicate-correction` must each be red.
+- Control that skips the claimed work: the landed counter on a scratch clone with the four
+  repairs reverted prints `SELFRECORD_R77 claims=6 mismatches=4 corrected=0 unbacked=0` and exits
+  1 (`measured/control/c1-norepair.out`). A do-nothing round cannot reach the after line.
+
+## C2 — freshness: every base audit event is accounted once at the live tip, and register rows outside the audited population change no bucket
+
+Motivating evidence, measured at the base revision before freeze (`before/c2-append.out`): the
+exit=0
+
+$ sed -n '124,136p' <lane>/plans/round-78-claims.md   # C2 scope rulings
+> accepted=<a> exempt=<x> permitted=<p> out_of_region=<o> restored=<r> disclosed=<d>
+> unaccounted=0 introductions=1/1 rotation_safe=1` line and exits 0 only when every deletion
+> event the append-only audit reports at that revision sits in exactly one of the six buckets
+> (their sum equals `events`), each bucket row is committed at the audited revision or earlier,
+> register rows naming an event commit that is not ancestral to the audited revision are counted
+> on a separate `APPEND_REGISTERS_OUT_OF_POPULATION rows=<n>` line and change no bucket, the two
+> register files' sha256 prefixes are printed on a separate `APPEND_REGISTERS_REGISTERS
+> exempt=<hex12> accepted=<hex12>` line, and rotation detection rejects a reintroduced path
+> carrying new rows; it exits 1 naming `APPEND_REGISTERS_FINDING
+> <missing-row|wrong-count|wrong-class|inside-region|out-of-population|rotation-reintroduced|uncommitted>
+> <detail>` otherwise, and 2 on could-not-evaluate.
+
+- Scope rulings declared here, before data: (a) admissibility of an **event** is ancestry to the
+exit=0
+
+$ tail -4 <lane>/registry/append-only-exempt.tsv   # schema example
+461d2adbf2b3fe596a53cb392e2bc6e82af79bfb	SCORECARD.md	exempt-head	1	## Axes	round-76 head re-derivation
+661622b50b6b49310321e8cb99618010cf65bb75	SCORECARD.md	exempt-head	1	## Axes	round-76 head re-derivation
+417bbf811f2968a4567d3d3159ccf22b5d171e4d	SCORECARD.md	exempt-head	1	## Saturation	round-76 head re-derivation
+c1ae92d56f61786c22924553038578f23971875e	SCORECARD.md	exempt-head	2	## Axes	round-76 head re-derivation
+exit=0

@@ -1,0 +1,31 @@
+$ python3 tools/append-only-audit.py --repo . --to c62ffd3a --json | jq .summary   # audit ground
+audit_exit=1
+{"bad_declarations": 0, "bad_disclosures": 0, "binary": 0, "commits": 628, "disclosed": 5, "disclosed_lines": 10, "events": 248, "files": 150, "partial": 0, "permitted_lines": 634, "regressed": 0, "restored": 99, "ungraded": 91, "ungraded_lines": 361, "unmatched": 0, "unrestored": 53, "vanished": 0}
+
+$ PYTHONDONTWRITEBYTECODE=1 python3 count_events.py   # independent re-implementation
+commits 628 merge_commits 2
+independent_events 248 event_files 34
+top [('SCORECARD.md', 127), ('corpus/SOURCES.md', 37), ('LOG.md', 18), ('corpus/README.md', 8), ('corpus/lessons/round-72.md', 5), ('corpus/knowledge/consumer-registry.md', 4)]
+exit=0
+
+$ git -C <lane> show <c> --stat --format='%H %s'   # the three unaccounted commits
+05a039805ba5dcca3e14091a447c88c07c971664 round-77: hold the superseded banner, province instrument row, planned round 78, and the pass=22 gate tally
+
+ PROVINCE.md  |  2 +-
+ SCORECARD.md | 26 +++++++++++++++++++++++---
+ 2 files changed, 24 insertions(+), 4 deletions(-)
+exit=0
+
+0fca5e18d408ab92717bbd9e26e7a4b4a1bcd7ac round-77: re-anchor the operability tally and the coverage digest after the province and gate edits
+
+ SCORECARD.md | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+exit=0
+
+21458716fbf3961312455ff78a12c9ca3a241a9e round-77: record-citation repairs (lesson holds the superseded sentence; planned item names no bare receipt dir)
+
+ SCORECARD.md               |  2 +-
+ corpus/lessons/round-77.md | 11 +++++++++--
+ 2 files changed, 10 insertions(+), 3 deletions(-)
+exit=0
+
