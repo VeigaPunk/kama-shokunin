@@ -3326,3 +3326,15 @@ decide a model-API listener), so the measured tip census is **297** rows (A 282 
 queued 8, rejected 22; `sources-census.sh validate` exit 0). The knowledge entry
 `unregistered-class-second-engine` carries a `## Round-80 addendum` citing S557. No claim's predicate,
 counter or target moves.
+
+## Round-80 erratum 2 — after the wave's attack seats (appended; the entry above is not rewritten)
+
+RV01 attacked the C1 counter (14 attacks, 13 catches) and found the correction container unenforced: a
+`corrected F<n>` block outside `## Corrections` was read as a correction. CR02 attacked the class-engine
+audit and found it accepted a receipt whose own engine token named another engine (it only required the
+row's engine name to appear somewhere in the text). Both are fixed before the report
+(`corrections()` reads the `## Corrections` section only; `audit()` requires the receipt's own first
+`engine=`/`engine:` token to equal the row's engine) and each fix is red-capable in a new selftest arm:
+`SELFRECORD_R79_SELFTEST pass=11 fail=0` (was 9) and `OLLAMA_CENSUS_SELFTEST pass=12 fail=0` (was 6). The
+v1→v2 C1 evolution RV01 also names is freeze divergence 4 (F2 sealed-bound), recorded in
+`corpus/lessons/round-80.md`. No claim predicate, counter target or control moves.

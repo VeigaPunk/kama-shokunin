@@ -45,6 +45,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import os
 import shutil
 import socket
@@ -309,7 +310,10 @@ def audit(repo: Path, register: str, tip: str) -> dict:
         if "class_missing=0" not in text:
             findings.append(f"CLASS_ENGINES_FINDING receipt-red {engine} {receipt}")
             continue
-        if engine not in text:
+        # Attack CR02 t5-fused (round 80): a receipt is this engine's only when its own first
+        # `engine=` / `engine:` token names it; a stray mention elsewhere proves nothing.
+        token = re.search(r"engine[=:]\s*([A-Za-z0-9._-]+)", text)
+        if token is None or token.group(1) != engine:
             findings.append(f"CLASS_ENGINES_FINDING receipt-names-other-engine {engine} {receipt}")
             continue
         verified += 1
@@ -340,6 +344,49 @@ def selftest() -> int:
     case("owner-not-ollama", green_yes, doc("no", {"unregistered": 1}, owner="python3(pid=2)"), 1)
     case("verdict-not-model-ok", green_yes, doc("no", {"unregistered": 1}, verdict="FOREIGN_SERVICE"), 1)
     case("counts-do-not-move", green_yes, doc("no", {"governed": 1, "unregistered": 0}), 1)
+    def audit_case(name, register_rows, receipts, want, finding=None):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "registry").mkdir()
+            (root / "tools").mkdir()
+            (root / "tools/round79-unregistered-census.py").write_text("")
+            (root / "tools/round80-ollama-census.py").write_text("")
+            for rel, text in receipts.items():
+                target = root / rel
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(text)
+            if register_rows is not None:
+                heads = [REGISTER_HEADER] + register_rows
+                (root / REGISTER).write_text("\n".join(heads) + "\n")
+            result = audit(root, REGISTER, "HEAD")
+            got = result["exit"]
+            ok = got == want and (finding is None or any(finding in f for f in result["findings"]))
+            cases.append((name, ok, got, want, result["findings"][:2]))
+
+    llama = ("# engine: llama.cpp\nUNREGISTERED_CENSUS port=43061 unregistered=1 governed=1 "
+             "class_missing=0 rows=1\n")
+    ollama = ("OLLAMA_CENSUS port=52569 engine=ollama unregistered=1 governed=1 class_missing=0\n")
+    good_reg = [
+        "llama.cpp\ttools/round79-unregistered-census.py\treceipts/llama.out\t2026-11-04",
+        "ollama\ttools/round80-ollama-census.py\treceipts/ollama.out\t2026-11-04"]
+    both = {"receipts/llama.out": llama, "receipts/ollama.out": ollama}
+    audit_case("audit-green", good_reg, both, 0)
+    audit_case("audit-missing-receipt", good_reg,
+               {"receipts/llama.out": llama}, 1, "missing-receipt")
+    audit_case("audit-receipt-red", good_reg,
+               {"receipts/llama.out": llama,
+                "receipts/ollama.out": ollama.replace("class_missing=0", "class_missing=1")},
+               1, "receipt-red")
+    audit_case("audit-fused-receipt",
+               ["llama.cpp\ttools/round79-unregistered-census.py\treceipts/llama.out\t2026-11-04",
+                "ollama\ttools/round80-ollama-census.py\treceipts/llama.out\t2026-11-04"],
+               {"receipts/llama.out": llama + "note: an ollama line mentioned here\n"},
+               1, "receipt-names-other-engine")
+    audit_case("audit-one-engine",
+               ["llama.cpp\ttools/round79-unregistered-census.py\treceipts/llama.out\t2026-11-04",
+                "llama.cpp\ttools/round79-unregistered-census.py\treceipts/llama.out\t2026-11-04"],
+               {"receipts/llama.out": llama}, 1, "one-engine")
+    audit_case("audit-register-absent", None, {}, 2)
     failed = 0
     for name, ok, got, want, findings in cases:
         failed += not ok

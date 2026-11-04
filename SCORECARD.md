@@ -4788,6 +4788,12 @@ warnings pre-existing, one pre-existing `W01 S481` warning); filtered knowledge 
 (`unregistered-class-second-engine`); one `corpus/README.md` coverage row; `corpus/QUALITY.md`
 gains KQ132 from the mined `self-record-states-intent` mistake.
 Appended correction (inserted after `4ced97ae`): S557 (Ollama's OpenAI-compatible `/v1/models` at v0.40.11, the route the probe actually reads) was opened and added after the first census above, so the measured tip census is **297** rows (A 282 / B 11 / C 4; mined 267, queued 8, rejected 22) and the entry's `## Round-80 addendum` cites it; the 296 figure is the `28debbcf` measurement.
+Attack hardening (after the wave, before the report): RV01 found that C1's correction container was
+unenforced (a block outside `## Corrections` was read) and CR02 found the class-engine audit accepted a
+receipt whose own engine token named another engine. Both are fixed — `corrections()` reads the
+`## Corrections` section only, `audit()` requires the receipt's own first `engine=`/`engine:` token to
+name the row's engine — and both fixes are red-capable: two new selftest arms (`pass=11`) and six audit
+arms (`pass=12`). The C1/C2/C3 tallies above are the post-hardening measurements.
 
 ### What the counters do not show
 

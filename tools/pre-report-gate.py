@@ -21,9 +21,11 @@ round 74 adds arm 7 and moves the arm count 6 -> 7):
 The round-71 receipt -- `PRE_REPORT round=71 arms=5 failed=0 uncommitted=0` -- is that
 round's five-arm measurement and stays readable as one: five arms is the population round
 71 had. From round 72 on the gate printed `arms=6`; from round 74 on it printed `arms=7`
-from round 75 on it printed `arms=8`, and from round 76 on it prints `arms=9`. A five-arm line
+from round 75 on it printed `arms=8`, from round 76 through round 78 it printed `arms=9`,
+and from round 79 on it prints `arms=10`. A five-arm line
 can only be a round-71 record, a six-arm line a round-72/73 record, a seven-arm line a
-round-74 record, an eight-arm line a round-75 record.
+round-74 record, an eight-arm line a round-75 record, and a nine-arm line a
+round-76/77/78 record.
 
 Arms, in fixed order, every one run with cwd = --repo:
   1 selfdesc          tools/round42-selfdesc-reconcile.py      --repo <repo> --tip <tip>
@@ -99,7 +101,7 @@ finding; arm 7 fails when any of its three counters is absent or exits non-zero)
 Because `-uall` expands untracked directories into individual files, one record is one
 file -- `.ufo/waves/round-70` at the round-71 start carries 26 files (the freeze's
 count), which the plain-status form collapses into 14 entries. Exit: 0 iff
-`failed == 0 and uncommitted == 0` across all nine arms, else 1. Exit 2 is reserved for CLI
+`failed == 0 and uncommitted == 0` across all ten arms, else 1. Exit 2 is reserved for CLI
 misuse (missing --round, --repo not a directory) and for an unevaluable selftest fixture; a
 scored run never exits 2, it names the failing arms and exits 1. Exit 3 is reserved for
 re-entry: a gate whose environment already carries PRE_REPORT_GATE_DEPTH >= 1 refuses to
@@ -136,7 +138,8 @@ Instrument wiring
   resolves its three counters the same way and the selftest injects one stub per
   counter, so the arm's composition, its fail-closed absence handling and its
   per-counter detail are all exercised without the real round-74 modules being present.
-  Arm 9 resolves the three round-76 counters the same way, one stub per counter.
+  Arm 9 (`round77-instruments`) and arm 10 (`round78-instruments`) resolve their
+  instruments the same way, one stub per counter.
 
 Selftest (--selftest; fixtures under --work, or a fresh TMPDIR tempdir)
   (a) green fixture                              -> exit 0, failed=0 uncommitted=0
@@ -146,7 +149,7 @@ Selftest (--selftest; fixtures under --work, or a fresh TMPDIR tempdir)
   (e) byte-changed declared path (SCORECARD.md)  -> exit 1, worktree-landing FAIL (DIRTY)
   (f) CRLF-translated declared path (SKILL.md)   -> exit 1, worktree-landing FAIL (DIRTY)
   (g) red round-scope stub (findings=1)          -> exit 1, round-scope FAIL, finding named
-  (h) green round-scope stub                     -> exit 0, verdict `arms=6`
+  (h) green round-scope stub                     -> exit 0, verdict `arms=10`
   (i) real round-scope counter, clean fixture    -> exit 0, `ROUND_SCOPE_V2 ... findings=0`
   (j) real counter, dirty linked worktree (A5)   -> exit 1, round-scope FAIL naming `worktree`
   (k) real counter, ignored file under round-71  -> exit 1, round-scope FAIL naming
@@ -154,19 +157,19 @@ Selftest (--selftest; fixtures under --work, or a fresh TMPDIR tempdir)
   (l) arm-5 verdict selector                     -> picks `ROUND_SCOPE_V2 ` over a later line
   (m) red canon stub inside arm 7                -> exit 1, round74-v2 FAIL naming
                                                     SELFDESC_CANON_V2_FINDING
-  (n) green arm-7 stubs                          -> exit 0, verdict `arms=9`
+  (n) green arm-7 stubs                          -> exit 0, verdict `arms=10`
   (o) drift-v2 stub deleted                      -> exit 1, round74-v2 FAIL naming the
                                                     absent round74-province-host-drift.py
   (p) red pins stub inside arm 8                 -> exit 1, round75-instruments FAIL naming
                                                     INTERPRETATION_PINS_FINDING
-  (q) green arm-8 stubs                          -> exit 0, verdict `arms=9`
+  (q) green arm-8 stubs                          -> exit 0, verdict `arms=10`
   (r) append-accepted stub deleted               -> exit 1, round75-instruments FAIL naming
                                                     the absent round75-append-accepted.py
-  (s) red self-record stub inside arm 9          -> exit 1, round76-instruments FAIL naming
-                                                    SELFRECORD_FACT
-  (t) green arm-9 stubs                          -> exit 0, verdict `arms=9`
-  (u) append-exempt stub deleted                 -> exit 1, round76-instruments FAIL naming
-                                                    the absent round76-append-exempt.py
+  (s) red citation-baseline stub inside arm 9    -> exit 1, round77-instruments FAIL naming
+                                                    round77-citation-baseline.py exit=1 FAIL
+  (t) green arm-9 stubs                          -> exit 0, verdict `arms=10`
+  (u) selfrecord-round76 stub deleted            -> exit 1, round77-instruments FAIL naming
+                                                    the absent round77-selfrecord-round76.py
   Prints PASS/FAIL per arm and `PRE_REPORT_SELFTEST pass=<n> fail=0`; exit 0 iff every
   arm passed. A fixture tree that cannot be built or verified is a could-not-evaluate
   (exit 2), never a pass. The fixture commits into its own throwaway repository only,
@@ -178,15 +181,17 @@ build), .ufo/waves/round-72/w1/EX03GateArm6/ (six-arm amendment),
 .ufo/waves/round-74/w1/EX04GateArm7/ (arm-7 `round74-v2` amendment, applied from
 arm7.patch).
 
-Round 77 retires `round76-append-exempt.py` from arm 9 (its shared-cutoff rule is red by
-construction once the exempt register grows; arm 10's `round77-append-registers` supersedes it)
-and adds arm 10, `round77-instruments`, after all existing arms. It runs
+Round 77 retires the whole `round76-instruments` arm (its `round76-append-exempt.py`
+sub-check's shared-cutoff rule is red by construction once the exempt register grows and
+`round77-append-registers` supersedes that population; its `receipt-scope` and
+`selfrecord-facts` counters are retired with it) and adds `round77-instruments` after the
+round-75 arm. It runs
 `round77-citation-baseline.py --selftest`, `round77-append-registers.py --selftest`,
 then `round77-selfrecord-round76.py --selftest`, using the same per-process timeout.
 Each must exit 0 and end with a `*_SELFTEST pass=N fail=0` line. Missing scripts,
 timeouts, nonzero exits and missing/malformed final summaries fail closed, naming the
-instrument. Scored verdicts now carry `arms=10`; historical nine-arm receipts above
-retain their original meaning. One composite wiring selftest extends the 21 existing
+instrument. From round 79 on, scored verdicts carry `arms=10`; historical nine-arm receipts
+above retain their original meaning. One composite wiring selftest extends the 21 existing
 cases to 22 without changing their individual pass counts.
 
 Round 79 adds arm 10, `round78-instruments`, after all existing arms: it runs the three
@@ -218,8 +223,8 @@ PREDICATE = (
     "round-74 v2 counters arm 7 composes (selfdesc canon, receipt-claim binding, "
     "province host drift), the three round-75 counters arm 8 composes (interpretation "
     "pins, survivor probe, append-accepted accounting), the three round-77 counter "
-    "selftests arm 10 composes (citation baseline, append registers, self-record round 76) "
-    "and the three round-78 instrument selftests arm 11 composes "
+    "selftests arm 9 composes (citation baseline, append registers, self-record round 76) "
+    "and the three round-78 instrument selftests arm 10 composes "
     "(round78-selfrecord-round77, round78-append-registers, round78-live-reconcile; each "
     "must end with its own `<NAME>_SELFTEST pass=N fail=0` summary) are all green AND no "
     "path under `.ufo/waves/round-<N>/` is uncommitted; it exits 1 naming every failed arm "
@@ -1211,7 +1216,7 @@ def run_selftest(args) -> int:
         print("PASS round77-instruments")
 
 
-    # (v) red round-78 stub inside arm 11: one failing instrument fails the whole arm.
+    # (v) red round-78 stub inside arm 10: one failing instrument fails the whole arm.
     r78_red = tools / "round78-append-registers.py"
     r78_red.write_text(
         "import sys\n"
@@ -1227,7 +1232,7 @@ def run_selftest(args) -> int:
         "assert sys.argv[1:] == ['--selftest']\n"
         "print('APPEND_REGISTERS_SELFTEST pass=7 fail=0')\n", encoding="utf-8")
 
-    # (w) a deleted round-78 instrument fails arm 11 closed, naming the absent module.
+    # (w) a deleted round-78 instrument fails arm 10 closed, naming the absent module.
     r78_missing = tools / "round78-selfrecord-round77.py"
     r78_missing.unlink()
     check("round78-instruments-missing", evaluate(repo, round_no, "master", str(tools)), 1, 1, 0,
@@ -1246,7 +1251,7 @@ def run_selftest(args) -> int:
           render_has="round78-instruments exit=0 ok",
           want_line="PRE_REPORT round=70 arms=10 failed=0 uncommitted=0")
 
-    # (y) a malformed summary (or another instrument's prefix) fails arm 11 closed.
+    # (y) a malformed summary (or another instrument's prefix) fails arm 10 closed.
     r78_malformed = tools / "round78-live-reconcile.py"
     r78_malformed.write_text(
         "import sys\n"

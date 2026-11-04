@@ -229,8 +229,11 @@ def corrections(repo: Path, tip: str, lesson: str) -> list[dict[str, str]]:
     text = show(repo, tip, lesson)
     if text is None:
         return []
+    # Attack RV01 a8 (round 80): a block outside `## Corrections` is not a correction. The
+    # container is the contract; the round-80 lesson's other sections quote the blocks in prose.
+    fenced = block(text, "Corrections")
     blocks = []
-    for m in CORRECTION.finditer(text):
+    for m in CORRECTION.finditer(fenced):
         blocks.append({"fact": m.group(1), "old": m.group(2), "new": m.group(3),
                        "at": m.group(4), "date": m.group(5)})
     return blocks
@@ -472,6 +475,16 @@ def selftest() -> int:
     run_case("duplicate-block", m_duplicate, 1)
     run_case("new-not-rederived", m_new_not_rederived, 1, "unbacked", "1")
     run_case("worktree-does-not-refute", m_worktree_shadow, 0, "mismatches", "0")
+    def m_outside_section(root, sealed):
+        (root / LESSON).write_text(fixture_lesson(sealed).replace("## Corrections", "## Notes"))
+        _commit(root, "blocks-outside-corrections")
+
+    def m_at_real_ancestor(root, sealed):
+        (root / LESSON).write_text(fixture_lesson(sealed).replace(f"at={sealed}", f"at={sealed}0"))
+        _commit(root, "at-not-a-revision")
+
+    run_case("correction-outside-section", m_outside_section, 1, "mismatches", "3")
+    run_case("at-not-a-revision", m_at_real_ancestor, 1, "unbacked", "3")
     run_case("no-corrections-control", m_corrected, 1, "mismatches", "3", use_corrections=False)
     failed = 0
     for name, ok, got, want, summary, findings in cases:
