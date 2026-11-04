@@ -1745,3 +1745,12 @@ that refuses to stay silent on an undated in-scope closure.
 | Round-83 selfrecord | gate: `python3 tools/round84-selfrecord-round83.py --repo .` | 0 eight facts answered; 1 mismatches/unbacked; 2 unavailable evidence | `--selftest` → `SELFRECORD_R83_SELFTEST pass=16 fail=0` in seat receipt; six stale/two holding facts; `--no-corrections` is red control | read-only committed blobs; selftest `--work`/TMPDIR |
 
 Subject-round note binding: `python3 tools/round81-append-debt.py --selftest` extends the suite with mismatch and unresolved-subject arms. A resolved event subject round must equal the note deletion round; unresolved subjects leave existing grading unchanged. No endpoint is contacted by these instruments.
+
+## Round-85 measurement registry (owner: kama)
+
+| Name | Kind / entry command | Exit map | Selftest / pinned values | Write scope |
+|---|---|---|---|---|
+| Authority-cell finite measurement | gate: `python3 .ufo/waves/round-85/count.py c1 --repo . --rev master --work /fast/scratch/hyaku/kama-r85/L1` | 0 two selected textual cells match; 1 mismatch; unexpected errors are could-not-evaluate, not clean | external controls: `python3 .ufo/waves/round-85/w1/out/EX02AuthorityControls/authority-controls.py --repo . --work /fast/scratch/hyaku/kama-r85/L1`; frozen spec and counter at7d3c987c; **falsified** by fenced/comment shadow cells, not general Markdown authority verification | committed reads; control fixtures only in scratch |
+| Delivered debt mutant measurement | gate: `python3 .ufo/waves/round-85/count.py c2 --repo . --rev master --work /fast/scratch/hyaku/kama-r85/L1` | 0 three declared mutants produce accepted semantic-failure output; 1 survivor/invalid | pristine `python3 tools/round81-append-debt.py --selftest`; three mutation replacements pinned in frozen counter; classifier accepts forged unrelated-note summaries, so actual owning-arm receipts must be independently inspected | trusted committed Python execution in removed scratch; not a security sandbox |
+
+Round85 adds equality, above-subject direction and exact-summary coverage arms to the existing debt selftest, preserving grade behavior. Historical round84 token-only selfrecord and documentary-source-origin limitations remain explicit; no generic mutation/Markdown capability or serving-runtime readiness is acquired. The finite authority gate has external fixture controls, not an added self-invocation flag: frozen counter bytes remain unchanged.

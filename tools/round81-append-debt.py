@@ -618,6 +618,42 @@ def selftest() -> int:
             subject_rounds=lambda commit: None)
     cases.append(("note-subject-unresolvable", r, 0, None))
     cases.extend(late_path_selftests())
+    # Round-85 controls bind deletion to the resolved subject, not the accepting round.
+    r = run(frozen, [late_row(B, "SCORECARD.md", H2,
+                              note="round-81 accepts round-79 subject; accepted history")],
+            subject_rounds=lambda commit: 79)
+    cases.append(("note-deletion-equals-subject", r, 0, None))
+    r = run(frozen, [late_row(B, "SCORECARD.md", H2,
+                              note="round-81 accepts round-80 subject; accepted history")],
+            subject_rounds=lambda commit: 79)
+    cases.append(("note-deletion-above-subject", r, 1, "note-wrong-deletion-round"))
+    r = run(frozen, [late_row(B, "SCORECARD.md", H2,
+                              note="round-81 accepts round-78 subject; accepted history")],
+            subject_rounds=lambda commit: 79)
+    cases.append(("note-subject-exact-summary", r, 1, "note-wrong-deletion-round"))
+    # A binding finding must stop the row before it can accept the event.
+    expected_summaries = {
+        "note-deletion-equals-subject": {
+            "events": 2, "accepted": 1, "late": 1, "pending": 1,
+            "unaccepted": 0, "bad_rows": 0, "bad_declarations": 0,
+            "out_of_population": 0,
+        },
+        "note-deletion-above-subject": {
+            "events": 2, "accepted": 1, "late": 0, "pending": 1,
+            "unaccepted": 1, "bad_rows": 1, "bad_declarations": 0,
+            "out_of_population": 0,
+        },
+        "note-subject-exact-summary": {
+            "events": 2, "accepted": 1, "late": 0, "pending": 1,
+            "unaccepted": 1, "bad_rows": 1, "bad_declarations": 0,
+            "out_of_population": 0,
+        },
+    }
+    expected_findings = {
+        "note-deletion-equals-subject": [],
+        "note-deletion-above-subject": ["note-wrong-deletion-round", "count-short"],
+        "note-subject-exact-summary": ["note-wrong-deletion-round", "count-short"],
+    }
 
     fail = 0
     for name, result, want_exit, want_class in cases:
@@ -631,6 +667,9 @@ def selftest() -> int:
             ok = ok and s["out_of_population"] == 1 and s["accepted"] == 1
         elif want_class is not None:
             ok = ok and any(f["class"] == want_class for f in result["findings"])
+        if name in expected_summaries:
+            ok = (ok and s == expected_summaries[name]
+                  and [f["class"] for f in result["findings"]] == expected_findings[name])
         if not ok:
             fail += 1
             print(f"APPEND_DEBT_SELFTEST_FAIL {name} exit={got} want={want_exit} "

@@ -1797,3 +1797,7 @@ These are actual appended table rows; round 83 placed its claimed addition in Fr
 | `corpus/knowledge/runtime-health-surface-matrix.md` | SGLang v0.5.23 readiness versus SageMaker ping during generation pauses, S574 | 84 |
 
 Frontier retained: live SGLang behavior, registered-consumer recovery, other engines and K05 across real consumers. Kengaku S178 attribution in relation 3 is retained; kama independently reads serving documentation, never model-evaluation quality.
+
+## Round-85 frontier disposition
+
+`lessons/round-85.md` records the two actual authority-cell repairs, three delivered debt-selftest controls, and the frozen selector's fenced/comment false greens. S576 grounds only0–3-space ATX heading exclusions; S577 preserves the rejected alternate b7200 README path. No new knowledge entry or serving-runtime capability is admitted, so coverage does not expand. Rendered-cell identity, coupled measurement provenance, ownership-aware mutant transcript grading and independently corroborated source origin remain frontier. Round85 is an honest stop under its frozen C1 kill rule, not a retroactive repair of round84.
