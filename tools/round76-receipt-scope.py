@@ -278,12 +278,15 @@ def main(argv=None):
             plan_path = "plans/round-{}-claims.md".format(args.round_no + 1)
             plan = base_mod._blob(args.repo, "HEAD", plan_path)
             if plan is None:
-                raise CouldNotEvaluate("missing population plan: " + plan_path)
-            match = re.search(r"Base revision `([0-9a-f]{40})`", plan.decode("utf-8", "replace"))
-            if match is None:
-                raise CouldNotEvaluate("population plan lacks Base revision: " + plan_path)
-            tip = match.group(1)
-            source = "plan:" + plan_path
+                # The graded round is the newest: its own record's landing tip is HEAD.
+                tip = "HEAD"
+                source = "default:head (no " + plan_path + " yet)"
+            else:
+                match = re.search(r"Base revision `([0-9a-f]{40})`", plan.decode("utf-8", "replace"))
+                if match is None:
+                    raise CouldNotEvaluate("population plan lacks Base revision: " + plan_path)
+                tip = match.group(1)
+                source = "plan:" + plan_path
         result = audit(args.repo, tip, args.round_no, args.all_findings)
         result["population_source"] = source
     except (CouldNotEvaluate, OSError, subprocess.SubprocessError) as exc:

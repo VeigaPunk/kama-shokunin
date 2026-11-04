@@ -3053,3 +3053,36 @@ receipt anywhere in `.ufo/waves/round-75/` (grep: 0 matches). The round-75 claim
 gate run it cites; what was missing is the practice of retaining the selftest receipt. Round 76
 retains one (`PRE_REPORT_SELFTEST pass=21 fail=0`, gate now nine arms), and this correction
 records the historical value as unbacked rather than inventing a receipt for it.
+
+
+## Round 76 — receipt scope measured, self-record facts bound, exempt accounting graded (2026-11-04)
+
+Frozen plan `plans/round-76-claims.md` (base `b06cc612711560c53eef3ec21484c6963601262f`,
+freeze `1a85a991fce5b76b60f88a5cab3df98d253b1a4a`); work tip `a3fbc629fa18c26ad1192adc5d8e762671dd1d79`.
+Claims C1 operability, C2 calibration, C3 freshness. Verdicts: **C2 verified; C1 and C3 honest
+misses** (both frozen targets unsatisfiable as written — the measurements that prove it are
+committed in the before receipts and predate any green run).
+Evidence: why C1 — the frozen receipt-claim counter cannot grade its own preceding record
+(`RECEIPT_CLAIM_V2 CouldNotEvaluate … (.py) … round-75.md:125`, exit 2,
+`measured/before/c1-receipt-claim.out`), and the append-only contract forbids dropping the fenced
+bytes that cause it. Why C2 — the round-75 record files one wrong digest, one wrong work tip, one
+wrong mistake count, one unbacked gate tally and one stale closure pointer
+(`c2-facts.out`, `c2-closure.out`, `c2-tally.out`). Why C3 — 83 audit events are unaccounted and
+the accepted register's cutoff cannot admit events that postdate it (`c3-audit.out`).
+What landed: `tools/round76-receipt-scope.py` (fence + record-path scope, seven arms, `--all-findings`),
+`tools/round76-selfrecord-facts.py` (eight facts, five arms), `tools/round76-append-exempt.py`
+(strict exempt-head rows, multi-register cutoff, six arms), `registry/append-only-exempt.tsv`
+(47 strictly admissible rows over the 83 ungraded events), gate arm 9 `round76-instruments`
+(`PRE_REPORT_SELFTEST pass=21 fail=0`), correction blocks in `SCORECARD.md`/`LOG.md` for the five
+stale facts, the `## Axes` closure re-anchor to round 75, `corpus/knowledge/fenced-quotation-scope.md`
+(S498, re-opened live) and `corpus/knowledge/selfrecord-fact-binding.md` (S548, own-work), three
+`corpus/QUALITY.md` criteria for the round-75 mistake classes, the round-75 coverage-map row, and
+the faithful re-capture of the round-75 survivor run (`measured/after/r75-survivors-recapture.out`,
+five mutants, all five lines). Wave: one v1 wave, 13 seats (3 executor, 3 scribe, 1 scout,
+1 connector, 1 revenger, 1 reviewer, 1 critic, 1 mutation-tester, 1 sentinel); attacks: RV01 named
+the cheat paths per claim, CR01 falsified the targets with do-nothing controls, MT01 mutated the
+frozen base module to show what makes the record unreadable, SN01 audited the fence/path
+laundering surface and the tools' argv safety. Misses recorded, not prettified: C1 `bound=6
+shifted=3` (the frozen target assumed `PROVINCE.md` was the only non-record delta; `registry/append-only-contract.tsv`
+at `b8ed2568` is a second), C3 `exempt=47 unaccounted=37` (the audit's `ungraded` bucket carries
+carveouts it does not serialize, and five events postdate the earliest register introduction).

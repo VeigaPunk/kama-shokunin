@@ -23,7 +23,7 @@ Commands actually run (all read-only against the lane; the clone is
 inside it, `git rev-parse --show-toplevel` asserted before every mutation). The seat's scratch
 tree was deleted before yielding, as the bounds require; each receipt's header records the
 command and the frozen module it imports, and the load-bearing measurement is re-runnable in one
-snippet (this is exactly what produced `population.out`, `delta-commits.out` and `sweep.py`):
+snippet (this is exactly what produced `population.out`, `delta-commits.out` and `tip-sweep.out`):
 
 ```python
 import importlib.util, sys
@@ -53,7 +53,7 @@ C1 composes three frozen tools. Their roles are **not** interchangeable:
 |---|---|---|---|
 | L1 resolver | `tools/round72-receipt-tip-binding.py` | token → receipt paths; then one class per receipt path (`stale`/`unbound`/`shifted`/`bound`) | a text line plus a `--json` verdict (`cited/bound/unbound/shifted/stale/findings/exit`) |
 | L2 claim pass | `tools/round73-receipt-claim-binding.py` | imports L1 (`_load_base`, `tools/round73-receipt-claim-binding.py:102`) and reuses its resolver and record readers; adds a *line-scoped* tip-claim pass | r74 supersedes this pass |
-| L3 claim pass v2 | `tools/round74-receipt-claim-binding.py` | imports L2, which imports L1 (`:86-91`); runs L1 as a subprocess (`:247`), re-reads the record, paragraph-scoped claims | `RECEIPT_CLAIM_V2 …` |
+| L3 claim pass v2 | `tools/round74-receipt-claim-binding.py` | imports L2, which imports L1 (`:86-91`); runs L1 as a subprocess (`:239`), re-reads the record, paragraph-scoped claims | `RECEIPT_CLAIM_V2 …` |
 
 The invariant all three share: **a citation is a file claim about a receipt, and a receipt is
 only evidence if the revision it names is still a faithful description of the tree at the tip.**
@@ -253,8 +253,13 @@ heading itself (file line 4053), so this record is not affected — the `fence-u
   `controls/build-spec.py` at :126 and :130 which resolve to the same wave path.
 - **9 fenced receipt instances** (SCORECARD:4108-4111, the held rows) — exact duplicates of live
   paths; on a set-valued population they change nothing.
-- **4 dropped tokens** (`measured/…` SCORECARD:4084, `controls/*` :4116, `controls/*.py`
-  lesson:161, and the `text` info-string residue of every fence line) — out of scope under §1.
+- **3 fallen-out tokens** (`measured/…` SCORECARD:4084, `controls/*` :4116, `controls/*.py`
+  lesson:161) — out of scope under §1. (Fence info strings also yield a one-word token, e.g.
+  `text` from ` ``````text `, and fall out the same way.)
+
+Instances are not paths: 14 live token instances over those 11 paths (the lesson repeats three of
+the before receipts verbatim), and 13 fenced instances — so the counter must dedupe by resolved
+path, exactly as L1's `cited_by` dict does (`:489-493`).
 
 So the fence scope is load-bearing for exactly one thing on real bytes: it removes the fatal
 `.py` **path**, not any receipt. That is why `live_citations` is fence-invariant here and why
@@ -305,6 +310,13 @@ nonreceipt=0 unclassified=0`, exit 0.
 | every tip in `ba9f7248..b06cc612` (13 tips) | 6 | 2 | 3 | same |
 | `1a85a991` (freeze) | **0** | 2 | **9** | `.ufo/waves/round-76/controls/fence-dryrun.py touched by 1a85a991fce5` |
 | `max bound` over the whole range `dc58e513..1a85a991` (17 tips) | **6** | | | |
+
+The lane tip moved while this seat measured (siblings commit the round-76 wave). Re-measured at
+`461d2adbf2b3`: `unbound=2 shifted=9`, first offender
+`.ufo/waves/round-76/measured/after/append-exempt-selftest.out touched by a3fbc629fa18` — the same
+class, a newer round-76 receipt. **At `master` the line is always the `shifted=9` shape; the
+`bound=6` shape appears only when the tip is pinned to the round's base/record revision** (which is
+what the landed counter does, §9).
 
 `bound=9` occurs at **no tip**. The reason is structural, not a matter of choosing a tip:
 
@@ -384,8 +396,11 @@ their bytes. Population sources: `SCORECARD.md`'s `## Round 75` section and all 
 you scope it) that ends inside an open fence is `CouldNotEvaluate` → exit 2 (the audit itself does
 not fail on an unclosed fence; the counter adds that rule).
 
-**Classes.** For each **live** (unfenced) citation path, exactly one, in this order, reusing
-L1's `_header_rev`, `_commit_sha`, `_is_ancestor`, `_rev_list`, `_diff_paths`, `_record_match`:
+**Classes.** Resolution comes first, then classification; every live path gets exactly one class.
+A live citation that resolves to a **non-receipt** path is `nonreceipt` (exit 1) — the class L1
+lacks — and is never header-checked; it must be computed from the resolver, not by re-parsing
+tokens. Otherwise, in this order, reusing L1's `_header_rev`, `_commit_sha`, `_is_ancestor`,
+`_rev_list`, `_diff_paths`, `_record_match`:
 
 1. blob absent at tip → `stale`;
 2. header window (first 5 lines) empty or conflicting → `unbound` (named, non-failing);
@@ -393,8 +408,6 @@ L1's `_header_rev`, `_commit_sha`, `_is_ancestor`, `_rev_list`, `_diff_paths`, `
 4. some commit in `rev..tip` touches a path outside `default_record_paths(75) +
    ["PROVINCE.md", "SKILL.md", "corpus/**"]` → `shifted`;
 5. otherwise → `bound`.
-6. a live citation that resolves to a **non-receipt** path → `nonreceipt` (exit 1) — the class L1
-   lacks; it must be computed from the resolver, not by re-parsing tokens.
 
 Paths that resolve to a non-receipt **only** inside fences → `fenced_quoted`, counted as distinct
 resolved paths.
@@ -418,7 +431,7 @@ fence is unclosed; exit 1 on any `RECEIPT_SCOPE_FINDING`; exit 2 on could-not-ev
 self-record, unclosed fence, empty live population, unreadable receipt at the tip, CLI misuse).
 
 **Worked examples** (each is the exact output the classifier must produce; all four are
-reproducible from real bytes except #4, which is the record's own line 125 with the fence removed):
+verified against real bytes, except #4, which is the record's own line 125 with the fence removed):
 
 1. **bound** — `.ufo/waves/round-75/measured/after/c1-pins.out` at tip `b06cc612`: header
    `# rev=c9ab73d8…` (line 1 of 5), rev is a commit and an ancestor, and
@@ -484,8 +497,8 @@ reported, not fixed in the counter.
    guard that fails when nonzero (§6).
 5. **Minor:** the plan's C1 text calls the citation population "the round-75 self-record's"; the
    population includes a *directory* citation (`assimilation/`) and a `controls/` directory
-   citation, so `live_citations=11` is 11 **paths**, not 11 tokens (30 wave-ish tokens exist;
-   `token-census.out`).
+   citation, so `live_citations=11` is 11 **paths** (14 live token instances, 30 wave-ish tokens
+   in all; `token-census.out`).
 
 ---
 
@@ -493,8 +506,8 @@ reported, not fixed in the counter.
 
 - **High** (byte-verified, from the frozen modules and the lane's history): §§1-5, 7 and
   disagreements 1-3. Every class in §5.3 and every delta in §2 was produced by importing the
-  frozen modules, not by re-implementing them; the clone runs reproduce the plan's own dry run
-  byte-for-byte before extending it.
+  frozen modules, not by re-implementing them; the clone runs reproduce the plan's own dry-run
+  finding block line-for-line before extending it.
 - **High**: the §6 unattainability result — the sweep covers every tip on `master` in
   `dc58e513..1a85a991`, and the ancestry argument covers tips outside it (before receipts are
   shifted at every tip ≥ `0908bab5`; receipts 6-11 require a tip ≥ `c9ab73d8`).
@@ -502,6 +515,14 @@ reported, not fixed in the counter.
   yields the frozen line; I reject it because it makes the claim's own `shift-tools` arm
   unfireable. If the plan's author intended a fourth reading, it is not recoverable from the
   frozen text or from the controls committed at the freeze.
-- **Not checked:** whether the in-flight `tools/round76-receipt-scope.py` (untracked at the time I
-  looked, sibling seat EX01ReceiptScope) lands the frozen target or reports the divergence — its
-  receipts and review belong to EX01/RV01, not to this seat.
+- **Independently confirmed, not reviewed:** after I finished measuring, the sibling C1
+  instrumentation landed (`.ufo/waves/round-76/measured/after/receipt-scope.out`,
+  `rev=c2aa7fb2…`). It prints exactly the numbers §6 measures and exactly the same first offender
+  — `RECEIPT_SCOPE round=75 fenced_quoted=1 live_citations=11 bound=6 unbound=2 shifted=3
+  nonreceipt=0 unclassified=0`, `RECEIPT_SCOPE_FINDING shifted … :: registry/append-only-contract.tsv
+  touched by b8ed25682958` — with the tip pinned to the plan's base revision
+  (`RECEIPT_SCOPE_POP … tip=b06cc612 … source=plan:plans/round-76-claims.md`). That confirms the
+  measurement but not the frozen target: the landed line is 6/2/3, the frozen line is 9/2/0, and
+  the gap is §6. Whether the claim is scored on the frozen line or on the landed one, and whether
+  pinning the tip to the plan's base is admissible under "the tip", are RV01's calls, not this
+  seat's.
