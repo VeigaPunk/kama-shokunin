@@ -91,13 +91,20 @@ def documented_refs(repo: Path):
     probe = git_bytes(repo, "rev-parse", "--show-toplevel")
     if probe.returncode:
         raise CouldNotEvaluate("repo has no readable committed tree")
-    result = git_bytes(repo, "grep", "-I", "-h", "-E",
+    result = git_bytes(repo, "grep", "-I", "--null", "-n", "-E",
                        r"^# url=https://[^ ]+ sha256=[0-9a-f]{64} ref=[^ ]+ lines=[0-9]+-[0-9]+$",
                        "HEAD", "--")
     if result.returncode not in (0, 1):
         raise CouldNotEvaluate("could not read committed anchor inventory")
-    return [match.groups() for line in result.stdout.decode("utf-8", "replace").splitlines()
-            if (match := EXTRACT_RE.fullmatch(line))]
+    headers = []
+    for record in result.stdout.splitlines():
+        fields = record.split(b"\0", 2)
+        if len(fields) != 3 or fields[1] != b"1":
+            continue  # a quoted header inside a report is not an anchor extract
+        match = EXTRACT_RE.fullmatch(fields[2].decode("utf-8", "replace"))
+        if match:
+            headers.append(match.groups())
+    return headers
 
 
 def snapshot_fixture(root: Path) -> None:

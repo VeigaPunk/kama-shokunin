@@ -122,7 +122,8 @@ def outside_restatements(text):
     return "\n".join(kept)
 
 
-def grade(facts, corr, read, sealed=SEALED):
+def grade(facts, corr, read, sealed=SEALED, sealed_witnesses=None):
+    sealed_witnesses = sealed_witnesses or {fid: witness for fid, _, witness in facts}
     by_fact = {}
     for entry in corr:
         by_fact.setdefault(entry[0], []).append(entry)
@@ -131,11 +132,14 @@ def grade(facts, corr, read, sealed=SEALED):
     for fid, declared, witness in facts:
         entries = by_fact.get(fid, [])
         state = "holds"
-        if declared == witness:
+        if declared == sealed_witnesses[fid]:
             if entries:
                 mismatches += 1
                 unbacked += len(entries)
                 state = "unbacked-correction-holds"
+            elif declared != witness:
+                mismatches += 1
+                state = "witness-drift"
         elif not entries:
             mismatches += 1
             state = "unanswered"
@@ -180,8 +184,10 @@ def evaluate(repo, sealed, tip, lesson_path, no_corrections=False):
             cache[key] = show(repo, revision, path)
         return cache[key]
     facts = extract_facts(read)
+    sealed_facts = extract_facts(lambda rev, path: read(SEALED, path))
+    sealed_witnesses = {fid: witness for fid, _, witness in sealed_facts}
     corr = [] if no_corrections else corrections(read("TIP", lesson_path))
-    return facts, grade(facts, corr, read, sealed)
+    return facts, grade(facts, corr, read, sealed, sealed_witnesses)
 
 
 def main(argv=None):
@@ -198,12 +204,12 @@ def main(argv=None):
     try:
         tip = git(args.repo, "rev-parse", args.tip + "^{commit}").strip()
         sealed = git(args.repo, "rev-parse", args.sealed + "^{commit}").strip()
-        facts, (mismatches, corrected, unbacked, rows) = evaluate(args.repo, sealed, tip, args.lesson, args.no_corrections)
+        facts, (mismatches, corrected, unbacked, rows) = evaluate(args.repo, sealed, tip, args.lesson, args.no_corrections or args.enumerate)
     except (CouldNotEvaluate, OSError) as exc:
         print(f"could-not-evaluate: {exc}", file=sys.stderr)
         return 2
     if args.enumerate:
-        stale = sum(old != new for _, old, new in facts)
+        stale = mismatches
         print(f"SELFRECORD_R82_ENUM claims={len(facts)} stale={stale} corrected=0")
         return int(bool(stale))
     if args.json:
@@ -259,6 +265,13 @@ def selftest():
     got = grade(extracted, corrections(lesson), lambda rev, path: backing.get(path))
     actual = got[0], got[2], got[1]
     cases.append(("registry-base-bound", extracted == facts and actual == (0, 0, 3), actual, (0, 0, 3)))
+    rewritten = [(fid, old, new.replace("=23", "=18")) for fid, old, new in facts]
+    rewritten_lesson = lesson.replace(lines[0] + "\n", "").replace("new=sc82c1-selftest=23", "new=sc82c1-selftest=18").replace("new=calib82-selftest=23", "new=calib82-selftest=18")
+    rewritten_files = {path: text.replace("=23", "=18") for path, text in backing.items()}
+    got = grade(rewritten, corrections(rewritten_lesson), lambda rev, path: rewritten_files.get(path),
+                sealed_witnesses={fid: witness for fid, _, witness in facts})
+    actual = got[0], got[2], got[1]
+    cases.append(("tip-witness-rewrite", actual == (1, 0, 2), actual, (1, 0, 2)))
     for name, ok, actual, expected in cases:
         print(f"{'PASS' if ok else 'FAIL'} {name} mismatches={actual[0]} unbacked={actual[1]} corrected={actual[2]} expected={expected}")
     failures = sum(not case[1] for case in cases)

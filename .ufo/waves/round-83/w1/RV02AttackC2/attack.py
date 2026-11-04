@@ -75,10 +75,17 @@ try:
  def c3fixture():
   if F.exists(): shutil.rmtree(F)
   F.mkdir(); m.build_green(F)
+  assert cmd(['git','-C',F,'init','-q']).returncode==0
+  assert cmd(['git','-C',F,'rev-parse','--show-toplevel']).stdout.strip()==str(F)
+  cmd(['git','-C',F,'config','user.name','RV02 c3']); cmd(['git','-C',F,'config','user.email','rv02@example.invalid'])
+  fcommit('c3 fixture baseline')
+ def fcommit(label):
+  p=cmd(['git','-C',F,'add','-A']); assert p.returncode==0,p.stderr
+  p=cmd(['git','-C',F,'commit','-q','--allow-empty','-m',label]); assert p.returncode==0,p.stderr
  def rows(): return [x.split('\t') for x in (F/'rows.tsv').read_text().splitlines()]
  def save(r): (F/'rows.tsv').write_text('\n'.join('\t'.join(x) for x in r)+'\n')
  c3=['python3',D/'tools/round83-pin-rechecks.py','--repo',F,'--register','register.tsv','--rows','rows.tsv']
- c3fixture(); commit('C3 honest'); record('c3-honest',c3,'green: graded=2 ungraded=1')
+ c3fixture(); record('c3-honest',c3,'green: graded=2 ungraded=1')
  for case in ['wrong-line-valid-digest','25-words-plus-period','duplicate-conflicting-verdicts','ungraded-documented-ref','uncommitted-extract']:
   c3fixture(); r=rows()
   if case=='wrong-line-valid-digest': r[1][6]='10'; save(r)
@@ -91,9 +98,9 @@ try:
   elif case=='ungraded-documented-ref':
    r[1]=['engone','b1','n2','ungraded','2026-11-04','-','-','-','-','-','-','missing document b1']; save(r)
   elif case=='uncommitted-extract':
-   commit('baseline for uncommitted mutant')
+   fcommit('baseline for uncommitted mutant')
    m.write_extract(F,'extracts/engone-b1.txt','https://example.com/raw','b1',10,12,['uncommitted',m.SENTENCE_A,'line twelve'])
-  if case!='uncommitted-extract': commit(case)
+  if case!='uncommitted-extract': fcommit(case)
   record('c3-'+case,c3,'red')
  (O/'results.json').write_text(json.dumps(results,indent=2)+'\n')
  print(json.dumps([{'name':x['name'],'exit':x['exit'],'summary':x['output'].splitlines()[-1:] } for x in results],indent=2))

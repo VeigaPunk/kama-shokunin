@@ -3516,3 +3516,7 @@ three claims repair lane instruments and the source budget is spent on C3's anch
 
 Owed by round 84: the debt leg's note check binds only `N > M` while the delta leg binds the deletion
 round to the commit subject (RV01 R83-1), and the round's own `pending` events.
+
+## Round 83 — terminal disposition (supersedes earlier provisional green descriptions)
+
+C1 misses its frozen late=35 token: late counts events and can be at most 23. Later report-record reconciliation also moves the 0d7c7c3e SCORECARD event outside the tip audit population, leaving ten unknown-event rows. The final red gate is retained; no counter is weakened. C2 and C3 are integrated from the final attack-hardened drafts and measured separately in `.ufo/waves/round-83/measured/final/`. The round is an honest stop, not an admission. Final integration and survivor limits: `.ufo/waves/round-83/integration.md`; all 15 seats settled in w1-results.json.
