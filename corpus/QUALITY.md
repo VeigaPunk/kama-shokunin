@@ -616,3 +616,11 @@ by reading, not by a counter.
 | ID | Admit only when | Reject or limit when | Motivating lesson |
 |---|---|---|---|
 | KQ130 | A record's "tip" claim names a revision, and that revision equals the tip at the record's own revision (`tip-accounting=rev:<r>/is-tip:true` re-derives); a run the record cites as evidence has its output committed, and the citation names the receipt path plus the revision it measured. Check: `python3 tools/round79-selfrecord-round78.py --repo .` prints `SELFTEST`-backed `mismatches=0` with F5/F6 fresh, and any `mismatches=1` on F5/F6 is answered by one value-bound correction whose `new` value re-derives at the tip. | The word "tip" is used for an ancestor revision; a run is asserted "in the lesson" with no committed output; a correction's `new` value is prose rather than a re-derivable token; or a 41-character `at` token is accepted. | `corpus/lessons/round-79.md` §Mistakes 1 and 2 (`tip-names-an-ancestor`, `prose-only-evidence`), captured by F5/F6; round-78 closure R78V1/R78V2. |
+
+## Criterion added — round 79 mistake 3 (2026-11-04; no outside review yet)
+
+KQ130 stays in force. This row carries the round's third mined mistake into a pre-commit check.
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ131 | An in-place deletion a round makes in a contract-declared append-only file (a) is held byte-exactly at the tip (its lines re-appear in the same file, e.g. in a held-bytes appendix), or (b) is left as a named red event in the round record; a row in `registry/append-only-accepted.tsv` or `registry/append-only-disclosures.tsv` names only commits that are ancestors of that ledger's own introduction commit. Check: `python3 tools/round75-append-accepted.py --repo .` prints `unaccepted=0 bad_rows=0`, and `python3 tools/append-only-audit.py --repo . --to master` reports no `bad disclosures`. | A same-round deletion is booked as accepted or disclosed history (the ledgers refuse a commit at or after their introduction); a register row is added for a commit the audit will grade as `post-introduction`; an invalid ledger row is left in place "for the record". | `corpus/lessons/round-79.md` §Mistakes 3 (`self-accepted-post-introduction-deletion`), captured by the ledgers' temporal cutoffs; `.ufo/waves/round-79/measured/after/c2-gate.out`. |

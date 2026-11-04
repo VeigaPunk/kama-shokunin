@@ -90,6 +90,23 @@ revision C1 grades is `7a3cd98243b69fcbee0cc9e31878782bd8459320` (round 78's tip
    *Fix:* the correction below points F6 at the committed receipt, and the counter re-derives
    that the receipt's bytes carry `mismatches=1` at the tip.
 
+3. **`self-accepted-post-introduction-deletion`** — a round tried to book its own in-place
+   deletions into the two ledgers that exist for *historical* events.
+   *Evidence pointer:* this round added 38 `in-place-edit` rows to
+   `registry/append-only-accepted.tsv` and 76 rows to `registry/append-only-disclosures.tsv` for
+   commits made this round; both ledgers refuse a commit at or after their own introduction
+   (`APPEND_ACCEPTED_FINDING post-introduction`, `bad_rows=38`; `audit bad_disclosures=76`). The
+   rows were reverted and the ledger restored; the register restore is itself one unaccountable
+   event (`APPEND_ACCEPTED unaccepted=1` on it, receipt
+   `.ufo/waves/round-79/measured/after/c2-gate.out`).
+   *Captured-by:* the ledgers' own temporal cutoffs (`SN01Register` in
+   `tools/round75-append-accepted.py:69-72`, and the audit's disclosure verdict in
+   `tools/append-only-audit.py` "names a commit at or after the ledger's introduction").
+   *Fix:* an in-place deletion made in round N is either restored (its bytes held in the file, as
+   the head-sections appendix does) or left as a disclosed red event; it is never booked into a
+   ledger that predates it. Routed to round 80 as a QUALITY criterion (KQ131) and as a hard
+   pre-commit check.
+
 ## Corrections
 
 Two value-bound blocks, one per stale fact, in the frozen shape (`at` names the sealed
@@ -109,5 +126,33 @@ revision; each `old` is the plan's declared value string).
 
 ## Attack dispositions
 
-The L1 integrates the wave's findings here after the wave settles; no seat's finding is
-accepted without a re-derivation by the L1, and no attack seat's self-assessment is a closure.
+The wave settled with **11 of 14 seats returning output** (EX02GateArm, EX03ProbeClass and
+EX04CensusCounter returned empty and are recorded dead; the L1 built those three items itself and
+their bytes are the committed ones the mutation seat graded). Integrated findings:
+
+- **MT01Mutation (5 mutants, 5 killed, 0 survived)** — the probe's `registered` class (three
+  mutants: always-yes, column omitted, registry column 3 instead of 4) and the gate's arm 10 (two
+  mutants: first instrument only, nonzero exit passes) are each caught by their owning detector.
+  Its graded snapshot hashes equal the committed bytes (`tools/kama-probe.sh`
+  `0943fb46…`, `tools/round79-unregistered-census.py` `25daa989…`, `tools/pre-report-gate.py`
+  `9b2ff3b4…`, committed at `5ac1a8d`). Evidence:
+  `.ufo/waves/round-79/w1/MT01Mutation/mutants.md`.
+- **EX01C1Facts (independent harness)** — re-derived all six facts without importing the counter;
+  agreement on every value string, including the two stale ones (F5, F6). Evidence:
+  `.ufo/waves/round-79/w1/EX01C1Facts/rederive.out`.
+- **SCT01Recon (read-only)** — hand-derived all six facts from committed bytes; agrees on F5/F6
+  stale and on the four fresh facts; names no vacuous fact. Evidence:
+  `.ufo/waves/round-79/w1/SCT01Recon/facts.md`.
+- **SCT02Source + SC01Sources + SC02Knowledge + SC03Lesson (scribes/scout)** — opened the router
+  README (HTTP 200, 135608 bytes, sha256 `8fd5abde…`), confirmed the quote is 16 words at line
+  2227 under note 1's `?reload=1` sentence, and flagged that the anchor's "Router mode" is a
+  region label, not a heading name; the lesson's Gate carries the correction and the S479/S037
+  distinction. Evidence: `.ufo/waves/round-79/w1/SCT02Source/source-check.md`,
+  `w1/SC01Sources/sources-append.md`.
+- **CN01Connector (overlap scan)** — no lane composes another's instrument selftests; the
+  `unregistered` token collides with mado's `CHECK96` vocabulary for a different population, and
+  kengaku's S178 reads the same host listener for eval identity — both reported, neither absorbed.
+  Evidence: `.ufo/waves/round-79/w1/CN01Connector/overlap.md`.
+- **RV01Reviewer, CR01Critic, CR02Critic** — ran while the tree was mid-flight (the C1/C3 counters
+  and the arm were not yet landed) and reported that in-flight state; none certifies a claim, and
+  no attack seat's self-assessment is treated as a closure.

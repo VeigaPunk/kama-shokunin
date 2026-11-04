@@ -4657,10 +4657,15 @@ round-79 note and the three instruments. `LOG.md` §Round 79 carries the narrati
 ### Gate and tip state
 
 `PRE_REPORT_SELFTEST pass=26 fail=0` at the revision named in
-`.ufo/waves/round-79/measured/after/c2-selftest.out`; the scored gate run's line and revision
-are in `.ufo/waves/round-79/measured/after/c2-gate.out` and its receipt commit, which names the
-revision it measured. The delta from that revision to this record's tip touches record paths
-only (`.ufo/waves/round-79/measured/**`, `SCORECARD.md`, `LOG.md`), so KQ119 binds it.
+`.ufo/waves/round-79/measured/after/c2-selftest.out`. The scored gate run measured at
+`b756571e435f3dda5697f8aa2eddd37abcb51797` prints
+`PRE_REPORT round=79 arms=10 failed=1 uncommitted=0` (`.ufo/waves/round-79/measured/after/c2-gate.out`):
+nine arms green including the new arm 10, and arm 8 `round75-instruments` red with
+`APPEND_ACCEPTED events=58 accepted=53 unaccepted=5 bad_rows=0` — the five undisclosed deletion
+events are this round's own in-place edits (four in `SCORECARD.md` / `corpus/lessons/round-79.md`,
+one on the accepted register after the 38 invalid rows were reverted). The delta from the measured
+revision to this record's tip touches record paths only (`.ufo/waves/round-79/measured/**`,
+`SCORECARD.md`, `LOG.md`), so KQ119 binds it.
 
 **Disclosed red instrument (not a claim).** The round-77 register counter is red at the tip:
 `.ufo/waves/round-79/measured/v1/registers-tip.out` prints `APPEND_REGISTERS … unaccounted=2`
@@ -4676,8 +4681,12 @@ editing a filed lesson in place.
 ### Wave
 
 One v1 wave of 14 seats (4 executor, 3 scribe, 2 scout, 1 connector, 1 reviewer, 2 critic,
-1 mutation-tester; attack 4/14 = 29 %) under `ufo-wave-policy.json` band 8–16. Seat results and
-dead seats: `.ufo/waves/round-79/w1-results.json`; the L1 re-derived every finding it used.
+1 mutation-tester; attack 4/14 = 29 %) under `ufo-wave-policy.json` band 8–16. **11 of 14 seats
+returned output**; `EX02GateArm`, `EX03ProbeClass` and `EX04CensusCounter` returned empty and are
+recorded dead — the L1 built those three items, and the mutation seat graded exactly those
+committed bytes (5 mutants, 5 killed). `RV01Reviewer`, `CR01Critic` and `CR02Critic` ran against
+the mid-flight tree and certify nothing. Evidence: `.ufo/waves/round-79/w1-results.json`,
+`w1/MT01Mutation/mutants.md`, and `corpus/lessons/round-79.md` §Attack dispositions.
 
 **Capabilities — canonical list as of round 79**
 
