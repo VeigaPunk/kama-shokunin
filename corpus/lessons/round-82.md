@@ -82,3 +82,11 @@ corrected F5 old=logcorr81-c2-pending=1 new=logcorr81-c2-pending=4 at=1b64f66dde
    the round reports the red-before and the green-after side by side.
 4. **`pending` is the round's own post-base events** and rises with each later record commit, as in
    round 81. The graded buckets are the target.
+5. **F2 is base-bound, not tip-bound.** The plan's F2 witness cell reads "the tip registry row count
+   (302)"; the round's own three admitted rows move the tip count to 305, which would make the round-81
+   record's honest end-state value unstatable. The counter therefore reads `corpus/SOURCES.md` at the
+   round's declared base revision (`aaf974db`, 302) and the correction stays `new=302`. Both numbers are
+   named in the record: 301 (declared) → 302 (base) → 305 (tip). This is the same divergence round 80
+   recorded for its own F2 (a population snapshot is a property of the record's revision); the plan's
+   witness cell should have said "base count" at freeze, and does not. The selftest arm
+   `registry-base-bound` proves the base reading (a tip with 305 rows must not move the witness).

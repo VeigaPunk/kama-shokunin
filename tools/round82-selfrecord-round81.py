@@ -20,8 +20,11 @@ The six facts (declared by the round-81 record, observed from the tree):
 
   F1 sc81c2-pending   `SCORECARD.md` §Round 81 C2 row, the `-> exit 0` cell's `pending=` value,
                       against `.ufo/waves/round-81/measured/after/debt-green.out` (`pending=4`)
-  F2 log81-frontier   `LOG.md` §Round 81 `Frontier: registry 297 -> <n> rows`, against the tip
-                      registry row count (302)
+  F2 log81-frontier   `LOG.md` §Round 81 `Frontier: registry 297 -> <n> rows`, against the registry
+                      row count at the round's declared base revision (302) -- a population snapshot
+                      is a property of the revision the record describes, not of the grading tip
+                      (the round-82 freeze divergence: the plan's witness cell said "tip count"; the
+                      round's own three rows would make the record's honest value unstatable)
   F3 skill81-gate     `SKILL.md` pre-report-gate row `(ten arms, ...)`, against
                       `.ufo/waves/round-81/measured/after/gate.out` (`arms=11`)
   F4 calib81-closure  `SCORECARD.md` `## Axes` calibration row's "newest non-author closure",
@@ -55,6 +58,7 @@ import sys
 
 SEALED = "1b64f66ddea89c57b71165eacd14b0e1d6f24e11"
 LESSON = "corpus/lessons/round-82.md"
+LESSON_ROUND = 82
 SCORECARD = "SCORECARD.md"
 LOG = "LOG.md"
 SKILL = "SKILL.md"
@@ -167,9 +171,9 @@ def fact_f2(read):
         raise CouldNotEvaluate("the Round 81 frontier line is absent")
     value = last_int(line, r"→\s*([0-9]+)\s*rows")
     declared = f"log81-frontier-rows={value}"
-    rows = registry_rows(read("TIP", "corpus/SOURCES.md") or "")
+    rows = registry_rows(read("BASE", "corpus/SOURCES.md") or "")
     if rows == 0:
-        raise CouldNotEvaluate("the tip registry is unreadable")
+        raise CouldNotEvaluate("the base registry is unreadable")
     return declared, f"log81-frontier-rows={rows}"
 
 
@@ -310,13 +314,23 @@ def grade(facts, corr, read, sealed=SEALED):
 def evaluate(repo, sealed, tip, lesson_path, no_corrections=False):
     cache = {}
 
+    base_holder = {}
+
+    def base_revision():
+        if "base" not in base_holder:
+            plan = show(repo, tip, f"plans/round-{LESSON_ROUND}-claims.md") or ""
+            match = re.search(r"Base revision `([0-9a-f]{40})`", plan)
+            base_holder["base"] = match.group(1) if match else sealed
+        return base_holder["base"]
+
     def read(rev, path):
         if path is None:
             return newest_closure(repo, tip)
         if rev == "NEWEST_CLOSURE":
             return cache.get(("closure", tip)) or cache.setdefault(
                 ("closure", tip), newest_closure(repo, tip))
-        revision = tip if rev in ("TIP", "NEWEST_CLOSURE") else sealed
+        revision = (tip if rev in ("TIP", "NEWEST_CLOSURE")
+                    else base_revision() if rev == "BASE" else sealed)
         key = (revision, path)
         if key not in cache:
             cache[key] = show(repo, revision, path)
@@ -505,7 +519,7 @@ def selftest():
     read_map[("TIP", DEBT_RECEIPT)] = "APPEND_DEBT round=81 pending=4 unaccepted=0\n"
     read_map[("TIP", GATE_RECEIPT)] = "PRE_REPORT round=81 arms=11 failed=0\n"
     read_map[("TIP", C1_RECEIPT)] = "SELFRECORD_R80_SELFTEST pass=13 fail=0\n"
-    read_map[("TIP", "corpus/SOURCES.md")] = "| S001 | a |\n| S002 | b |\n"
+    read_map[("BASE", "corpus/SOURCES.md")] = "| S001 | a |\n| S002 | b |\n"
     read = fixture(read_map)
     checks = [
         ("extract-f1", fact_f1(read)[0] == "sc81c2-pending=1"),
@@ -516,15 +530,19 @@ def selftest():
             "calib81-newest-closure=round-81-verifier-spotcheck.md")),
         ("extract-f5", fact_f5(read) == ("logcorr81-c2-pending=1", "logcorr81-c2-pending=4")),
         ("extract-f6", fact_f6(read) == ("sc81c1-selftest=13", "sc81c1-selftest=13")),
-        ("registry-rows", registry_rows(read_map[("TIP", "corpus/SOURCES.md")]) == 2),
+        ("registry-rows", registry_rows(read_map[("BASE", "corpus/SOURCES.md")]) == 2),
     ]
     # F2's witness is the tip registry row count; give it the real 302-row shape.
-    read_map[("TIP", "corpus/SOURCES.md")] = "".join(
+    read_map[("BASE", "corpus/SOURCES.md")] = "".join(
         f"| S{index:03d} | row |\n" for index in range(1, 303))
+    read_map[("TIP", "corpus/SOURCES.md")] = "".join(
+        f"| S{index:03d} | row |\n" for index in range(1, 306))
     read = fixture(read_map)
     checks[1] = ("extract-f2", fact_f2(read) == ("log81-frontier-rows=301",
                                                  "log81-frontier-rows=302"))
-    checks.append(("registry-rows-302", registry_rows(read_map[("TIP", "corpus/SOURCES.md")]) == 302))
+    checks.append(("registry-rows-302", registry_rows(read_map[("BASE", "corpus/SOURCES.md")]) == 302))
+    checks.append(("registry-base-bound",
+                   fact_f2(read) == ("log81-frontier-rows=301", "log81-frontier-rows=302")))
     for name, ok in checks:
         cases.append((name, ok, "", "", ""))
     failures = [case for case in cases if not case[1]]
