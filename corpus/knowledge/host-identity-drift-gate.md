@@ -81,3 +81,13 @@ newest record is the claim.
   appended after a run is not in that run's verdict.
 - An unparsable triple is `stale-host`, never a skip, so a broken append turns the counter red
   instead of silently disabling it.
+
+## Scope correction — round 73 L1 integration
+
+The broad machine-change sentence above is false and is superseded here: two different machines
+running the same kernel family, hardware architecture and distribution can share this triple.
+Likewise a copied block passes whenever its triple matches; the counter does not authenticate
+where that block was measured. The demonstrated capability detects differences in these three
+fields only, not every physical-host move. Append-only history is a policy, not something this
+counter enforces: deleting or editing the newest block can still pass when the resulting triple
+matches. S544 supports what the uname fields print, not uniqueness of a host identifier.
