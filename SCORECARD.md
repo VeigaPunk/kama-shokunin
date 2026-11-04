@@ -4529,3 +4529,24 @@ their landed files used only where they re-derive (EX02's and EX03's modules, SC
 SKILL/README edits, RV01's independent receipts). No attack seat certified this round; the
 do-nothing controls are the L1's own runs and are cited above, and the closure's non-author
 verification remains the authority. Evidence: `.ufo/waves/round-78/w1-results.json`.
+
+## Superseded head bytes (round 78; held so the audit grades the head re-derivation restored)
+
+Round 78 re-derived the banner and the `### Planned (round 78)` plan in place. The append-only
+contract grades those lines because they were born outside an eligible exempt section (the banner
+precedes the first `## ` heading; the plan items were born under a `###` subsection). The
+superseded bytes are held here byte-exactly, per the round-77 pattern:
+
+``````text
+**Current authority (round 77):** assigned axes are operability + calibration (`shokunin.conf`); Latest measured round: 77. Round 77 declared three claims: C1 operability verified (the baseline receipt binds by introduction ancestry and byte identity, `bound=9 shifted=0`), C2 freshness verified (two register cutoffs plus the permitted and out_of_region carriage classes account every base audit event, `unaccounted=0`), C3 calibration an honest miss (the frozen line predicted two corrections and the sealed record carried three stale facts; the instrument prints `mismatches=0 corrected=3`). Scores hold: operability 8, freshness 8, calibration 7, depth 7, coverage 9, adjacency 7; the three new capabilities enter the repertoire. The detailed head of the round is the `## Round 77` section below.
+The live plan follows; historical plans remain as filed (round 77's in `plans/round-77-claims.md`, executed in the §Round 77 section below; round 76's at the end of the §Round 76 section).
+### Planned (round 78)
+1. Calibration: run the sealed-fact harness against the round-77 record's own facts (work tip,
+   the three corrections' values, the 34-row capability count) so the next round starts from
+   `mismatches=0` with a target whose corrected count was measured before the freeze.
+2. Freshness: extend the two-register accounting to the live tip (the round-76 and round-77
+   events included) and keep the `rotation-reintroduced` and `inside-region` arms red-capable.
+3. Operability: give the baseline class a certifying control that a later `tools/` delta still
+   shifts an at-the-tip receipt, or extend the class to a sealed post-work receipt whose
+   revision is re-runnable, whichever the next measurement shows is reachable.
+``````
