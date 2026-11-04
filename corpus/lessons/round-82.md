@@ -90,3 +90,27 @@ corrected F5 old=logcorr81-c2-pending=1 new=logcorr81-c2-pending=4 at=1b64f66dde
    recorded for its own F2 (a population snapshot is a property of the record's revision); the plan's
    witness cell should have said "base count" at freeze, and does not. The selftest arm
    `registry-base-bound` proves the base reading (a tip with 305 rows must not move the witness).
+
+## Hardening notes (wave attack seats, applied before the report)
+
+- **RV01 (C1 counter) escapes, fixed and re-armed.** Three admitting lines were closed: the `fix` token
+  test was substring containment (`sc81c2-pending=44` backed `new=…=4`) and now requires the whole token
+  with a non-token right boundary; `fix=` could name this lesson itself and now cannot; the corrections
+  container matched any `## ` heading containing "Corrections" and now must be exactly `## Corrections`.
+  Three selftest arms (`near-token-new`, `fix-self-referential`, `near-corrections-heading`) make each
+  red (selftest 19 → 22). Residual, disclosed: witnesses are read at the graded tip by design (a record
+  rewritten to match its receipts stops being stale), and F4's closure pointer is sequencing-fragile —
+  a round-82 closure landing before grading moves it, exactly as round 81's F6 did.
+- **RV02 (C2) escape, fixed.** The note's deletion round was bound only by `N > M`, so a row noted
+  `round-82 accepts round-79` for a round-81 event passed both legs; `tools/round82-late-delta.py` now
+  compares the note's deletion round with the event commit's own subject round (`subject_rounds`), with
+  the `note-wrong-deletion-round` arm red (selftest 12 → 13). The debt leg's `not-descendant` /
+  `unbound-register` behaviour and the `--late` limit are unchanged and were confirmed correct.
+- **CR01 (critic) receipt defects, fixed.** Two `before`/control receipts carried `tail`'s exit status
+  instead of Python's, and the C2 delta `before` receipt was measured at a revision where its tool did
+  not yet exist. Both were re-measured: the C1 controls now run the frozen command at the graded tip
+  (the sealed facts do not move) and the delta `before` runs the tip instrument against the base tree
+  (`# tree=bfdd7a70`), each with a real `EXIT=`. The two in-place SCORECARD edits this round made
+  (banner, claim row) are the `pending` events the round reports, not append-only silence.
+- **F2 plan-literal reading.** A plan-literal grader reads "the tip registry row count" as 305 and calls
+  the correction `new=302` unbacked; the record states both numbers and the base binding is divergence 5.
