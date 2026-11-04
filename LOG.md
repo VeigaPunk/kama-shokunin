@@ -3393,3 +3393,14 @@ with each later record commit, so the retained receipt
 `pending=1` at `1b96317f`, while the graded buckets (`accepted=53 late=10 unaccepted=0 bad_rows=0
 bad_declarations=0 out_of_population=0`) are unchanged. The SCORECARD banner and the §Round 81 C2 row
 name `pending=1` and say what the value is; no claim predicate moves.
+
+## Round 81 — correction to the §Round 79 gate verdict carried in the head operability row (appended)
+
+`LOG-CORRECTION round=81 field=round79-gate-failed old=failed=0 new=failed=1 at=a2af1af59faf6cf66fe854559293c4e4b441aff3`
+
+The head operability row's round-79 cell said "the scored run `PRE_REPORT round=79 arms=10 failed=0
+uncommitted=0` at its receipt revision". The receipt that cell names,
+`.ufo/waves/round-79/measured/after/c2-gate.out`, prints `PRE_REPORT round=79 arms=10 failed=1
+uncommitted=0` with `EXIT=1` (arm 8 red on the round's own in-place edits). The row now states the
+receipt's value and calls round 79's C2 an honest stop. Found by the round-81 C1 critic seat, not by the
+round's six graded facts; no claim predicate, count or target moves.

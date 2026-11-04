@@ -74,6 +74,17 @@ the sealed record tip, but the round-80 closure landed at the round-81 base (`e7
 present-tense claim is stale at the graded tip and the gate's newest-closure arm fails on it. The row is
 re-anchored to `corpus/lessons/round-80-verifier-spotcheck.md`.
 
+### Correction — the head operability row's round-79 gate verdict (seventh stale fact)
+
+The C1 critic seat re-derived a seventh stale declared fact the six graded facts do not cover: the head
+operability row's round-79 cell stated `PRE_REPORT round=79 arms=10 failed=0 uncommitted=0` while the
+receipt it names (`.ufo/waves/round-79/measured/after/c2-gate.out`) prints `failed=1`, exit 1 — the same
+class as the round-80 C2 overstatement (R79V1) and inherited through the round-79 correction. It is
+repaired in the appended `#### round-81 correction` block and the appended `LOG-CORRECTION round=81`
+entry, not by a claim change: the counter's six facts, predicate and target are frozen and this seventh
+fact is recorded as an ungraded stale location (the class is not saturated; KQ133's check enumerates the
+six).
+
 ## Mistakes
 
 | Class | Evidence pointer | Captured-by | Fix |
