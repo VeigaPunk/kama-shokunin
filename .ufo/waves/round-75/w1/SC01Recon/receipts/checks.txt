@@ -1,0 +1,54 @@
+# event-set reconstruction (evset.py)
+independent (commit,file) deletion pairs: 223
+audit events: 223
+in git but no audit event: 0 []
+audit event but no git deletion: 0 []
+deletion-count disagreements: 0 []
+
+# per-event re-derivation (rederive.py)
+events with undisclosed: 53; total undisclosed entries 389
+events where JSON deleted != numstat or != hunk-deleted, or hash mismatch: 0
+counts all agree: 53 / 53
+
+# strict replication (verify_all.py)
+events replicated (region=*, permitted=0): 80 of 223
+mismatches: 26
+   {'short': 'ccc4bb31267f', 'file': 'corpus/SOURCES.md', 'deleted': 1, 'graded': 1, 'max_mine': 0, 'max_json': 0, 'by_mine': None, 'by_json': None, 'hto_mine': 0, 'hto_json': 0, 'status': 'disclosed'}
+Traceback (most recent call last):
+  File "/fast/scratch/hyaku/kama-r75/SC01Recon/verify_all.py", line 64, in <module>
+    print("status vs replicated semantics:",dict(st))
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+BrokenPipeError: [Errno 32] Broken pipe
+
+# SCORECARD carve-out positions (sectioncheck2.py)
+baa0675a1b28    3      2                   1                 0
+a5bc42a10546    1      1                   0                 0
+
+excluded lines whose deleted position sits OUTSIDE the five exempt titles: 0
+
+# pointer drift (drift.py)
+
+SCORECARD.md @ corpus/README.md:761 (row introduced 380bcdff)
+  binds at HEAD: False
+  last commit where it bound: c2c05e30b80e :: append-only (SCORECARD.md, LOG.md, corpus/QUALITY.md, corpus/README.md, corpus/SOURCES.md)
+  first commit where it stopped: 750e76b9363b ::   context-capacity rows' scope already excludes.
+
+corpus/QUALITY.md @ corpus/README.md:761 (row introduced 380bcdff)
+  binds at HEAD: False
+  last commit where it bound: c2c05e30b80e :: append-only (SCORECARD.md, LOG.md, corpus/QUALITY.md, corpus/README.md, corpus/SOURCES.md)
+  first commit where it stopped: 750e76b9363b ::   context-capacity rows' scope already excludes.
+
+corpus/README.md @ corpus/README.md:761 (row introduced 380bcdff)
+  binds at HEAD: False
+  last commit where it bound: c2c05e30b80e :: append-only (SCORECARD.md, LOG.md, corpus/QUALITY.md, corpus/README.md, corpus/SOURCES.md)
+  first commit where it stopped: 750e76b9363b ::   context-capacity rows' scope already excludes.
+
+corpus/SOURCES.md @ SKILL.md:578 (row introduced 3a09a1d9)
+  binds at HEAD: False
+  last commit where it bound: c2c05e30b80e :: | SOURCES append-only guard | gate: `python3 tools/sources-append-only.py --from A --to B [--json]` | 0 no vio
+  first commit where it stopped: dc48ee2e9f45 :: of any real deployment.
+
+corpus/lessons/*.md @ corpus/README.md:1239 (row introduced 24e906f0)
+  binds at HEAD: False
+  last commit where it bound: c2c05e30b80e :: Lesson files under `corpus/lessons/` are append-only as the `A-corr` contract row declares: filed lessons stay
+  first commit where it stopped: 750e76b9363b :: - Carried over unchanged and not re-measured here: the b11906 ledger population at

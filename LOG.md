@@ -2995,3 +2995,28 @@ and receipts are the evidence of the seat's work.
 - L0: the round-65 NTFS-path question stays unanswered — routed around; nothing assumed.
   No service restore, configuration write, package install or registered-endpoint sample
   occurred. Scores held: operability 8, freshness 8, calibration 7.
+
+## Round 75 — interpretation pins, survivor certification, accepted-history accounting (2026-11-04)
+
+Frozen plan `plans/round-75-claims.md` (base `dc58e51315e79d36df5fc530c95fbd3aecbf7593`,
+freeze `0908bab5cbf0ab6b435144fc525a3e18443dc08f`); work tip `b8ed256829589a13a0ba2249a8ae9e2b8800fb5a`.
+Evidence: why C1 — the two routed interpretation debts were prose, not graded rules: mutating either
+reading (older-demonstrated names joining `total`; any 40-hex token counting as a revision mention)
+left both modules' selftests green (`CONTROL_C1 killed=0 escaped=2`,
+`.ufo/waves/round-75/measured/before/c1-mutants.out`). Why C2 — the receipt-claim module's docstring
+declared two behaviours no arm graded; five mutants, two escaped (`CONTROL_C2 killed=3 escaped=2`,
+`measured/before/c2-mutants.out`). Why C3 — the append-only audit has reported five unbound contract
+declarations since round 51 and 53 post-ledger undisclosed events it may never disclose
+(`measured/before/c3-audit.out`); the lane needed an explicit accepted-history grade, not a re-stamp.
+What landed: `tools/round75-interpretation-pins.py` (two declared readings, mutated-reading legs),
+`tools/round75-survivor-probe.py` plus the `conflicting-headers` and `header-window-fifth-line` arms in
+`tools/round74-receipt-claim-binding.py`, `registry/append-only-accepted.tsv` (389 rows over 53 events)
+with `tools/round75-append-accepted.py` and its introduction-commit cutoff, `registry/append-only-declarations.md`
+(the five unbound contract pointers re-pointed, register declared append-only), pre-report gate arm 8
+`round75-instruments` (`PRE_REPORT_SELFTEST pass=18 fail=0`), S547 (`gitattributes(5)`), three QUALITY
+criteria and the round-74 coverage-map block. Lesson: `corpus/lessons/round-75.md` (four mistake classes,
+each with a fix shown able to fail). Wave: one v1 wave, 13 seats (3 executor, 3 scribe, 1 scout,
+1 connector, 1 revenger, 1 reviewer, 1 critic, 1 mutation-tester, 1 sentinel); attacks: RV01 both pins
+load-bearing with four cheat attempts caught; SN01's fresh-damage finding adopted as the register's
+temporal cutoff; no axis harmed (operability 8, freshness 8, depth 7, coverage 9, calibration 7,
+adjacency 7).

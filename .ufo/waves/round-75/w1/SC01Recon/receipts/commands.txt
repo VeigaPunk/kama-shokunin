@@ -1,0 +1,25 @@
+# SC01Recon receipt — commands and exits
+
+$ curl -sS -L --max-time 60 -o gitattributes.live.html -w 'http_code=%{http_code} size=%{size_download} url=%{url_effective}' https://git-scm.com/docs/gitattributes
+http_code=200 size=131174 url=https://git-scm.com/docs/gitattributes
+exit=0
+
+$ sha256sum gitattributes.live.html .ufo/waves/round-75/w1/sources/gitattributes.html
+ceb3351f931ae86283f51416cf0042fd78265eda59e5af7d09e17581ec0f77f7  /fast/scratch/hyaku/kama-r75/SC01Recon/gitattributes.live.html
+ceb3351f931ae86283f51416cf0042fd78265eda59e5af7d09e17581ec0f77f7  .ufo/waves/round-75/w1/sources/gitattributes.html
+
+$ cmp -s <live> <retained>; echo exit=$?
+cmp exit=0
+
+$ sha256sum plans/round-75-claims.md
+7e3e913cf8ee87843ca108f34e3cbcdff5f75cd72b4ff5377da9a3ed451eecda  plans/round-75-claims.md
+  (freeze.txt pin plan_sha256 7e3e913cf8ee87843ca108f34e3cbcdff5f75cd72b4ff5377da9a3ed451eecda)
+
+$ python3 tools/append-only-audit.py --repo . --json > audit.json ; echo exit=$?
+exit=1 (unrestored=53, bad_declarations=5)
+
+$ python3 tools/append-only-audit.py --repo . | tail -1
+summary commits=577 files=144 events=223 restored=87 partial=0 unrestored=53 ungraded=78 disclosed=5 permitted_lines=633 disclosed_lines=10 bad_disclosures=0 ungraded_lines=330 regressed=0 vanished=0 unmatched=0 binary=0 bad_declarations=1
+
+$ git show ea33a78f2b0b^:corpus/SOURCES.md | tr -d '\r' | cmp - <(git show ea33a78f2b0b:corpus/SOURCES.md)
+cmp exit=0
