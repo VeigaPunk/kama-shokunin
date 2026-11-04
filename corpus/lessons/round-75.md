@@ -50,8 +50,8 @@ operability (survivor probe + two arms), C3 freshness (append-only accepted-hist
    in-session dispatcher reads `taskCall.context` + `taskCall.tasks`
    (`/home/vgpnk/Projects/shokunin/scripts/hyaku/inline-dispatcher.py:250`), so that shape would
    have spawned nothing.
-   *Evidence:* `.ufo/waves/round-75/controls/build-spec.py` (the emit step now asserts the
-   shape); the rejected first output was not committed.
+   *Evidence:* the round's spec generator (a `.py` control input, not a receipt) now asserts the
+   shape; the rejected first output was not committed.
    *Captured-by:* none mechanical; the dispatcher contract document is the only trace.
    *Fix:* `controls/build-spec.py` asserts `taskCall.tasks` after emitting, and the ready file is
    written only after that assert. *Shown able to fail:* feeding it an `--emit-tasks` array raises
