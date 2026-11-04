@@ -4938,3 +4938,13 @@ cite print the post-hardening ones. Superseded values, each bound by a `correcte
   as the measurement revision, not the tip, and the counters re-derive at the tip.
 - **R80V6 fixed**: the head coverage row's last-change cell now names round 80, the round its evidence
   cell carries.
+
+### Round 81 §Gate
+
+`python3 tools/pre-report-gate.py --repo . --round 81 --tip master` prints `PRE_REPORT round=81
+arms=11 failed=0 uncommitted=0`, exit 0 (`measured/after/gate.out`, whose header names the revision it
+graded): every arm green, arm 8's composed line carries `APPEND_DEBT round=81 base=e7d2fd729cf8
+events=63 accepted=53 late=10 … unaccepted=0 bad_rows=0 bad_declarations=0 out_of_population=0`, arm 11
+`APPEND_DEBT_SELFTEST pass=16 fail=0`, and the gate's own selftest is `PRE_REPORT_SELFTEST pass=26
+fail=0` (`measured/after/gate-selftest.out`). The base control is red: at the freeze tip with no late
+register arm 8's module prints `unaccepted=10`, exit 1 (`measured/before/debt-base.out`).
