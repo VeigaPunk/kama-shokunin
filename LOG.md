@@ -3067,7 +3067,7 @@ Evidence: why C1 — the frozen receipt-claim counter cannot grade its own prece
 `measured/before/c1-receipt-claim.out`), and the append-only contract forbids dropping the fenced
 bytes that cause it. Why C2 — the round-75 record files one wrong digest, one wrong work tip, one
 wrong mistake count, one unbacked gate tally and one stale closure pointer
-(`c2-facts.out`, `c2-closure.out`, `c2-tally.out`). Why C3 — 83 audit events are unaccounted and
+(`measured/before/c2-facts.out`, `measured/before/c2-closure.out`, `measured/before/c2-tally.out`). Why C3 — 83 audit events are unaccounted and
 the accepted register's cutoff cannot admit events that postdate it (`c3-audit.out`).
 What landed: `tools/round76-receipt-scope.py` (fence + record-path scope, seven arms, `--all-findings`),
 `tools/round76-selfrecord-facts.py` (eight facts, five arms), `tools/round76-append-exempt.py`
@@ -3086,3 +3086,9 @@ laundering surface and the tools' argv safety. Misses recorded, not prettified: 
 shifted=3` (the frozen target assumed `PROVINCE.md` was the only non-record delta; `registry/append-only-contract.tsv`
 at `b8ed2568` is a second), C3 `exempt=47 unaccounted=37` (the audit's `ungraded` bucket carries
 carveouts it does not serialize, and five events postdate the earliest register introduction).
+
+### Superseded bytes (round 76 record-citation repair; held so the audit grades the edit restored)
+
+``````text
+(`c2-facts.out`, `c2-closure.out`, `c2-tally.out`). Why C3 — 83 audit events are unaccounted and
+``````
