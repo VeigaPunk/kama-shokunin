@@ -117,3 +117,17 @@ run this round; the next freshness round owns it.
 4. **R80V4's warning inventory.** The validate `W04` set is pre-existing except `S555` (round 80's
    supersession row shares `S553`'s URL, by design); round 81 adds `S558`/`S559`/`S560`/`S561` with four
    distinct URLs, so the warning set does not grow this round.
+
+## Hardening notes accepted without an instrument change (wave attack seats)
+
+- **RV01 N1–N4 (C1 counter, info severity, no live effect).** N1: F1–F5's `new` is checked against the
+  sealed receipt observation rather than a tip re-derivation (the receipt blobs are byte-identical at
+  sealed and tip — `git diff --stat a2af1af5 <tip> -- .ufo/waves/round-80/measured/after/` is empty);
+  N2: `section()` matches a heading prefix (a hypothetical `## Corrections-archive` would join the
+  container); N3: `marked_section()` does not stop at `###` levels; N4: "newest closure" is newest by
+  committer time, not round number. Every one is non-exploitable at the graded revisions, and changing
+  the counter after the measured receipt would move the receipt's binding, so the counter stays
+  byte-frozen this round and the four notes are the first round-82 instrument items.
+- **EX03 control (C2 gate arm).** The green is carried by `registry/append-only-late.tsv`, not by the
+  re-point: same module blob at the base population without the register → `unaccepted=10` exit 1;
+  with it → `unaccepted=0` exit 0; arm 11's fixture-pure selftest cannot launder the debt.
