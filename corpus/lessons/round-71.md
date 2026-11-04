@@ -154,4 +154,15 @@ Wave dispositions (12 seats, one v1 wave; role mix 3 executor / 2 scribe / 1 sco
 
 
 
-Final receipts at the tip: <!--FINAL-RECEIPTS-->
+Final receipts at the tip: Final receipts at the report tip (`4b284653`, all committed under `.ufo/waves/round-71/measured/after/`):
+`reconciler-at-tip.out` (`mismatches=0 met=True`, exit 0), `newest-closure-at-tip.out`
+(`row_current=true`, exit 0), `receipt-audit-at-tip.out` (`unresolved=0`, exit 0), `wlc-at-tip.out`
+(`paths=5 clean=5`, exit 0), `pre-report-at-tip.out` (`PRE_REPORT round=71 arms=5 failed=0 uncommitted=0`,
+exit 0), `province-claims-at-tip.out` (`markers=11 tags=12 extra=4 contradicted=14 uncovered=0 exit=0`),
+`sources-census-at-tip.out` (`kama ok`, exit 0), `boundary-at-tip.out`
+(`BOUNDARY cases=7 killed=5 survivors=0`, exit 0). A second gate run at `1375f51c` is
+`pre-report-at-final.out` (`PRE_REPORT round=71 arms=5 failed=0 uncommitted=0`, exit 0); the lane tip
+`9458c3d7` equals `ls-remote origin refs/heads/master`. The pre-report receipt measured at `4b284653`
+remains valid at the later tips: the only commits after it add receipts under
+`measured/after/` (this lesson's final-receipts block is the one non-receipt edit and touches no
+instrument input).
