@@ -1778,3 +1778,4 @@ gate's arm 8. Indexing the entry here certifies nothing about the gate run beyon
 the round report; acceptance never restores bytes and never changes the audit's `unrestored` count.
 Registered consumers remain `DEAD`; K05 declared-versus-served context capacity across real consumers
 stays open.
+| `pin-recheck-trigger.md` | A `behind` relation in `registry/engine-pin-relations.tsv` is a recheck trigger, never drift: resolve it by re-opening the pinned document at its own ref and locating the anchored statement; the llama.cpp `/health` sentence is byte-identical at b11755 and b12103 (one line shifted, document 2402 -> 2620 lines) | S563, S564; round 82 |

@@ -374,3 +374,14 @@ late-acceptance register. The frozen `tools/round75-append-accepted.py` and
 `registry/append-only-accepted.tsv` stay as history: their pre-introduction cutoff cannot accept a
 post-introduction event, which is why the pre-report gate's arm 8 now composes the new counter.
 Late acceptance never restores bytes and never changes the audit's `unrestored` count.
+
+**Round-82 note — the late-row rule and the recheck trigger (2026-11-04).** The lane's two new
+instruments: `tools/round82-late-delta.py` re-derives a late register's round delta against the frozen
+round-81 generator (carried rows bound byte-wise to the base revision, new rows by cell and by the
+accepting/deletion round order), and `tools/round81-append-debt.py` now binds each late row's OWN
+introducing commit (`git blame`) instead of one commit for the whole register — the row-level reading
+its prose always named. Freshness ground: a `pin-watch` `behind` relation is a recheck trigger, and the
+only honest resolution is re-opening the pinned document at its own ref; the round-82 read compares
+llama.cpp `tools/server/README.md` at `b11755` and at `b12103` (the `### GET /health` statement is
+byte-identical, one line shifted, while the document grew 2402 → 2620 lines), recorded in
+`corpus/knowledge/pin-recheck-trigger.md`. No consumer config, unit or host surface is touched.

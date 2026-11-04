@@ -3415,3 +3415,52 @@ mutation battery (the dedicated mutation-tester seat did not spawn) showed four 
 `split-pending`, `resolve-base-*`) and the committed module now prints `APPEND_DEBT_SELFTEST pass=22
 fail=0`, exit 0. The claim predicate, the target line and the graded buckets are unchanged; the
 SCORECARD §Round 81 rows and the knowledge entry's addendum carry the new tally.
+
+## Round 82 — the round-81 record is graded, the late-acceptance rule is repaired to its own wording (2026-11-04)
+
+Frozen plan `plans/round-82-claims.md` (base `aaf974dbd3b6adb2ef914dc7293cda92b4e05551`; sealed record
+`1b64f66ddea89c57b71165eacd14b0e1d6f24e11`). Two claims, two distinct axes:
+
+- **C1 calibration (lowest assigned axis, 7)** — `tools/round82-selfrecord-round81.py` re-derives six
+  declared facts of the round-81 self-record and grades one dated value-bound correction per stale fact.
+  Before: `SELFRECORD_R81_ENUM claims=6 stale=5 corrected=0` exit 1 (F1 the §Round 81 C2 row's `pending`
+  cell 1 against its cited receipt's 4; F2 the LOG frontier 301 against the tip registry's 302; F3 the
+  SKILL pre-report-gate row's ten arms against the round-81 receipt's `arms=11`; F4 the head calibration
+  row's round-80 closure pointer against the round-81 closure at the tip; F5 the `LOG-CORRECTION
+  round=81 claim=C2` line's own `pending=1` against the receipt's 4). F6 (the §Round 81 C1 row's
+  `pass=13 fail=0`) holds and is not corrected — the direction test. After: `SELFRECORD_R81 claims=6
+  mismatches=0 corrected=5 unbacked=0` exit 0; selftest `pass=18 fail=0`; the no-corrections control
+  prints `mismatches=5` exit 1.
+- **C2 operability** — the round-81 late-acceptance rule is repaired from a register-wide introduction to
+  the ROW's own introducing commit (`git blame <rev> -- registry/append-only-late.tsv`), with three new
+  red-capable selftest arms (`APPEND_DEBT_SELFTEST pass=22 → pass=25`), and round 81's five pending
+  events are repaid by 15 committed rows: `LATE_DELTA round=82 base=aaf974dbd3b6 population=103
+  carried=88 new=15 bad=0` exit 0 and `APPEND_DEBT round=82 base=aaf974dbd3b6 events=68 accepted=53
+  late=15 pending=<p> unaccepted=0 bad_rows=0 bad_declarations=0 out_of_population=0` exit 0. The
+  red-before receipt is `.ufo/waves/round-82/measured/defects/c2-debt-register-level-before.out`
+  (`unaccepted=5 bad_rows=15`, every row `not-descendant`, rev `b0064016`). `registry/append-only-late-r82.tsv`
+  is committed as the failed file-level hypothesis and is read by neither leg.
+
+Frontier: registry 302 → 305 rows (S563 the newest-tag llama.cpp server README at b12103, S564 the same
+file at the lane's pin b11755, S565 a rejected SGLang README with its flip; census exit 0); one admitted
+knowledge entry (`pin-recheck-trigger`) with its coverage-map row; KQ134 from the mined
+`register-introduction-conflated` mistake.
+
+Owed by round 83: the `--late`-bound-register limit, the retained successor register, and the round's
+own `pending` events.
+
+## Round 82 — corrections to the round-81 record (appended; the entries above stand)
+
+`LOG-CORRECTION round=81 field=append-debt-selftest old=pass=22 new=pass=25 at=5fe3c58c38bd10172f8d263633a8254f47467c75`
+
+The §Round 81 C2 bullet's `pass=22` tally was the module's pre-repair count; the round-82 row-level
+introduction repair adds three selftest arms (`row-intro-later`, `row-intro-earlier`,
+`row-intro-unbound`) and the committed module prints `APPEND_DEBT_SELFTEST pass=25 fail=0`. Graded as F3
+of the round-82 record? No — F3 is the SKILL arm count; this tally is superseded in place and named here.
+
+`LOG-CORRECTION round=81 claim=C2 pending=1 -> pending=4 at=1b64f66ddea89c57b71165eacd14b0e1d6f24e11`
+
+The round-81 correction line quoted `pending=1`; the receipt it names
+(`.ufo/waves/round-81/measured/after/debt-green.out`) prints `pending=4`, so the correction's own target
+was stale. The round-82 counter grades this as F5 (`logcorr81-c2-pending=4`), and the C2 row's same cell
+as F1 (`sc81c2-pending=4`).
