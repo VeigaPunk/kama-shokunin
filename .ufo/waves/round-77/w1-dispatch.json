@@ -1,0 +1,244 @@
+{
+ "schema": "ufo-swarm-wave-dispatch-v1",
+ "wave": "kama-r77-w1",
+ "policy": {
+  "source": "config",
+  "maxLanes": 13,
+  "minLanes": 8,
+  "waveMinLanes": 8,
+  "waveMaxLanes": 16,
+  "declaredMaxLanes": 13,
+  "hardCeiling": 256,
+  "rampBatchSize": 5,
+  "rampIntervalMs": 700,
+  "globalRunnerCeiling": 1056
+ },
+ "counts": {
+  "spawn": 13,
+  "resume": 0,
+  "total": 13
+ },
+ "registry": {
+  "schema": "ufo-swarm-registry-v1",
+  "path": ".ufo/waves/round-77/w1/swarm-registry.json",
+  "reportDir": ".ufo/waves/round-77/w1",
+  "members": {
+   "EX01C1Baseline": {
+    "kind": "spawn",
+    "agentId": null,
+    "role": "executor",
+    "item": null,
+    "axes": [
+     "operability"
+    ],
+    "milestone": "kama r77 w1"
+   },
+   "EX02Registers": {
+    "kind": "spawn",
+    "agentId": null,
+    "role": "executor",
+    "item": null,
+    "axes": [
+     "freshness"
+    ],
+    "milestone": "kama r77 w1"
+   },
+   "EX03Selfrecord": {
+    "kind": "spawn",
+    "agentId": null,
+    "role": "executor",
+    "item": null,
+    "axes": [
+     "calibration"
+    ],
+    "milestone": "kama r77 w1"
+   },
+   "EX04Gate": {
+    "kind": "spawn",
+    "agentId": null,
+    "role": "executor",
+    "item": null,
+    "axes": [
+     "operability"
+    ],
+    "milestone": "kama r77 w1"
+   },
+   "SC01Knowledge": {
+    "kind": "spawn",
+    "agentId": null,
+    "role": "scribe",
+    "item": null,
+    "axes": [
+     "coverage",
+     "depth"
+    ],
+    "milestone": "kama r77 w1"
+   },
+   "SC02Lesson": {
+    "kind": "spawn",
+    "agentId": null,
+    "role": "scribe",
+    "item": null,
+    "axes": [
+     "calibration",
+     "freshness"
+    ],
+    "milestone": "kama r77 w1"
+   },
+   "SC03Corrections": {
+    "kind": "spawn",
+    "agentId": null,
+    "role": "scribe",
+    "item": null,
+    "axes": [
+     "calibration",
+     "freshness"
+    ],
+    "milestone": "kama r77 w1"
+   },
+   "SCT01Recon": {
+    "kind": "spawn",
+    "agentId": null,
+    "role": "scout",
+    "item": null,
+    "axes": [
+     "freshness",
+     "operability"
+    ],
+    "milestone": "kama r77 w1"
+   },
+   "CN01Connector": {
+    "kind": "spawn",
+    "agentId": null,
+    "role": "connector",
+    "item": null,
+    "axes": [
+     "coverage",
+     "adjacency"
+    ],
+    "milestone": "kama r77 w1"
+   },
+   "RV01Reviewer": {
+    "kind": "spawn",
+    "agentId": null,
+    "role": "reviewer",
+    "item": null,
+    "axes": [
+     "operability"
+    ],
+    "milestone": "kama r77 w1"
+   },
+   "CR01Critic": {
+    "kind": "spawn",
+    "agentId": null,
+    "role": "critic",
+    "item": null,
+    "axes": [
+     "freshness"
+    ],
+    "milestone": "kama r77 w1"
+   },
+   "MT01Mutation": {
+    "kind": "spawn",
+    "agentId": null,
+    "role": "mutation-tester",
+    "item": null,
+    "axes": [
+     "operability",
+     "calibration"
+    ],
+    "milestone": "kama r77 w1"
+   },
+   "CR02AuditProbe": {
+    "kind": "spawn",
+    "agentId": null,
+    "role": "critic",
+    "item": null,
+    "axes": [
+     "freshness"
+    ],
+    "milestone": "kama r77 w1"
+   }
+  }
+ },
+ "compaction": {
+  "applied": false,
+  "mechanism": null,
+  "reason": null,
+  "savedBytes": 0,
+  "payloadBytesBefore": 0,
+  "payloadBytesAfter": 0
+ },
+ "taskCall": {
+  "context": "# Goal\nkama lane, round 77: ONE v1 wave of 13 seats (build + attack) against the frozen claims in\n/home/vgpnk/Projects/shokunin/kama-shokunin/plans/round-77-claims.md \u2014 read that file in full before your item, and treat its\npredicate blockquotes as frozen text. Base revision cc6e1d3cf202ee3e17cd07f42fc63d2dca5f3bb7; the freeze commit is the commit that\nadds the plan. Lane tip is read with `git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-parse master` (git HEAD is detached).\n\n# Write scope (hard)\nYou may write ONLY inside /home/vgpnk/Projects/shokunin/kama-shokunin plus your own report file. Never touch the fleet root\n/home/vgpnk/Projects/shokunin (no MANIFEST.json, templates/, scripts/, .ufo/state/, .ufo/watchdog.log,\n.scratch/, l0-questions.md), never a sibling repo, never /home/vgpnk/Projects/shokuknow.\n\n# VCS rules (hard)\nNever run git commit/push/stash/checkout/switch/reset/pull, never any mutating jj command, never\n`git add`; the L1 is the only committer. Read-only git (log/show/diff/status/ls-files/rev-parse/\nmerge-base/ls-tree) is fine. Any fixture repo is created as `D=$(mktemp -d -p \"$S\") && git -C \"$D\"\ninit -q` and every later git/jj call names `-C \"$D\"`; verify `git -C \"$D\" rev-parse\n--show-toplevel` equals `$D` before the first commit. Never run git writes in the lane.\n\n# Scratch (hard)\nEvery clone, fixture, work tree or counter --work dir lives under $S =\n/fast/scratch/hyaku/kama-r77/<SeatName>/ (mkdir -p it; export TMPDIR=$S). /tmp is for files under\n50 MB only. Delete $S before you yield (trap 'rm -rf -- \"$S\"' EXIT; Python: finally:\nshutil.rmtree) after copying receipts into the wave dir. A seat that leaves its tree reports that\nas its own defect. Never mirror the whole lane into a wave build dir.\n\n# Absolute paths\nYour tools start at the fleet root, not the lane. Every path you read or write must be absolute\nunder /home/vgpnk/Projects/shokunin/kama-shokunin. Every `Report:` trailer path the dispatch shows is relative to\n/home/vgpnk/Projects/shokunin/kama-shokunin \u2014 write it at /home/vgpnk/Projects/shokunin/kama-shokunin/<that path>.\n\n# Tooling authorization (operator, 2026-10-19)\nYou may install or upgrade tools that help the task: read /home/vgpnk/.omp/agent/RULES.md first\n(official channels, update-safety gate; record tool/version/channel/reason in your report). All\npacman transactions are PAUSED host-wide (orchestrator ruling 2026-10-20): install via `uv tool`,\n`npx`, or an official binary into ~/.local/bin; never -Sy/-Syu/-U/-R, never restart a host\nservice. Named items require no installs.\n\n# Claims (frozen; do not edit the plan)\nC1 operability: `python3 tools/round77-citation-baseline.py --repo . --round 75` must print\n`CITATION_BASELINE round=75 fenced_quoted=1 live_citations=11 bound=9 unbound=2 shifted=0\nnonreceipt=0 unclassified=0` and exit 0. Base state: `RECEIPT_SCOPE ... bound=6 unbound=2\nshifted=3`, exit 1.\nC2 freshness: `python3 tools/round77-append-registers.py --repo . --to cc6e1d3cf202ee3e17cd07f42fc63d2dca5f3bb7` must print\n`APPEND_REGISTERS ... events=241 accepted=53 exempt=56 permitted=28 out_of_region=4 restored=95\ndisclosed=5 unaccounted=0 ... rotation_safe=1` and exit 0. Base state: `APPEND_EXEMPT events=241\nregister=53 exempt=47 restored=95 disclosed=5 unaccounted=41`, exit 1.\nC3 calibration: `python3 tools/round77-selfrecord-round76.py --repo .` must print\n`SELFRECORD_R76 claims=6 mismatches=0 corrected=2 unbacked=0` and exit 0. Base state: no counter\n(exit 2); two stale round-76 facts.\n\n# Seat rules\nYou are a leaf. An executor may spawn at most one read-only labrat probe; no other role spawns\nanyone and no seat runs a swarm. Never message agent://all; message nothing outside your item.\nDo not commit, do not edit another seat's files, do not run pre-report-gate.py (L1 does).\nA dead seat stays dead in the evidence: report every failure with its last error text, never\nfabricate a run. Report every receipt path as an absolute path plus its command and exit code.\n",
+  "tasks": [
+   {
+    "name": "EX01C1Baseline",
+    "agent": "executor",
+    "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n# EX01 \u2014 build the C1 counter: tools/round77-citation-baseline.py\n\nRead /home/vgpnk/Projects/shokunin/kama-shokunin/plans/round-77-claims.md \u00a7C1 (predicate frozen; copy the blockquote text verbatim into\nthe module's `PREDICATE` constant) and \u00a7C1's scope rulings (a), (b), (c).\n\n## Target\nCreate /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round77-citation-baseline.py. Import tools/round76-receipt-scope.py as a\nmodule by path (`importlib.util.spec_from_file_location`), never copy its bytes, and reuse its\n`audit()`, `render()`, `_load_module`, fence and population logic. Add exactly the declared\nbaseline-receipt class: a live citation whose path contains `/measured/before/` is `bound` when\n(1) the first five lines name one 40-hex revision, (2) that revision is an ancestor of the\ncommit from `git log --diff-filter=A --format=%H -- <path>`, and (3) the file's sha256 is equal\nat that introducing commit and at the population tip. A baseline failing (1)-(3) stays `shifted`\nwith the failing leg in the detail. Summary line label `CITATION_BASELINE`; unbound findings keep\nthe `CITATION_BASELINE_UNBOUND` label; all other findings `CITATION_BASELINE_FINDING`.\nExit 0 only on the frozen after line, 1 on any finding other than `unbound`, 2 on\ncould-not-evaluate (wrap the base module's CouldNotEvaluate).\n\n## Selftest arms (fixtures in $S, each must be red-capable)\nInherited: `fence-none-live`, `fence-unclosed`, `fence-live-nonreceipt`, `shift-tools`.\nNew: `baseline-bound` (a fixture where a measured/before receipt is bound), `baseline-nonancestor`\n(header rev not an ancestor of introduction -> exit 1 shifted), `baseline-edited` (bytes differ\nbetween introduction and tip -> exit 1 shifted). Print `CITATION_BASELINE_SELFTEST <arm>\nPASS|FAIL` and a final `CITATION_BASELINE_SELFTEST pass=N fail=0`.\n\n## Run and record\nRun `python3 tools/round77-citation-baseline.py --repo . --round 75` in /home/vgpnk/Projects/shokunin/kama-shokunin; it must print the\nfrozen after line and exit 0. Write receipts at\n/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-77/measured/after/c1-baseline.out and\n/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-77/measured/after/c1-selftest.out (command, exit, verbatim output).\nIf the frozen line is unreachable, report the exact deviation and do not edit the plan.\n\n## Do not touch\nOnly the new module and those two receipts. Do not edit registry/, SCORECARD.md, LOG.md.\n\nLane bounds: leaf member \u2014 no subagent dispatch except your single labrat.\nJudged on: operability\nMilestone: kama r77 w1\n\nReport: write your scoped findings to .ufo/waves/round-77/w1/EX01C1Baseline.md"
+   },
+   {
+    "name": "EX02Registers",
+    "agent": "executor",
+    "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n# EX02 \u2014 build the C2 counter and append the nine exempt rows\n\nRead /home/vgpnk/Projects/shokunin/kama-shokunin/plans/round-77-claims.md \u00a7C2 (predicate frozen; copy the blockquote verbatim into the\nmodule's `PREDICATE` constant) and its scope rulings (a)-(d).\n\n## Target\nCreate /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round77-append-registers.py. Import tools/append-only-audit.py,\ntools/round75-append-accepted.py and tools/round76-append-exempt.py by path; reuse their contract\nparse, `exemption_sections`, `file_regions`, `deleted_lines`, `sections` and accepted-register\ngrading. Implement per-register cutoffs: accepted cutoff = earliest `git log --diff-filter=A` commit\nof registry/append-only-accepted.tsv; exempt cutoff = same for registry/append-only-exempt.tsv;\nintroductions `<a>/<e>` counts per path. Rotation: a second introduction of the same path whose\nrow set is not a subset of the file's row set at the version immediately before that introduction.\nAccounting buckets: accepted (register row valid under its own cutoff), exempt (class/count/\nsections valid under its own cutoff), permitted (`permitted == deleted` and graded==0 and\nungraded==0), out_of_region (contract `only=` region exists and every deleted line's parent\nsection lies outside every declared region), restored (held at audit revision), disclosed.\nSummary line exactly as the predicate prints it; findings `APPEND_REGISTERS_FINDING\n<unaccounted|wrong-class|wrong-count|duplicate|rotation> <commit> <file> <detail>`.\nExit 0 only on the frozen line, 1 on findings, 2 on could-not-evaluate.\n\n## Register rows\nAppend NINE rows to /home/vgpnk/Projects/shokunin/kama-shokunin/registry/append-only-exempt.tsv (six-column LF TSV, header unchanged)\nfor these SCORECARD.md events, each with class `exempt-head`, count = that event's ungraded lines,\nsections = sorted parent section titles joined by `|`, note naming the round-76 head\nre-derivation: 900e31b762d51b155fe79f2ef689ca52143e391e (1), 11c08bdc0064b9566dc220821db8b9116c6cf788\n(1), b919f0cb35f40e444899b8de70ea79b813ece678 (3), ac1c8538e391bb76cf1118da10d375b95cc4c1e9 (2),\nba9f724800b7385fc3b732924ffebd143344367d (2), 461d2adbf2b3fe596a53cb392e2bc6e82af79bfb (1),\n661622b50b6b49310321e8cb99618010cf65bb75 (1), 417bbf811f2968a4567d3d3159ccf22b5d171e4d (1),\nc1ae92d56f61786c22924553038578f23971875e (2). Compute the section list with the audit's own\nparser; never hand-guess it. Do not edit the accepted register or the contract.\n\n## Selftest arms (fixtures in $S)\n`audit-fixture-green`, `missing-row`, `wrong-count`, `wrong-class`, `inside-region` (a deletion\ninside the consumer-registry `## Errata` region stays a finding), `rotation-reintroduced` (re-add a\nregister with one new row -> exit 1 rotation), `permitted-overclaim` (an event with one graded line\nclaimed permitted -> exit 1). Print `APPEND_REGISTERS_SELFTEST <arm> PASS|FAIL` and\n`APPEND_REGISTERS_SELFTEST pass=N fail=0`.\n\n## Run and record\nRun `python3 tools/round77-append-registers.py --repo . --to cc6e1d3cf202ee3e17cd07f42fc63d2dca5f3bb7`; it must print the frozen\nline and exit 0. Receipts: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-77/measured/after/c2-registers.out and\nc2-selftest.out (command, exit, verbatim output). Then run\n`python3 tools/round77-append-registers.py --repo . --to cc6e1d3cf202ee3e17cd07f42fc63d2dca5f3bb7 --json` and save it as\nc2-registers.json.\n\n## Do not touch\nOnly the new module, registry/append-only-exempt.tsv and those receipts.\n\nLane bounds: leaf member \u2014 no subagent dispatch except your single labrat.\nJudged on: freshness\nMilestone: kama r77 w1\n\nReport: write your scoped findings to .ufo/waves/round-77/w1/EX02Registers.md"
+   },
+   {
+    "name": "EX03Selfrecord",
+    "agent": "executor",
+    "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n# EX03 \u2014 build the C3 counter: tools/round77-selfrecord-round76.py\n\nRead /home/vgpnk/Projects/shokunin/kama-shokunin/plans/round-77-claims.md \u00a7C3 (predicate frozen; copy the blockquote verbatim into the\nmodule's `PREDICATE` constant).\n\n## Target\nCreate /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round77-selfrecord-round76.py. Model it on\ntools/round76-selfrecord-facts.py (read it first; reuse its `git`/`blob`/`text`/`match`/`section`/\n`record_path`/`worktip` helpers by importing it as a module where practical). RECORD_REV =\ncc6e1d3cf202ee3e17cd07f42fc63d2dca5f3bb7 (the sealed round-76 tip). Facts (6 ids):\n1. `work-tip` \u2014 LOG.md \u00a7Round 76 `work tip <40hex>`; derive with the closure-sealed rule: boundary\n   = introduction commit of corpus/lessons/round-76-verifier-spotcheck.md, freeze =\n   1a85a991fce5b76b60f88a5cab3df98d253b1a4a, first non-record commit in freeze..boundary.\n2. `gate-tally` \u2014 LOG.md \u00a7Round 76 `PRE_REPORT_SELFTEST pass=21 fail=0`; derive `backed` only\n   when a committed `.out`/`.txt`/`.stdout`/`.log` receipt under .ufo/waves/round-76/ carries that\n   exact tally at RECORD_REV.\n3. `capability-count` \u2014 SCORECARD.md head `6 axes and <N> capabilities remain active`; derive N\n   from the row count of the `**Capabilities \u2014 canonical list as of round 76**` table at RECORD_REV.\n4. `knowledge-entries` \u2014 SCORECARD.md \u00a7Round 76 `filtered knowledge entries <N>` at the\n   `rev=<8hex>` the record names; derive by expanding that abbreviation to the full commit\n   (`git rev-parse <8hex>`), then `git ls-tree` the corpus/knowledge names, excluding\n   `engine-sides` and `processes` files.\n5. `sources-rows` \u2014 the same paragraph's `sources census <N> rows`; derive with the 0-3 leading\n   space row pattern at the same revision.\n6. `closure-pointer` \u2014 the `## Axes` calibration row's `latest outside closure` name; derive the\n   newest `corpus/lessons/round-N-verifier-spotcheck.md` at RECORD_REV (reuse\n   tools/round69-newest-closure-counter.py's `_closure_population`/`_closure_date` with since_round\n   63).\nCorrections: accept `### Correction (YYYY-MM-DD) \u2014 <id>` blocks that sit after the fact, name the\nfact's locator or filed value, carry a 40-hex `Revision:` ancestor of the read revision and state\na `Corrected:` value equal to the derived value; population facts 4-5 require Revision == the\nrevision the record names. Any other correction is `wrong-value`.\n\n## Selftest arms (fixtures in $S)\n`correction-wrong-value`, `cheat-constant` (a module printing zeros without reading -> FAIL),\n`missing-record` (exit 2), `stale-uncorrected` (exit 1 naming both facts). Print\n`SELFRECORD_R76_SELFTEST <arm> PASS|FAIL` and `SELFRECORD_R76_SELFTEST pass=N fail=0`.\n\n## Run and record (the corrections are L1's; you build and report the before state)\nRun `python3 tools/round77-selfrecord-round76.py --repo .`; at this point it must exit 1 naming\nexactly `knowledge-entries` and `closure-pointer` as `SELFRECORD_R76_FACT` mismatches and no other\nfact. Write receipts /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-77/measured/after/c3-before-corrections.out and\nc3-selftest.out (command, exit, verbatim output). L1 appends the corrections and captures the\ngreen receipt afterwards.\n\n## Do not touch\nOnly the new module and those two receipts; never SCORECARD.md or LOG.md.\n\nLane bounds: leaf member \u2014 no subagent dispatch except your single labrat.\nJudged on: calibration\nMilestone: kama r77 w1\n\nReport: write your scoped findings to .ufo/waves/round-77/w1/EX03Selfrecord.md"
+   },
+   {
+    "name": "EX04Gate",
+    "agent": "executor",
+    "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n# EX04 \u2014 compose the three round-77 instruments as ONE gate arm\n\nRead /home/vgpnk/Projects/shokunin/kama-shokunin/tools/pre-report-gate.py and the round-76 arm 9 it composes. Add ONE arm (the next\nnumber) named `round77-instruments` that runs, in this order and fail-closed:\n`python3 tools/round77-citation-baseline.py --selftest`,\n`python3 tools/round77-append-registers.py --selftest`,\n`python3 tools/round77-selfrecord-round76.py --selftest` \u2014 each with a timeout, each required to\nexit 0 and print its `pass=N fail=0` final line. The arm's failure must name the instrument.\nDo not change any existing arm, its expected tally or its ordering. If a module is missing, the\narm fails (exit 1) rather than skipping.\n\n## Target\n- `python3 tools/pre-report-gate.py --selftest` prints `PRE_REPORT_SELFTEST pass=N fail=0` with N\n  = the previous total + the number of arms you add (round 76's total was 21).\n- `python3 tools/pre-report-gate.py` runs the real gate; record its exit and output. It may exit\n  non-zero for a pre-existing red arm; name every red arm and its text, never hide it.\nReceipts: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-77/measured/after/gate-selftest.out and\ngate-run.out (command, exit, verbatim output).\n\n## Do not touch\nOnly tools/pre-report-gate.py and those two receipts. Do not edit the three round-77 modules.\n\nLane bounds: leaf member \u2014 no subagent dispatch except your single labrat.\nJudged on: operability\nMilestone: kama r77 w1\n\nReport: write your scoped findings to .ufo/waves/round-77/w1/EX04Gate.md"
+   },
+   {
+    "name": "SC01Knowledge",
+    "agent": "scribe",
+    "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n# SC01 \u2014 two knowledge entries and one live source row\n\nRead /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/CORPUS.md contract + /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/QUALITY.md bar + /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/README.md\n\u00a7Coverage map. Open a source LIVE this round and record the access date (today, 2026-11-04 -03)\nand a \u226425-word located quote.\n\n## Work\n1. Fetch https://git-scm.com/docs/git-log with curl into $S, keep the bytes and their sha256. The\n   row's lesson quote must be a verbatim \u226425-word sentence from the fetched bytes that supports\n   `--diff-filter=A` (the introduction-commit rule). Record url, access date, quote, and the\n   retained copy's sha256.\n2. Append ONE row to /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md in contract-v1 shape (11 columns, no literal `|` in\n   any cell), id continuing the registry (read the highest S### first; never reuse or renumber),\n   tier A (own-work instrument evidence is the alternative; a git doc row is tier B), status\n   `mined`, `used-by` naming the new entry, recheck as an ISO date.\n3. Write /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/knowledge/baseline-receipt-binding.md \u2014 the baseline-receipt class: header\n   ancestry + byte reproducibility at the introducing commit; why a delta-default rule is wrong\n   for a `measured/before/` receipt; the three failure legs; source: S### of the row above.\n4. Write /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/knowledge/register-cutoff-split.md \u2014 per-register cutoffs, why one shared\n   cutoff plateaus a register, the permitted and out-of-region carriage classes, and the rotation\n   test; cite the lane's own tools and the round-77 plan (own-work is acceptable if no external\n   source grounds it; do not invent a source).\nBoth entries: `source:` line, dated census framing, `## Boundary` (what they do NOT prove) and a\ncoverage-map-shaped summary row for SC03 to paste (write the row text into your report, do not\nedit corpus/README.md).\n\n## Verify\nRun `/home/vgpnk/Projects/shokunin/kama-shokunin/../scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama` and\nreport its exit and tail. Write findings to\n/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-77/w1/SC01Knowledge/notes.md. Never edit any other file.\n\nLane bounds: leaf member \u2014 no subagent dispatch.\nJudged on: coverage, depth\nMilestone: kama r77 w1\n\nReport: write your scoped findings to .ufo/waves/round-77/w1/SC01Knowledge.md"
+   },
+   {
+    "name": "SC02Lesson",
+    "agent": "scribe",
+    "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n# SC02 \u2014 corpus/lessons/round-77.md\n\nRead /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/QUALITY.md and the two most recent lessons (round-75.md, round-76.md) for\nshape. Create /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-77.md with:\n1. Header: lane, round 77, base cc6e1d3cf202ee3e17cd07f42fc63d2dca5f3bb7, author line `author: kama L1 (round 77)`.\n2. `## Mistakes` \u2014 mine at least one real mistake from this round or the round-76 record. The\n   strongest candidate: the round-76 single-cutoff rule made the exempt register unable to grow\n   (an event after the register's introduction could never be admitted), i.e. a mechanism whose\n   own admission rule forbids its growth. Required fields per mistake: class \u00b7 evidence pointer\n   (commit/path:line) \u00b7 captured-by (the criterion or `none`) \u00b7 fix, and the fix shown able to\n   fail (the `rotation-reintroduced` arm is the failing demonstration). Also mine the\n   `out_of_region` conflation risk: the audit folds a contract-permitted region deletion into\n   `ungraded`, so a counter that trusts `ungraded` alone would chain one wrong class.\n3. `## Gate` \u2014 the new SOURCES row: URL, access date 2026-11-04, \u226425-word located quote; plus at\n   least one rejected candidate with reason and flip (e.g. an audit-log/temporal-table source you\n   checked and refused for scope or duplication).\n4. `## Freeze divergences` \u2014 compare the landed bytes against plans/round-77-claims.md and record\n   any divergence with its reason (write `none observed` only after checking).\n5. `## Round-77 duties` \u2014 one line per approved duty (D1-D6) with its disposition.\nDo not edit SCORECARD.md, LOG.md or corpus/README.md (SC03 and L1 own them). Write your report at\n/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-77/w1/SC02Lesson/notes.md.\n\nLane bounds: leaf member \u2014 no subagent dispatch.\nJudged on: calibration, freshness\nMilestone: kama r77 w1\n\nReport: write your scoped findings to .ufo/waves/round-77/w1/SC02Lesson.md"
+   },
+   {
+    "name": "SC03Corrections",
+    "agent": "scribe",
+    "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n# SC03 \u2014 close the round-76 closure duties D1, D3, D4, D6 (append-only edits)\n\nRead /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-76-verifier-spotcheck.md \u00a74 D1-D6. You own these append-only\nedits; never rewrite existing text, only append correction blocks or rows.\n\n1. D1 \u2014 append the missing coverage-map row for `knowledge/selfrecord-fact-binding.md` to\n   /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/README.md \u00a7Coverage map, and correct the Frontier sentence that says seven\n   knowledge files remain unmapped: derive the true count at c2aa7fb2 with\n   `git ls-tree -r --name-only c2aa7fb2 corpus/knowledge/` and append the correct value plus the\n   command.\n2. D3 \u2014 the round-76 record says five audit events postdate the cutoff; the committed findings\n   show six (5 SCORECARD + c2aa7fb2's own SOURCES event). Append one correcting block to\n   /home/vgpnk/Projects/shokunin/kama-shokunin/LOG.md \u00a7Round 76 and one to /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-76.md, each naming the\n   superseded sentence, the corrected values 6 and 31+6=37, and the derivation command.\n3. D4 \u2014 in /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-76.md `## Gate`, append the verbatim S498 retained\n   sentence (\"The content of a code fence is treated as literal text, not parsed as inlines.\"),\n   S548's access date and its re-runnable command receipt as the located quote, and log S498's\n   `used-by` old->new in the round-77 lesson? No: log it here in the round-76 lesson's Gate\n   block (the contract asks for the lesson that produced it).\n4. D6 \u2014 read /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-76/w1/SCR03Corrections/corrections.md. Apply its\n   log-tally correction to /home/vgpnk/Projects/shokunin/kama-shokunin/LOG.md \u00a7Round 76 ONLY with the receipt pointer repaired to the\n   real path `.ufo/waves/round-76/measured/after/gate-selftest.out`; if the draft's substance is\n   wrong, append one line in LOG.md saying it was discarded and why. Never leave the draft\n   treated as landed.\nVerify each edit by re-running the command the correction names. Write your report at\n/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-77/w1/SC03Corrections/notes.md with before/after commands and exits.\nNever edit SCORECARD.md (L1 owns the round-77 record and its fact corrections).\n\nLane bounds: leaf member \u2014 no subagent dispatch.\nJudged on: calibration, freshness\nMilestone: kama r77 w1\n\nReport: write your scoped findings to .ufo/waves/round-77/w1/SC03Corrections.md"
+   },
+   {
+    "name": "SCT01Recon",
+    "agent": "scout",
+    "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n# SCT01 \u2014 independent re-derivation of the base measurements (read-only)\n\nDo not write anywhere except your report. Re-derive, with your own commands, and report exact\noutputs:\n1. The 41 unaccounted audit events at cc6e1d3cf202ee3e17cd07f42fc63d2dca5f3bb7: run\n   `python3 tools/append-only-audit.py --repo . --json`, join each event against\n   registry/append-only-accepted.tsv and registry/append-only-exempt.tsv, and print the\n   decomposition: restored / disclosed / accepted / ungraded-with-no-row. Of the latter, print how\n   many are fully permitted (`permitted == deleted`) and how many have a contract `only=` region\n   with every deleted line outside it (4 expected), and the 9 SCORECARD head events.\n2. The three round-75 `measured/before/*.out` receipts: each one's header revision, its\n   `git log --diff-filter=A --format=%H` introduction commit, `git merge-base --is-ancestor`\n   result, and `git show <intro>:<path> | sha256sum` vs `git show cc6e1d3cf202ee3e17cd07f42fc63d2dca5f3bb7:<path> | sha256sum`.\n3. The two stale round-76 facts: `filtered knowledge entries 46` vs the true count at c2aa7fb2,\n   and the `## Axes` calibration row's named closure vs the newest closure at cc6e1d3cf202ee3e17cd07f42fc63d2dca5f3bb7.\n4. Any counter-evidence: an event that would fall through all six accounting classes; a baseline\n   receipt whose introduction is not an ancestor of cc6e1d3cf202ee3e17cd07f42fc63d2dca5f3bb7; a permitted event that also carries a\n   graded line.\nWrite /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-77/w1/SCT01Recon/recon.md with every command, its exit and verbatim\noutput. State disagreements plainly; do not soften a finding.\n\nLane bounds: leaf member \u2014 no subagent dispatch.\nJudged on: freshness, operability\nMilestone: kama r77 w1\n\nReport: write your scoped findings to .ufo/waves/round-77/w1/SCT01Recon.md"
+   },
+   {
+    "name": "CN01Connector",
+    "agent": "connector",
+    "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n# CN01 \u2014 sibling-overlap scan, considerthese mining, assimilation guard (read-only)\n\nRead-only over other repos; never write outside /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-77/w1/CN01Connector/.\n1. Sibling-overlap scan: grep the sibling lane repos under /home/vgpnk/Projects/shokunin/*-shokunin\n   (read-only) for a baseline-receipt class (`measured/before`, `--diff-filter=A`,\n   `merge-base --is-ancestor`) and for register-cutoff/rotation accounting (`append-only`,\n   `cutoff`, `rotation`). Name any lane that holds a competing or prior claim on either method,\n   with path:line, and whether kama's claim is distinct or overlapping.\n2. considerthese: list /home/vgpnk/Projects/shokunin/kama-shokunin/considerthese/, read the newest file, and find at most ONE proposal\n   that is still unimplemented and in province. Open what it points at (do not trust the prose),\n   and write a grounded note: proposal, current state, why unimplemented, and whether it should\n   land as a lesson, a QUALITY criterion or a SOURCES row. Never edit considerthese/.\n3. Assimilation guard (read-only against /home/vgpnk/Projects/shokuknow): run the id-collision\n   extractor exactly as the round prompt \u00a710 states (0-3 leading spaces, compare\n   registry ids vs merge/kama/SOURCES.append.md), and the quarantine slice awk from the\n   absent-defect register for lane `kama`. Print the two id lists' counts, the collision count,\n   and every quarantine row with its verdict plan. Adopt nothing this round.\nWrite /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-77/w1/CN01Connector/notes.md with commands and verbatim output.\n\nLane bounds: leaf member \u2014 no subagent dispatch.\nJudged on: coverage, adjacency\nMilestone: kama r77 w1\n\nReport: write your scoped findings to .ufo/waves/round-77/w1/CN01Connector.md"
+   },
+   {
+    "name": "RV01Reviewer",
+    "agent": "reviewer",
+    "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n# RV01 \u2014 attack C1 (baseline-receipt class)\n\nRead /home/vgpnk/Projects/shokunin/kama-shokunin/plans/round-77-claims.md \u00a7C1 and the landed tool tools/round77-citation-baseline.py\n(EX01 may still be writing it; if absent, read tools/round76-receipt-scope.py and judge the\ndeclared rule against the base bytes). Re-derive with plain git commands, not by running the new\ntool:\n1. Is `bound=9` reachable ONLY through the baseline class? Recompute bound/unbound/shifted from\n   the round-75 self-record population by hand.\n2. Laundering: can the baseline class bind a receipt whose recorded revision predates a change to\n   the *runtime* surface it measured? Construct the concrete counterexample path and say whether\n   the class admits it. The declared guard is `measured/before/` + ancestry of introduction +\n   byte stability; test each leg.\n3. Predicate/counter/label identity: normalized-whitespace compare of the plan blockquote against\n   the module's PREDICATE constant and the printed label (words, count).\n4. Arms: read the selftest and name any arm that cannot fail (assert the fixture really mutates\n   the condition it names).\nWrite /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-77/w1/RV01Reviewer/review.md. Verdict per item: agree/disagree with\na command or path:line. Do not edit the tool.\n\nLane bounds: leaf member \u2014 no subagent dispatch.\nJudged on: operability\nMilestone: kama r77 w1\n\nReport: write your scoped findings to .ufo/waves/round-77/w1/RV01Reviewer.md"
+   },
+   {
+    "name": "CR01Critic",
+    "agent": "critic",
+    "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n# CR01 \u2014 falsify C2 (two registers, permitted and out-of-region classes)\n\nRead /home/vgpnk/Projects/shokunin/kama-shokunin/plans/round-77-claims.md \u00a7C2, tools/round76-append-exempt.py and (if landed)\ntools/round77-append-registers.py.\n1. Do-nothing control: at base the counter prints `unaccounted=41`. Show, with commands, that a\n   round that only appends the nine SCORECARD rows still cannot print `unaccounted=0` (the 28\n   permitted + 4 out-of-region events stay unaccounted), and that a round that appends nothing\n   else fails.\n2. Loophole hunt: can `out_of_region` swallow a real head edit? Build the fixture that has a\n   deletion inside `## Errata` and say which class the rule must assign (a finding). Can\n   `permitted` swallow an event with one graded line? Test the declared condition.\n3. Rotation: does the rule detect a re-added register carrying one new row? Does it wrongly flag\n   a normal append? Answer both with the rule's own logic.\n4. Target arithmetic: 95+5+53+56+28+4 must equal 241; verify each bucket independently from the\n   audit JSON.\nWrite /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-77/w1/CR01Critic/critique.md with commands and verbatim output.\n\nLane bounds: leaf member \u2014 no subagent dispatch.\nJudged on: freshness\nMilestone: kama r77 w1\n\nReport: write your scoped findings to .ufo/waves/round-77/w1/CR01Critic.md"
+   },
+   {
+    "name": "MT01Mutation",
+    "agent": "mutation-tester",
+    "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n# MT01 \u2014 certify the round-77 arms by mutation\n\nFor each landed round-77 module (tools/round77-citation-baseline.py,\ntools/round77-append-registers.py, tools/round77-selfrecord-round76.py), work on a COPY in $S\n(never mutate the lane's tools):\n1. List every named selftest arm from the module's source.\n2. For each arm, produce one source mutant that should turn that arm red (change the condition,\n   not the print). Run the mutated selftest and record the arm's PASS/FAIL.\n3. Report any arm that stays PASS under its mutant (a survivor) as a defect with the mutant diff.\nAlso run the unmutated selftest of each module from the lane and record its tally.\nWrite /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-77/w1/MT01Mutation/mutants.md with the mutant list, per-arm results\nand the survivor list. If a module is absent or red at read time, record that with its error.\n\nLane bounds: leaf member \u2014 no subagent dispatch.\nJudged on: operability, calibration\nMilestone: kama r77 w1\n\nReport: write your scoped findings to .ufo/waves/round-77/w1/MT01Mutation.md"
+   },
+   {
+    "name": "CR02AuditProbe",
+    "agent": "critic",
+    "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n# CR02 \u2014 adversarial probe: audit permitted/region semantics on a fixture\n\nRead /home/vgpnk/Projects/shokunin/kama-shokunin/tools/append-only-audit.py (`permitted_edits`, `file_regions`, `parse_region`,\n`sections`, `deleted_lines`) and tools/round76-append-exempt.py. Build ONE fixture repo under\n$S (git init -q; verify toplevel == $D) that contains: a SOURCES-like file with an appended row\nthen an in-place status change (permitted), a file whose contract row is `only=## Errata` with a\ndeletion inside the region and another outside it, and a SCORECARD-like head-section edit.\nRun the audit on the fixture (module import, not the lane) and print for each event: deleted,\ngraded, ungraded, permitted, status. Then answer exactly:\n- Does `permitted == deleted` hold only when every deleted line is a permitted row edit?\n- Does `file_regions` return `['## Errata']` as a prefix and empty titles, and can a deletion\n  inside it be distinguished from one outside?\n- Does the audit ever set `permitted>0` and `ungraded>0` on the same event, which would break the\n  C2 permitted condition?\nWrite /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-77/w1/LB01Labrat/probe.md with the fixture path, commands, exits and\nverbatim output. Delete the fixture before you yield.\n\nLane bounds: leaf member \u2014 no subagent dispatch.\nJudged on: freshness\nMilestone: kama r77 w1\n\nReport: write your scoped findings to .ufo/waves/round-77/w1/CR02AuditProbe.md"
+   }
+  ]
+ },
+ "resumeSends": [],
+ "note": "Issue exactly one batched task call with taskCall ({context, tasks}); never split a wave into multiple task calls (one-swarm-per-wave). Then one hub send per resumeSends entry: hub send --to <entry.resume> --message <entry.message> (entry.name is bookkeeping, not a hub field)."
+}
