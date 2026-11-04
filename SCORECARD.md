@@ -4766,7 +4766,7 @@ Frozen plan `plans/round-80-claims.md` (freeze `fe7b978013bd1aa6d67a7e0fbf6369b8
 `a9b4543f14625d0f37daa42ef664ee6f6ea975ea`). Three claims on three distinct axes; the lowest
 assigned axis (calibration 7) carries C1.
 
-### Round-79 correction (appended; the round-79 bytes are not rewritten)
+### Prior-record correction (appended; the earlier record's bytes are not rewritten)
 
 R79V1/R79V2: the round-79 banner and its claim table state C2 "verified", and `LOG.md:3217` says
 "all verified on their receipts"; the receipt that row cites,
