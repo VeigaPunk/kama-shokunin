@@ -141,3 +141,22 @@ first filed; the reworded lines above stand as the correction:
    *Evidence:* `.ufo/waves/round-75/controls/build-spec.py` (the emit step now asserts the
    shape); the rejected first output was not committed.
 ```
+
+## Mistakes (continued)
+
+5. **`record-cites-control`** — the self-record may cite only receipt extensions. Round 75's
+   §Mistakes 4 pointed at the round's spec generator, a control script (`.py`) under
+   `.ufo/waves/round-75/controls/`; the receipt-binding counter refuses any cited path whose
+   extension is not one of `.out`, `.txt`, `.log`, `.json`, and exits 2 (could-not-evaluate) for
+   the whole round's record — it does not skip fenced blocks, so quoting the line to satisfy the
+   append-only contract re-breaks it.
+   *Evidence:* `RECEIPT_CLAIM_V2 CouldNotEvaluate: … cited path is not a receipt file (.py):
+   .ufo/waves/round-75/controls/build-spec.py (corpus/lessons/round-75.md:125)` at
+   `rev=bd1198ab9e63ecb337bffb53bad857eddbace860`.
+   *Captured-by:* the round-74 receipt-binding counter (it caught it, at the cost of the round's
+   gate verdict); nothing in the round contract warns a writer before the line is filed.
+   *Fix:* record writers cite a receipt inside the wave dir, never a control script; the pointer
+   itself landed as a `.py`-free sentence before this class was understood. *Shown able to fail:*
+   the counter above exits 2 on the restored bytes and 0 on the rest of the record; the remaining
+   work is a counter-scope decision (skip fenced quotes, or admit `controls/*.py` as citable
+   control inputs), which is a round-76 routing item, not a change made after scoring.
