@@ -3,7 +3,8 @@
 Lane: kama. Round 81 (attempt 1). Base `e7d2fd729cf8204c89c32534303bc9f2a97fcee4` (round-80
 non-author closure tip); frozen plan `plans/round-81-claims.md`; sealed revision for C1
 `a2af1af59faf6cf66fe854559293c4e4b441aff3` (the round-80 record tip, an ancestor of the base).
-Lane tip at drafting `2c1faed0354dbb3cb9f869cb1af4a9302dfcfd4e`.
+Lane tip at drafting `2c1faed0354dbb3cb9f869cb1af4a9302dfcfd4e`; at the last check of this
+draft's evidence `f6cb5303171cc73dc570ace06f99125266e5b956` (the C2 late-row commit landed mid-seat).
 
 ## Gate
 

@@ -1,0 +1,22 @@
+## C2 counter tools/round81-append-debt.py git primitives
+292:    proc = subprocess.run(["git", "-C", str(repo), "show", f"{rev}:{path}"],
+298:    return subprocess.run(["git", "-C", str(repo), "merge-base", "--is-ancestor", a, b],
+303:    proc = subprocess.run(["git", "-C", str(repo), "log", "--diff-filter=A", "--format=%H",
+## C1 counter tools/round81-selfrecord-round80.py git primitives
+85:            proc = subprocess.run(["git", "-C", str(self.path), "show", f"{rev}:{path}"],
+491:        tip = repo.git("rev-parse", "--verify", f"{args.tip}^{{commit}}").strip()
+492:        sealed = repo.git("rev-parse", "--verify", f"{args.sealed}^{{commit}}").strip()
+## diff-tree call sites in tools/ (record-scanning family)
+tools/round72-receipt-tip-binding.py:197:            "diff-tree",
+tools/round76-selfrecord-facts.py:90:        paths = git(repo, "diff-tree", "--root", "--no-commit-id", "--name-only", "-r", commit).decode().splitlines()
+tools/round77-selfrecord-round76.py:60:        paths = git(repo, "diff-tree", "--root", "--no-commit-id", "--name-only",
+## C2 strict-descendant predicate
+        def strict_descendant(event_commit, row_commit):
+            if ("d", event_commit, row_commit) not in cache:
+                cache[("d", event_commit, row_commit)] = (event_commit != row_commit
+                                                          and is_ancestor(repo, event_commit,
+                                                                          row_commit))
+            return cache[("d", event_commit, row_commit)]
+
+        result = grade(events, frozen_rows, late_rows, graded_keys=graded_keys,
+                       frozen_precedes=frozen_precedes, late_intro=late_intro,
