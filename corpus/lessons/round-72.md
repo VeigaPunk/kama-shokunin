@@ -27,7 +27,7 @@ receipts and the scribe's own selftest runs; the L1 appends its integration adde
 | own-work receipts — `.ufo/waves/round-72/measured/before/round-scope-control-old.out`, `.../receipt-tip-control-old.out`, `.ufo/waves/round-72/controls/freeze.txt`, `plans/round-72-claims.md` | `SCOPE_CONTROL base_rev=d30a8696 cases=3 base_green=3 killed=0` (exit 1); `BINDING_CONTROL cited=3 accepted=3 rejected=0` (exit 1) | **no row** — these are the round's own controls and freeze bytes, i.e. evidence a counter reads (D2 discipline), not learnable sources opened this round |
 | `shoukuknow/merge/kama/` package | not re-opened this round; the freeze carries the round-71 decision forward | **Assimilation: none** — the round is sized to two instrument claims, so nothing was re-grounded; the id-collision check ran anyway (receipt `w1/SCR01SourceRow/collisions`) |
 
-Id collision check (wave receipt `w1/SCR01SourceRow/{reg-ids,staged-ids,collisions}`): lane ids 282, staged
+Id collision check (wave receipt `collisions` beside `reg-ids` and `staged-ids` in the seat directory): lane ids 282, staged
 ids 142, **collisions 9** (S330, S333, S334, S335, S346, S347, S352, S353, S363), union max **S542**, next
 unused **S543**. No staged row is adopted, so no renumber map is needed, and the collision set is why a
 bulk append here would have been wrong.
