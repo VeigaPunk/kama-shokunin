@@ -31,12 +31,22 @@ revision C1 grades is `7a3cd98243b69fcbee0cc9e31878782bd8459320` (round 78's tip
   https://raw.githubusercontent.com/ggml-org/llama.cpp/39febd2adb947b70da35e95f9351b3bf58ad170a/tools/server/README.md,
   opened **2026-11-04** (HTTP 200, 135608 bytes, sha256 `8fd5abde2fb52de3b30f30a170631d4c0d92febecc8da44d0541e48b132b35c6`;
   the same bytes as the live listener's build tree `~/src/llama.cpp/tools/server/README.md`).
-  Located quote, **14 words**, at line 2227 (§Router mode, `GET /models`, note 1): "If a model
-  is not running, it will be added or updated according to the source" — the router lists
-  unloaded models and marks each with a `status.value` (loaded/loading/unloaded/sleeping), so a
-  model list is an inventory, never a loaded-model or readiness claim. Scope: the census class's
-  meaning only; not `/v1/models` identity normalisation (S001/S016/S526 ground) and not model
-  quality. Receipt: `.ufo/waves/round-79/measured/before/source-router-models.out`.
+  Located quote, **16 words**, at line 2227 under note 1's `?reload=1` refresh sentence of
+  `### GET /models: List available models` (heading line 2197): "If a model is not running, it
+  will be added or updated according to the source" — the router lists models that are not
+  running and marks each with a `status.value` (loaded/loading/unloaded/sleeping; the same list
+  also documents `downloading` and `incomplete`), so a model list is an inventory, never a
+  loaded-model or readiness claim. Anchor note: the anchor's "Router mode" is the region label
+  (the file's prose at 2015 defines router mode; no heading carries that name) and the line
+  number resolves exactly. Scope: the census class's meaning only — not `/v1/models` identity
+  normalisation (S001/S016/S526 ground), **not** S479's router model-listing code
+  (`get_router_models`' declared-capacity key at the older pin `704366d76`), and **not** S037's
+  router-mode `is_ready` ordering: S553 is docs of the list's *semantics* at a newer commit
+  (`39febd2a`, the build the live listener runs). Pin divergence recorded, not reconciled:
+  `registry/engine-pins.tsv` pins b11755 (`704366d76`), kengaku's S178 pins b7200
+  (`ab49f094…`), and this row pins `39febd2a`; only `engine-pins.tsv` feeds `pin-watch.py`.
+  Receipt: `.ufo/waves/round-79/measured/before/source-router-models.out`;
+  independent re-open: `.ufo/waves/round-79/w1/SCT02Source/source-check.md`.
 - **Rejected — llama.cpp INI presets.** URL
   https://raw.githubusercontent.com/ggml-org/llama.cpp/39febd2adb947b70da35e95f9351b3bf58ad170a/docs/preset.md,
   opened 2026-11-04 (HTTP 200, 4090 bytes, sha256 `3e6643541e12ff3dfee2a23c23a57357403bf4500beced780f010eaebbbdfe13`).

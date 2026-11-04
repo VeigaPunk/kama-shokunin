@@ -10,7 +10,7 @@ section C1 re-points arm 5 at the six-case counter without amending that sentenc
 round 74 adds arm 7 and moves the arm count 6 -> 7):
 
     `python3 tools/pre-report-gate.py --repo <lane> --round <N> --tip <rev>` prints one
-    `PRE_REPORT round=<N> arms=9 failed=<f> uncommitted=<u>` line and exits 0 only when
+    `PRE_REPORT round=<N> arms=10 failed=<f> uncommitted=<u>` line and exits 0 only when
     the five reconciled instruments (selfdesc reconciler, newest-closure counter,
     receipt-pointer audit, worktree-landing check, round-scope counter) plus the three
     round-74 v2 counters arm 7 composes (selfdesc canon, receipt-claim binding,
@@ -41,6 +41,12 @@ Arms, in fixed order, every one run with cwd = --repo:
   9 round76-instruments tools/round76-receipt-scope.py         --repo <repo> --round <N>
                       tools/round76-selfrecord-facts.py        --repo <repo>
                       tools/round76-append-exempt.py           --repo <repo>
+ 10 round77-instruments tools/round77-citation-baseline.py     --selftest
+                      tools/round77-append-registers.py        --selftest
+                      tools/round77-selfrecord-round76.py      --selftest
+ 11 round78-instruments tools/round78-selfrecord-round77.py    --selftest
+                      tools/round78-append-registers.py        --selftest
+                      tools/round78-live-reconcile.py          --selftest
 
 `round-scope` is the round-72 C1 addition -- the sixth arm the gate has ever had, executed
 fifth because `ARM_ORDER` derives every instrument arm from `ARM_SPECS` and keeps the
@@ -109,7 +115,7 @@ an unbounded process chain; it never fires for a normal scored run.
 
 Output (default mode; one line per arm in the order above, then the verdict):
     PRE_REPORT_ARM <name> exit=<e> ok|FAIL <detail>
-    PRE_REPORT round=<N> arms=9 failed=<f> uncommitted=<u>
+    PRE_REPORT round=<N> arms=10 failed=<f> uncommitted=<u>
 
 `--json` replaces the human lines with one JSON document whose "line" field carries the
 same PRE_REPORT verdict string. Child processes get stdout+stderr captured, a 600 s
@@ -182,6 +188,13 @@ timeouts, nonzero exits and missing/malformed final summaries fail closed, namin
 instrument. Scored verdicts now carry `arms=10`; historical nine-arm receipts above
 retain their original meaning. One composite wiring selftest extends the 21 existing
 cases to 22 without changing their individual pass counts.
+
+Round 79 adds arm 11, `round78-instruments`, after all existing arms: it runs the three
+round-78 instruments' `--selftest` and requires each to end with its own summary prefix
+(`SELFRECORD_R77_SELFTEST`, `APPEND_REGISTERS_SELFTEST`, `LIVE_RECONCILE_SELFTEST`), so a
+foreign or malformed summary fails closed. Four wiring cases (red stub, absent module, green
+stubs, malformed summary) move the selftest tally 22 -> 26; scored verdicts now carry
+`arms=10`, and the nine-arm receipts above keep their original meaning.
 """
 
 from __future__ import annotations
@@ -199,15 +212,18 @@ from pathlib import Path
 
 PREDICATE = (
     "`python3 tools/pre-report-gate.py --repo <lane> --round <N> --tip <rev>` prints one "
-    "`PRE_REPORT round=<N> arms=9 failed=<f> uncommitted=<u>` line and exits 0 only when "
+    "`PRE_REPORT round=<N> arms=10 failed=<f> uncommitted=<u>` line and exits 0 only when "
     "the five reconciled instruments (selfdesc reconciler, newest-closure counter, "
     "receipt-pointer audit, worktree-landing check, round-scope counter), the three "
     "round-74 v2 counters arm 7 composes (selfdesc canon, receipt-claim binding, "
     "province host drift), the three round-75 counters arm 8 composes (interpretation "
-    "pins, survivor probe, append-accepted accounting) and the three round-76 counters "
-    "arm 9 composes (receipt scope, self-record facts, append-exempt accounting) are all "
-    "green AND no path under `.ufo/waves/round-<N>/` is uncommitted; it exits 1 naming "
-    "every failed arm otherwise."
+    "pins, survivor probe, append-accepted accounting), the three round-77 counter "
+    "selftests arm 10 composes (citation baseline, append registers, self-record round 76) "
+    "and the three round-78 instrument selftests arm 11 composes "
+    "(round78-selfrecord-round77, round78-append-registers, round78-live-reconcile; each "
+    "must end with its own `<NAME>_SELFTEST pass=N fail=0` summary) are all green AND no "
+    "path under `.ufo/waves/round-<N>/` is uncommitted; it exits 1 naming every failed arm "
+    "otherwise."
 )
 
 ARM_TIMEOUT = 600
@@ -221,7 +237,7 @@ ARM_SPECS = [
                      "--tip", "{tip}")),
 ]
 ARM_ORDER = [name for name, _ in ARM_SPECS] + ["round-clean", "round74-v2",
-              "round75-instruments", "round77-instruments"]
+              "round75-instruments", "round77-instruments", "round78-instruments"]
 VERDICT_RE = {
     "selfdesc": r"mismatches=\d+ met=(?:True|False)",
     "newest-closure": r"(?:NEWEST_CLOSURE|STALE_CALIBRATION) ",
@@ -281,6 +297,15 @@ ROUND77_MODULES = (
     "round77-selfrecord-round76.py",
 )
 ROUND77_SELFTEST_RE = re.compile(r"[A-Z][A-Z0-9_]*_SELFTEST pass=[0-9]+ fail=0")
+
+# Arm 11 `round78-instruments` (round 79): the three round-78 counters' own selftests, each
+# required to end with its OWN summary prefix — a foreign instrument's summary must not
+# certify this one, and a `fail=1` or truncated summary fails the arm closed.
+ROUND78_MODULES = (
+    ("round78-selfrecord-round77.py", "SELFRECORD_R77_SELFTEST"),
+    ("round78-append-registers.py", "APPEND_REGISTERS_SELFTEST"),
+    ("round78-live-reconcile.py", "LIVE_RECONCILE_SELFTEST"),
+)
 
 
 def _decode(data) -> str:
@@ -398,6 +423,36 @@ def _round77_instruments(tools_path: str, repo_path: str, depth: int = 0) -> dic
     }
 
 
+def _round78_instruments(tools_path: str, repo_path: str, depth: int = 0) -> dict:
+    details: list[str] = []
+    commands: list[list[str]] = []
+    failed = False
+    for script_name, prefix in ROUND78_MODULES:
+        script = os.path.join(tools_path, script_name)
+        argv = [sys.executable, script, "--selftest"]
+        commands.append(argv)
+        if not os.path.isfile(script):
+            failed = True
+            details.append(f"missing {script_name}")
+            continue
+        code, text, error = _run(argv, repo_path, depth)
+        summary = _last_line(text)
+        ok = code == 0 and error is None and re.fullmatch(
+            rf"{prefix} pass=[0-9]+ fail=0", summary) is not None
+        failed = failed or not ok
+        reason = error or summary or "(no output)"
+        if code == 0 and not ok and error is None:
+            reason = f"missing valid final selftest summary: {reason}"
+        details.append(f"{script_name} exit={code} {'ok' if ok else 'FAIL'} {_one_line(reason)}")
+    return {
+        "name": "round78-instruments",
+        "argv": commands,
+        "exit": 1 if failed else 0,
+        "ok": not failed,
+        "detail": " | ".join(details),
+    }
+
+
 def evaluate(repo: str, round_no: int, tip: str = "master", tools_dir: str | None = None,
              depth: int = 0) -> dict:
     """Run the seven arms and derive the pinned verdict; the only scoring entry point."""
@@ -504,6 +559,7 @@ def evaluate(repo: str, round_no: int, tip: str = "master", tools_dir: str | Non
     # population with the baseline class.
 
     arms.append(_round77_instruments(tools_path, repo_path, depth))
+    arms.append(_round78_instruments(tools_path, repo_path, depth))
 
     failed = sum(1 for arm in arms if not arm["ok"])
     verdict = f"PRE_REPORT round={round_no} arms={len(arms)} failed={failed} uncommitted={uncommitted}"
@@ -848,6 +904,16 @@ def run_selftest(args) -> int:
             "import sys\n"
             "assert sys.argv[1:] == ['--selftest']\n"
             "print('ROUND77_FIXTURE_SELFTEST pass=1 fail=0')\n", encoding="utf-8")
+    _STUB78 = {
+        "round78-selfrecord-round77.py": "SELFRECORD_R77_SELFTEST pass=8 fail=0",
+        "round78-append-registers.py": "APPEND_REGISTERS_SELFTEST pass=7 fail=0",
+        "round78-live-reconcile.py": "LIVE_RECONCILE_SELFTEST pass=4 fail=0",
+    }
+    for script_name, summary in _STUB78.items():
+        (tools / script_name).write_text(
+            "import sys\n"
+            "assert sys.argv[1:] == ['--selftest']\n"
+            f"print({summary!r})\n", encoding="utf-8")
     (tools / "scope-expect.txt").write_text("70 master\n", encoding="utf-8")
     red_file = tools / "red-arms.txt"
     red_file.write_text("", encoding="utf-8")
@@ -902,7 +968,7 @@ def run_selftest(args) -> int:
     # (a) green fixture: the target shape, exit 0.
     check("green", evaluate(repo, round_no, "master", str(tools)), 0, 0, 0, "round-clean", True,
           detail_has="files=0",
-          want_line="PRE_REPORT round=70 arms=9 failed=0 uncommitted=0")
+          want_line="PRE_REPORT round=70 arms=10 failed=0 uncommitted=0")
 
     # (b) one uncommitted file under the round's wave dir.
     extra = repo / ".ufo/waves/round-70/extra.out"
@@ -948,7 +1014,7 @@ def run_selftest(args) -> int:
     check("round-scope-green", evaluate(repo, round_no, "master", str(tools)), 0, 0, 0,
           "round-scope", True, detail_has="findings=0",
           render_has="round-scope exit=0 ok",
-          want_line="PRE_REPORT round=70 arms=9 failed=0 uncommitted=0")
+          want_line="PRE_REPORT round=70 arms=10 failed=0 uncommitted=0")
 
     # (i)-(k) the real round-73 counter through the same arm-5 wiring: the clean fixture,
     # then the A5 linked-worktree survivor and the A6 ignored-older-round survivor.
@@ -959,7 +1025,7 @@ def run_selftest(args) -> int:
     check("round-scope-v2-clean", evaluate(repo, round_no, "master", str(tools)), 0, 0, 0,
           "round-scope", True,
           detail_has="ROUND_SCOPE_V2 round=70 cases=6 findings=0",
-          want_line="PRE_REPORT round=70 arms=9 failed=0 uncommitted=0")
+          want_line="PRE_REPORT round=70 arms=10 failed=0 uncommitted=0")
 
     linked = work / "linked-worktree"
     added = _git(repo, "worktree", "add", "--detach", str(linked), "master", check=False)
@@ -1017,7 +1083,7 @@ def run_selftest(args) -> int:
           detail_has="SELFDESC_CANON_V2 canon_round=70 canon_rows=2 demonstrated=0 "
                      "total=2 invisible=0",
           render_has="round74-v2 exit=0 ok",
-          want_line="PRE_REPORT round=70 arms=9 failed=0 uncommitted=0")
+          want_line="PRE_REPORT round=70 arms=10 failed=0 uncommitted=0")
 
     # (o) a deleted counter stub fails arm 7 closed, naming the absent module.
     drift_stub = tools / "round74-province-host-drift.py"
@@ -1042,7 +1108,7 @@ def run_selftest(args) -> int:
           "round75-instruments", True,
           detail_has="SURVIVORS2 mutants=5 killed=5 escaped=0",
           render_has="round75-instruments exit=0 ok",
-          want_line="PRE_REPORT round=70 arms=9 failed=0 uncommitted=0")
+          want_line="PRE_REPORT round=70 arms=10 failed=0 uncommitted=0")
 
     # (r) a deleted round-75 counter fails arm 8 closed, naming the absent module.
     aa_stub = tools / "round75-append-accepted.py"
@@ -1074,7 +1140,7 @@ def run_selftest(args) -> int:
           "round77-instruments", True,
           detail_has="round77-selfrecord-round76.py exit=0 ok",
           render_has="round77-instruments exit=0 ok",
-          want_line="PRE_REPORT round=70 arms=9 failed=0 uncommitted=0")
+          want_line="PRE_REPORT round=70 arms=10 failed=0 uncommitted=0")
 
     # (u) a deleted round-77 instrument fails arm 10 closed, naming the absent module.
     sr_stub = tools / "round77-selfrecord-round76.py"
@@ -1143,6 +1209,57 @@ def run_selftest(args) -> int:
     else:
         passed += 1
         print("PASS round77-instruments")
+
+
+    # (v) red round-78 stub inside arm 11: one failing instrument fails the whole arm.
+    r78_red = tools / "round78-append-registers.py"
+    r78_red.write_text(
+        "import sys\n"
+        "assert sys.argv[1:] == ['--selftest']\n"
+        "print('APPEND_REGISTERS_SELFTEST pass=6 fail=1')\n"
+        "raise SystemExit(1)\n", encoding="utf-8")
+    check("round78-instruments-red", evaluate(repo, round_no, "master", str(tools)), 1, 1, 0,
+          "round78-instruments", False,
+          detail_has="round78-append-registers.py exit=1 FAIL",
+          render_has="round78-instruments exit=1 FAIL")
+    r78_red.write_text(
+        "import sys\n"
+        "assert sys.argv[1:] == ['--selftest']\n"
+        "print('APPEND_REGISTERS_SELFTEST pass=7 fail=0')\n", encoding="utf-8")
+
+    # (w) a deleted round-78 instrument fails arm 11 closed, naming the absent module.
+    r78_missing = tools / "round78-selfrecord-round77.py"
+    r78_missing.unlink()
+    check("round78-instruments-missing", evaluate(repo, round_no, "master", str(tools)), 1, 1, 0,
+          "round78-instruments", False,
+          detail_has="missing round78-selfrecord-round77.py",
+          render_has="round78-instruments exit=1 FAIL")
+    r78_missing.write_text(
+        "import sys\n"
+        "assert sys.argv[1:] == ['--selftest']\n"
+        "print('SELFRECORD_R77_SELFTEST pass=8 fail=0')\n", encoding="utf-8")
+
+    # (x) green arm-11 stubs: the arm passes and the verdict carries ten arms.
+    check("round78-instruments-green", evaluate(repo, round_no, "master", str(tools)), 0, 0, 0,
+          "round78-instruments", True,
+          detail_has="round78-live-reconcile.py exit=0 ok",
+          render_has="round78-instruments exit=0 ok",
+          want_line="PRE_REPORT round=70 arms=10 failed=0 uncommitted=0")
+
+    # (y) a malformed summary (or another instrument's prefix) fails arm 11 closed.
+    r78_malformed = tools / "round78-live-reconcile.py"
+    r78_malformed.write_text(
+        "import sys\n"
+        "assert sys.argv[1:] == ['--selftest']\n"
+        "print('SELFRECORD_R77_SELFTEST pass=8 fail=0')\n", encoding="utf-8")
+    check("round78-instruments-malformed", evaluate(repo, round_no, "master", str(tools)), 1, 1, 0,
+          "round78-instruments", False,
+          detail_has="missing valid final selftest summary",
+          render_has="round78-instruments exit=1 FAIL")
+    r78_malformed.write_text(
+        "import sys\n"
+        "assert sys.argv[1:] == ['--selftest']\n"
+        "print('LIVE_RECONCILE_SELFTEST pass=4 fail=0')\n", encoding="utf-8")
 
     total = passed + len(failed_arms)
     print(f"PRE_REPORT_SELFTEST pass={passed} fail={len(failed_arms)}")

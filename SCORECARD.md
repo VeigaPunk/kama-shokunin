@@ -3,7 +3,7 @@
 Contract per `AXES.md` §SCORECARD.md contract. Scores are 0–10, self-assessed,
 each bound to an evidence pointer and the round that last changed it.
 
-**Current authority (round 78):** assigned axes are operability + calibration (`shokunin.conf`); Latest measured round: 78. Round 78 declared three claims: C1 calibration verified (six declared facts of the round-77 self-record re-derive or are answered by dated value-bound corrections, `mismatches=0 corrected=4`), C2 freshness verified (every base audit event accounted once at the audited revision, `events=248 unaccounted=0`, and register rows outside that population move no bucket), C3 operability verified (the probe's three verdicts exercised against a live pinned llama.cpp child, `model_ok=1 mismatch=1 dead=1`). Scores hold: operability 8, freshness 8, calibration 7, depth 7, coverage 9, adjacency 7; the three new capabilities enter the repertoire. The detailed head of the round is the `## Round 78` section below.
+**Current authority (round 79):** assigned axes are operability + calibration (`shokunin.conf`); Latest measured round: 79. Round 79 declared three claims: C1 calibration verified (six declared facts of the round-78 self-record re-derive at the sealed revision `7a3cd98243b69fcbee0cc9e31878782bd8459320` or are answered by dated value-bound corrections — `SELFRECORD_R78 claims=6 mismatches=0 corrected=2 unbacked=0`), C2 operability verified (the pre-report gate composes the three round-78 instrument selftests as its tenth arm `round78-instruments`; `PRE_REPORT_SELFTEST pass=26 fail=0` and the scored line with its measured revision sit in §Round 79 §Gate), C3 coverage verified (the probe's `listeners` census names an unregistered serving listener as its own class — `UNREGISTERED_CENSUS port=<p> unregistered=1 governed=1 class_missing=0`). Scores hold: operability 8, freshness 8, calibration 7, depth 7, coverage 9, adjacency 7; the three new capabilities enter the repertoire. The nine-arm gate receipts of rounds 76–78 stay readable as their rounds' records.
 
 ## Axes
 
@@ -11,10 +11,10 @@ Round 43 re-anchors the `SKILL.md` and `PROVINCE.md` hashes after the round-43 e
 
 | Axis | Score | Evidence pointer (re-derivable at the measured commit) | Last change |
 |---|---|---|---|
-| **operability** | **8** | registry gate `tools/kama-probe.sh` sha256 `4393ab819d6a741646237ef0268cc0836988a9711bab6b06c46cbfea382964f4` (1138 lines); run `python3 tools/pin-watch.py selftest` → `selftest pass=9 fail=0`; run `python3 tools/pre-report-gate.py --selftest` → `PRE_REPORT_SELFTEST pass=22 fail=0`; run `python3 tools/round72-round-scope.py --selftest` → `ROUND_SCOPE_SELFTEST pass=16 fail=0`; round 74: run `python3 tools/round74-receipt-claim-binding.py --selftest` → `RECEIPT_CLAIM_V2_SELFTEST pass=11 fail=0`; run `python3 tools/pre-report-gate.py --selftest` → `PRE_REPORT_SELFTEST pass=22 fail=0` (arm 7 composes the three v2 counters); round 78: run `python3 tools/round78-append-registers.py --selftest` → `APPEND_REGISTERS_SELFTEST pass=7 fail=0`; run `python3 tools/round78-live-reconcile.py --self-test` → `LIVE_RECONCILE_SELFTEST pass=4 fail=0`. Limit: registered consumers retain their last recorded DEAD state; these are lane-local instrument checks, not a readiness claim | score round 3; run facts re-derived round 78 |
+| **operability** | **8** | round 79: run `python3 tools/pre-report-gate.py --selftest` → `PRE_REPORT_SELFTEST pass=26 fail=0` and the scored run `PRE_REPORT round=79 arms=10 failed=0 uncommitted=0` at its receipt revision (§Round 79 §Gate); registry gate `tools/kama-probe.sh` sha256 `4393ab819d6a741646237ef0268cc0836988a9711bab6b06c46cbfea382964f4` (1138 lines); run `python3 tools/pin-watch.py selftest` → `selftest pass=9 fail=0`; run `python3 tools/pre-report-gate.py --selftest` → `PRE_REPORT_SELFTEST pass=22 fail=0`; run `python3 tools/round72-round-scope.py --selftest` → `ROUND_SCOPE_SELFTEST pass=16 fail=0`; round 74: run `python3 tools/round74-receipt-claim-binding.py --selftest` → `RECEIPT_CLAIM_V2_SELFTEST pass=11 fail=0`; run `python3 tools/pre-report-gate.py --selftest` → `PRE_REPORT_SELFTEST pass=22 fail=0` (arm 7 composes the three v2 counters); round 78: run `python3 tools/round78-append-registers.py --selftest` → `APPEND_REGISTERS_SELFTEST pass=7 fail=0`; run `python3 tools/round78-live-reconcile.py --self-test` → `LIVE_RECONCILE_SELFTEST pass=4 fail=0`. Limit: registered consumers retain their last recorded DEAD state; these are lane-local instrument checks, not a readiness claim | score round 3; run facts re-derived round 78 |
 | **freshness** | **8** | snapshot/diff harness `tools/test-snapshot.sh` sha256 `236c23c12964cf0b2f0a2f970187e216d3398dcf2b92ffb7e8606e0fdd029646` (194 lines); run `python3 tools/citation-provenance.py --selftest` → `selftest: ok (24 cases)`; round 74: run `python3 tools/round74-province-host-drift.py --selftest` → `PROVINCE_HOST_DRIFT_V2_SELFTEST pass=10 fail=0`; live drift evidence `.ufo/waves/round-41/c2/ls-remote-vllm.txt` sha256 `13388e483163357aa4daea784d0e67cdc8d6b5438d3166d613a2a044590b9282`; run `python3 -c "recheck=[l.split(chr(124))[10].strip() for l in open('corpus/SOURCES.md') if l.startswith(chr(124)+' S') and int(l.split(chr(124))[1].strip()[1:])<=477];print(sum(1 for r in recheck if r))"` → `218` (registry rows S001–S477 carrying a recheck cadence). Limit: snapshots are invocation-driven (no clock), and source rechecks run on each row's `recheck` cadence; release re-verification ledger `registry/release-recheck-b11889.tsv`: the 91 `on-release` registry rows pinned to a llama.cpp commit re-verified at release b11889 (counter `tools/round44-release-recheck-audit.py`, §Round-44 measured results: 82 holds, 3 holds-reworded, 6 unchanged-file, 0 drifted, 0 removed); round 78: run `python3 tools/round78-append-registers.py --selftest` → `APPEND_REGISTERS_SELFTEST pass=7 fail=0`; the counter itself prints `APPEND_REGISTERS … events=248 … unaccounted=0 … introductions=1/1 rotation_safe=1` at the frozen base (`.ufo/waves/round-78/measured/after/c2-registers.out`), with the `out-of-population-row` and `uncommitted` arms red-capable | score round 10; evidence re-anchored round 78 (registry rows `290 → 292`; S551 git-rev-parse `--verify` and S552 own-work instrument class opened this round) |
 | depth | **7** | `SKILL.md` sha256 `a50f6f7445402de8f09d52d9fa1fb2d3017769ec4ea372ff4bd3baa036df672d` (1736 lines; round 78 rewrote the pre-report-gate row in place); run `grep -c '^## ' SKILL.md` → `48`; `corpus/knowledge/endpoint-identity.md` sha256 `0100ac6d89876b2f11a58542ae1ab75c3765f61d9d138fdad4d720074ddf13d7` (218 lines) | score round 1; evidence re-anchored round 78 (SKILL gate row) after round 73's registry edits |
-| coverage | **9** | surface list `PROVINCE.md` sha256 `6b8c604f045d7275aa77e8788ba318e7cf51dfbc2ae29ffed4564cb34edcd3c9` (331 lines; round 78 appended the three instruments to the lane-instruments row); run `python3 -c "import glob;print(len([f for f in glob.glob('corpus/knowledge/*.md') if 'engine-sides' not in f and 'processes' not in f]))"` → `51` (round 78 added the append-registers-at-the-tip and live-reconcile-trial entries; round 77 added the baseline-receipt and register-cutoff entries) | score round 10; evidence re-anchored round 78 |
+| coverage | **9** | round 79: the `registered` census class in `tools/kama-probe.sh listeners` plus `tools/round79-unregistered-census.py` (`UNREGISTERED_CENSUS port=<p> unregistered=1 governed=1 class_missing=0`), one admitted knowledge entry on that ground, and 52 filtered knowledge entries; surface list `PROVINCE.md` sha256 `6b8c604f045d7275aa77e8788ba318e7cf51dfbc2ae29ffed4564cb34edcd3c9` (331 lines; round 78 appended the three instruments to the lane-instruments row); run `python3 -c "import glob;print(len([f for f in glob.glob('corpus/knowledge/*.md') if 'engine-sides' not in f and 'processes' not in f]))"` → `51` (round 78 added the append-registers-at-the-tip and live-reconcile-trial entries; round 77 added the baseline-receipt and register-cutoff entries) | score round 10; evidence re-anchored round 78 |
 | calibration | **7** | run `python3 tools/capability-repertoire-audit.py --selftest` → `CAP_SELFTEST pass=2 fail=0`; round 74: run `python3 tools/round74-selfdesc-canon.py --selftest` → `SELFDESC_CANON_V2_SELFTEST pass=11 fail=0` and `python3 tools/round74-receipt-claim-binding.py --selftest` → `RECEIPT_CLAIM_V2_SELFTEST pass=11 fail=0` (routed defect 3 ruling: the executable git-state instrument surface — round-scope and receipt-claim families — is calibration, counting self-assessment vs observed-state mismatches per AXES.md; coverage credit would require new domain ground these instruments do not hold); run `python3 tools/round68-receipt-pointer-audit.py --selftest` → `9/9 selftest arms passed`; run `python3 tools/round69-newest-closure-counter.py --selftest` → `10/10 selftest arms passed`; the gate's report-tip receipt is `.ufo/waves/round-71/measured/after/pre-report-at-tip.out` (`PRE_REPORT round=71 arms=5 failed=0 uncommitted=0`); verifier-spotcheck population and latest outside closure are derived at the measured tip by `python3 tools/round59-c2-counter.py --repo <repo> --tip <rev> --fleet-ref HEAD`; run `python3 -c "import glob; n=len(glob.glob('corpus/lessons/*verifier-spotcheck.md')); print('verifier-spotcheck population present' if n else 'verifier-spotcheck population missing')"` → `verifier-spotcheck population present` (exit 0); exact count and resolved fleet ref are in the counter receipt; latest outside closure `corpus/lessons/round-77-verifier-spotcheck.md` (round-78 re-anchor: round 77 closed `ok`/`rejected-honest-stop` — C1 and C2 verified, C3 an honest miss on its frozen count; round 78's own fact run: `python3 tools/round78-selfrecord-round77.py --repo .` → `SELFRECORD_R77 claims=6 mismatches=0 corrected=4 unbacked=0` exit 0 (`.ufo/waves/round-78/measured/after/c1-facts.out`) and its `--selftest` → `SELFRECORD_R77_SELFTEST pass=8 fail=0`; round 76 closed `ok`/`rejected-honest-stop`; round 75 closed `ok`/`admitted=true`; the round-74 re-anchor follows as history, round 73 closed as an honest stop — B6 verified, the full frozen clean-fixture clause unprovable on committed bytes; the round-72 closure stays named in the row-72 section below as history); its seven routed defects are disposed in round 73's records and report); the prior closure `corpus/lessons/round-71-verifier-spotcheck.md` was admitted with five routed defects, all closed by round 72: the false boundary tally now reads `BOUNDARY_SELFTEST pass=18 fail=0` in `SKILL.md`, the boundary row carries its exit `2`, the depth anchor is corrected in `LOG.md` §Round 72, the "at the report tip" wording is replaced by the receipt-tip binding gate, and the missing coverage-map row is appended); round-72 receipts: `.ufo/waves/round-72/w1/EX01RoundScope/selftest.out` (`ROUND_SCOPE_SELFTEST pass=16 fail=0`), `.ufo/waves/round-72/w1/EX01RoundScope/kill-label-wronground.out`, `.ufo/waves/round-72/w1/EX01RoundScope/kill-stray.out`, `.ufo/waves/round-72/w1/EX01RoundScope/kill-ignored.out`; `.ufo/waves/round-72/w1/EX02ReceiptBinding/selftest.out` (`RECEIPT_TIP_BINDING_SELFTEST pass=14 fail=0`), `.ufo/waves/round-72/w1/EX02ReceiptBinding/kill-unbound.out`, `.ufo/waves/round-72/w1/EX02ReceiptBinding/kill-stale.out`, `.ufo/waves/round-72/w1/EX02ReceiptBinding/kill-shifted.out`, `.ufo/waves/round-72/w1/EX02ReceiptBinding/kill-non-receipt.out`; `.ufo/waves/round-72/w1/CRT01ReceiptAttack/live-r71-min.out` (`RECEIPT_TIP_BINDING round=71 cited=1 bound=1 unbound=0 shifted=0 stale=0`, the round-71 record re-graded by these bytes); `.ufo/waves/round-72/w1/EX03GateArm6/selftest.out` (`PRE_REPORT_SELFTEST pass=8 fail=0`); the report-tip runs are cited by the round-72 report; the verifier-spotcheck population covers rounds 1-72 (the round-73 closure included); run `python3 tools/instrument-agreement.py --selftest` → `IA_SELFTEST pass=4 fail=0`; this table's counters `tools/round41-scorecard-reconcile.py` and `tools/round42-selfdesc-reconcile.py`; trend-verdict ledger `registry/verdict-ledger.tsv` (204 rows, self against outside for rounds 10–43: `agreement=69/87 overclaim=2 underclaim=16 other=0 absent=15`, §Round-44 calibration ledger); claim-outcome ledger `registry/claim-outcome-ledger.tsv` (126 rows, the 63 claims of rounds 10–44, self against outside: `agreement=58/61 overclaim=1 underclaim=2 other=1 absent=1`, §Round-45 claim-outcome ledger) | score round 1; evidence re-anchored round 70 (the content-dependent live run fact removed — it duplicated `closure_ptr` and its expected line carried an ellipsis; the live green run is cited in §Round 70) round 75: run `python3 tools/round75-interpretation-pins.py --selftest` → `INTERPRETATION_PINS_SELFTEST pass=3 fail=0`; run `python3 tools/round75-survivor-probe.py --selftest` → `SURVIVORS2_SELFTEST pass=5 fail=0`; run `python3 tools/round75-append-accepted.py --selftest` → `APPEND_ACCEPTED_SELFTEST pass=12 fail=0` |
 | adjacency | **7** | `corpus/knowledge/cross-lane-scope.md` sha256 `c45318b5a7ade2b797c2cf88120fbbcd48bd2c31630620b15c892d13be907f74` (148 lines); run `python3 -c "print(sum(1 for l in open('corpus/knowledge/cross-lane-scope.md') if l.startswith(chr(124))))"` → `16` (lines starting with a table pipe, header and separator lines included); contested scope stays reported, not absorbed (`PROVINCE.md` paragraph "Out of province → report, never absorb") | score round 1; evidence re-anchored round 42 and again round 72 (the round-72 additions name tameshi's binding gate, kaidoku/mori/souji scope instruments and the three shared limits) |
 
@@ -46,17 +46,18 @@ reported, not absorbed).
 **Carried debt:** the two positive-control rows (`ufo-fsd-thetick`,
 `ufo-fsd-local-helper`) read `DEAD` — the pins verify `file=yes` at the relocated
 tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.service`
-(or a successor unit). Until then `model_ok=0` is ground truth, not a gate defect.
+(or a successor unit). Until then `model_ok=0`### Planned (round 80)
 
-## Planned
+1. Calibration: grade the three corrections' *new* values with a second, independent receipt path (the F5 ancestry
+   check and the F6 receipt body), or extend the self-record harness to the round-79 record so the next round starts
+   from `mismatches=0` with a pre-freeze measured correction count.
+2. Freshness: re-measure the pinned serving-engine gap from a live `pin-watch.py check` run (`registry/engine-pins.tsv`
+   pins llama.cpp b11755 while the round-79 source row pins `39febd2a` and kengaku's S178 pins b7200) and record one
+   dated line per engine, so the three llama.cpp pins have a declared relation.
+3. Operability: exercise the `registered` class against a second engine fixture (Ollama's `/api/tags`), or make the
+   census counter's live leg red-capable when a model-API listener answers while the registry is unreadable.
 
-The live plan follows; historical plans remain as filed (round 78's in `plans/round-78-claims.md`, executed in the §Round 78 section below; round 77's at the end of the §Round 77 section).
-
-### Planned (round 79)
-
-1. Calibration: extend the self-record harness to the round-78 record's own facts (the C2 predicate/ruling divergence's recorded status, the three new capability rows, the wave's dead-seat count) with the corrected count measured before the freeze — the class C1 round 77 missed and round 78 measured.
-2. Freshness: wire the three round-78 instruments into the pre-report gate as its own arm and re-anchor the gate registry row in the same commit, so a gate run at the tip covers the counters a round actually lands; keep the `out-of-population-row` and `uncommitted` arms red-capable.
-3. Coverage: turn the unregistered live listener observation (`127.0.0.1:1234`, four LFM3 ids) into a probe-visible census class — an `unregistered` report surface that names a serving listener the registry does not govern, without admitting a consumer pin (operator-owned).
+ive listener observation (`127.0.0.1:1234`, four LFM3 ids) into a probe-visible census class — an `unregistered` report surface that names a serving listener the registry does not govern, without admitting a consumer pin (operator-owned).
 
 ## Retired
 
@@ -120,7 +121,7 @@ plan, not a run. No native Phase 0/self-iter failure was re-executed.
 
 ## Capabilities
 
-Mirror of the round-77 canonical capability list that §Round 77 carries (a mirror, not the canonical source: the counters resolve the highest-numbered canonical heading below this line; round 74 repaired R73-D1 by making the canonical list bold so the round-42 reconciler sees it, and round 75 keeps that form). Registry counts are not restated here: `scripts/sources-census.sh census --file corpus/SOURCES.md` derives them.
+Mirror of the round-79 canonical capability list that §Round 79 carries (a mirror, not the canonical source: the counters resolve the highest-numbered canonical heading below this line; round 74 repaired R73-D1 by making the canonical list bold so the round-42 reconciler sees it, and round 75 keeps that form). Registry counts are not restated here: `scripts/sources-census.sh census --file corpus/SOURCES.md` derives them.
 
 | Capability | What it can now do | Evidence pointer | First-working round |
 |---|---|---|---|
@@ -161,6 +162,9 @@ Mirror of the round-77 canonical capability list that §Round 77 carries (a mirr
 | selfrecord-round77 | Re-derive six declared facts of the round-77 self-record at the sealed revision and grade dated value-bound corrections | `tools/round78-selfrecord-round77.py` | 78 |
 | append-registers-tip | Account every append-only audit event at the audited revision with ancestry-filtered, commit-bound register rows and both register digests | `tools/round78-append-registers.py` | 78 |
 | live-reconcile | Exercise the probe's MODEL_OK / MODEL_MISMATCH / DEAD verdicts end-to-end against the pinned llama.cpp child on an unregistered loopback port | `tools/round78-live-reconcile.py` | 78 |
+| selfrecord-round78 | Re-derive six declared facts of the round-78 self-record at the sealed revision and grade dated value-bound corrections whose new values re-derive at the tip | `tools/round79-selfrecord-round78.py` | 79 |
+| gate-arm-composition | Compose a round's own instrument selftests as one pre-report-gate arm, fail-closed on a red, malformed or absent instrument | `tools/pre-report-gate.py` (arm 10 `round78-instruments`) | 79 |
+| unregistered-census | Classify a serving listener by whether a registry row declares its port, graded by two fixture registries over the lane-owned pinned child | `tools/round79-unregistered-census.py`, `tools/kama-probe.sh listeners` | 79 |
 
 ## Saturation
 
@@ -4568,4 +4572,156 @@ The live plan follows; historical plans remain as filed (round 77's in `plans/ro
 3. Operability: give the baseline class a certifying control that a later `tools/` delta still
    shifts an at-the-tip receipt, or extend the class to a sealed post-work receipt whose
    revision is re-runnable, whichever the next measurement shows is reachable.
+``````
+
+
+## Round 79 — the round-78 record is graded, the gate runs a round's own instruments, an unregistered listener becomes a class (2026-11-04)
+
+Frozen plan `plans/round-79-claims.md` (freeze `331037039c30909aa2163b2d1de22a7964f90420`; base
+`ee53f1a25eab93a8ab55bbb877e49e2e731df535`; sealed revision C1 grades
+`7a3cd98243b69fcbee0cc9e31878782bd8459320`). Three claims on three distinct axes; the lowest
+assigned axis (calibration 7) carries C1.
+
+| Claim | Axis | Before → after (measured) | Counting command | Verdict |
+|---|---|---|---|---|
+| C1 — six declared facts of the round-78 self-record re-derive, or are answered by dated value-bound corrections | calibration | exit 1 `SELFRECORD_R78_ENUM claims=6 stale=2 corrected=0` (`.ufo/waves/round-79/measured/before/c1-enum.out`; F5 tip-accounting, F6 pre-correction receipt) → exit 0 `SELFRECORD_R78 claims=6 mismatches=0 corrected=2 unbacked=0` (`.ufo/waves/round-79/measured/after/c1-green.out`) | `python3 tools/round79-selfrecord-round78.py --repo .` | **verified**; selftest `pass=9 fail=0` |
+| C2 — the pre-report gate composes the three round-78 instruments as its own arm, fail-closed | operability | `ARM_ORDER` 9 arms, `PRE_REPORT_SELFTEST pass=22 fail=0` (`.ufo/waves/round-79/measured/before/c2-gate-arms.out`) → `PRE_REPORT_SELFTEST pass=26 fail=0` and a scored gate run `arms=10` (`.ufo/waves/round-79/measured/after/c2-selftest.out`, `.ufo/waves/round-79/measured/after/c2-gate.out`) | `python3 tools/pre-report-gate.py --selftest`; `python3 tools/pre-report-gate.py --repo . --round 79 --tip master` | **verified** |
+| C3 — the probe reports an unregistered serving listener as its own census class | coverage | no `registered` column or `governed`/`unregistered` keys; base probe scored by the frozen counter `class_missing=1`, exit 1 (`.ufo/waves/round-79/measured/control/c3-base-probe.out`) → exit 0 `UNREGISTERED_CENSUS port=<p> unregistered=1 governed=1 class_missing=0` (`.ufo/waves/round-79/measured/after/c3-census.out`) | `python3 tools/round79-unregistered-census.py --repo .` | **verified**; selftest `pass=4 fail=0` |
+
+Population at the measured revision: sources registry 292 → 293 rows (S553 admitted with a
+16-word located quote, census exit 0; the INI-preset candidate rejected with its flip); filtered
+knowledge entries 51 → 52 (`unregistered-listener-census`); `SKILL.md` pre-report-gate row
+rewritten in place to ten arms / `pass=26` / `round78-instruments`; `PROVINCE.md` gains the
+round-79 note and the three instruments. `LOG.md` §Round 79 carries the narrative.
+
+### What the counters do not show
+
+- C1 grades six declared facts, not the record's truth: a fact the harness does not name stays
+  ungraded even when false. F6's "committed" reading is a receipt-existence test, not a claim
+  that the reproduction is the original run (the original tip's output was never captured; the
+  receipt says so in its header).
+- C1's corrections are graded at the tip, so an edit to `corpus/lessons/round-79.md` after the
+  measurement can only be caught by re-running the counter. The scored run is committed at the
+  revision it measured.
+- C2's arm composes each instrument's `--selftest`, not its scored mode: a green arm says the
+  three modules' own fixtures pass, not that their claims are green at the tip (C1's and C3's
+  own receipts carry that). The arm's timeout is the gate's per-process 600 s, so a hung
+  instrument fails the arm rather than the gate.
+- C3's class reads the registry's *declared* ports, not the consumers' resolved files: an
+  `inherited` row (the builtin llama.cpp fallback) declares `8080` and therefore governs it
+  even though the consumer never resolves a URL from a file. The class names governance of the
+  port, not pin correctness.
+- The live-host leg is informational: it listed seven model-API listeners outside the registry
+  (`1234`, `8788`–`8795` brokers) at the measured revision, and it gates nothing — the host's
+  listener set changed between two legs during the round (`model_endpoints` 8 → 9), which is why
+  the graded legs run the probe with `--port` and count only the fixture.
+
+### Routed defects from the round-78 closure — status
+
+- **R78V1 fixed** (tip receipts): the scored gate receipt names its revision, the round-77
+  register counter is re-run at the round-79 tip, and this record names each receipt's revision.
+- **R78V2 fixed** (red-before receipt): the pre-correction run is reproduced from the pre-fix
+  module at `fa65ce2c` and committed
+  (`.ufo/waves/round-79/measured/v2/c1-pre-correction.out`, `mismatches=1`, `EXIT=1`).
+- **R78V3 fixed** (post-change selftest): `round78-selfrecord-round77.py --selftest` is re-run
+  at the round-79 tip and committed (`.ufo/waves/round-79/measured/v3/c1-selftest.out`).
+- **R78V4 fixed** (C2 stability leg): `round78-append-registers.py` is re-run at the round-79 tip
+  and its out-of-population line committed
+  (`.ufo/waves/round-79/measured/v4/c2-tip.out`).
+- **R78V5 closed by supersession, not by rewriting**: round-78's `c3-live.json` stays history;
+  the round-79 C3 receipt carries a measured revision and a receipt header, and the round-79
+  counter is the surface that now produces revision-bound C3 evidence.
+- **R78V6 recorded here**: the round-78 plan's `measured/control/c1-norepair.out` and
+  `c2-norows.out` were never created; the real controls are the C1 enumeration
+  (`measured/before/c1-score-nocorrections.out`) and the base gate
+  (`measured/before/c2-gate-arms.out`). The drift is a plan-path defect, not a claim failure.
+- **R78V7 recorded here**: the round-78 before→after table's single command column mixed the
+  before and after modules; this record names both commands per row and names each receipt's
+  revision, and the round-78 report's text is left as filed.
+
+### Freeze divergences (recorded, not rewritten)
+
+1. C3's two legs were first implemented as a summary *delta* over the whole host; between the
+   legs the host acquired another model listener (`model_endpoints` 8 → 9), so the delta failed
+   while the class was correct. The legs now pass `--port` to the probe, which makes the frozen
+   sentence ("the summary's counts move with the class") exact for the fixture listener. The
+   predicate, target and value strings are unchanged; only the leg implementation narrowed.
+2. C2's arm count is read from `ARM_ORDER` at run time; the shipped docstring still calls the
+   retirements of earlier rounds "arm N" in historical prose, so a reader must take the arm
+   count from the verdict line, not the prose.
+3. The plan's target `PRE_REPORT_SELFTEST pass=26` was fixed at freeze from the four new cases;
+   the four cases are committed in the module's selftest block, and the tally is re-derived by
+   the run, never copied.
+
+### Gate and tip state
+
+`PRE_REPORT_SELFTEST pass=26 fail=0` at the revision named in
+`.ufo/waves/round-79/measured/after/c2-selftest.out`; the scored gate run's line and revision
+are in `.ufo/waves/round-79/measured/after/c2-gate.out` and its receipt commit, which names the
+revision it measured. The delta from that revision to this record's tip touches record paths
+only (`.ufo/waves/round-79/measured/**`, `SCORECARD.md`, `LOG.md`), so KQ119 binds it.
+
+### Wave
+
+One v1 wave of 14 seats (4 executor, 3 scribe, 2 scout, 1 connector, 1 reviewer, 2 critic,
+1 mutation-tester; attack 4/14 = 29 %) under `ufo-wave-policy.json` band 8–16. Seat results and
+dead seats: `.ufo/waves/round-79/w1-results.json`; the L1 re-derived every finding it used.
+
+**Capabilities — canonical list as of round 79**
+
+| Capability | What it can now do | Evidence pointer | First-working round |
+|---|---|---|---|
+| sources-registry | Curate where kama learns: tier-scoped, revision-anchored rows; contract-v1 census clean | `corpus/SOURCES.md` | 10 |
+| ollama-offline-evidence-replay | Reconcile caller-supplied `/api/tags` + `/api/ps` captures fail-closed | `tools/kama-ollama-evidence.py` | 14 |
+| live-llamacpp-lifecycle | Start the pinned llama.cpp server on an unregistered loopback port, capture loading/ready surfaces, grade, tear down | `.ufo/waves/round-16/live/receipt.json` | 16 |
+| gguf-declared-identity-replay | Decode bounded local GGUF metadata offline and compare declared metadata with a captured receipt | `tools/gguf-identity.py` | 20 |
+| context-capacity-receipt | Run the registered context-capacity cells on the lane-owned llama.cpp fixture and write a sha256-bound receipt | `tools/kama-context-capacity.py` | 25 |
+| instrument-agreement | Run a lane instrument N times over one tree and emit a receipt with per-run digests and an agreement counter | `tools/instrument-agreement.py` | 30 |
+| pin-watch | List upstream release tags for each pinned serving engine and report the newest tag and how many releases sort above it | `tools/pin-watch.py` | 41 |
+| digest-ledger | Classify every full SHA-256 the lane's documents cite: committed blob, ledger-declared external artifact, unverifiable with reason, or flagged known-wrong | `tools/digest-ledger.py` | 42 |
+| hexrun-census | Classify every lower-case hex run of 32–127 chars the lane's documents cite | `tools/hexrun-census.py` | 43 |
+| append-only-audit | Grade the lane's contract-declared append-only self-description against its git history, every deleted line accounted | `tools/append-only-audit.py` | 46 |
+| live-receipt-replay | Re-acquire a pinned receipt's server archive and model from recorded https URLs, verify sha256 before execution, re-run the lifecycle from an empty home | `tools/kama-live-replay.py` | 47 |
+| live-ollama-lifecycle | Start the pinned Ollama binary on an unregistered loopback port, create a qualified model, capture surfaces, grade, tear down | `tools/kama-ollama-live.py` | 61 |
+| worktree-landing-check | Prove at report time that each declared self-record path's worktree bytes are byte-identical to its HEAD blob | `tools/round67-worktree-landing-check.py` | 67 |
+| receipt-pointer-audit | Audit every section-relative `measured/…` receipt citation against an append-only ledger whose own target must exist | `tools/round68-receipt-pointer-audit.py` | 68 |
+| newest-closure-counter | Resolve the lane's newest non-author closure mechanically and fail when the calibration row names an older one | `tools/round69-newest-closure-counter.py` | 69 |
+| pre-report-gate | Run the round's reconciled instruments as ONE gate; exit 0 only when every arm is green and the tree is clean | `tools/pre-report-gate.py` | 71 |
+| province-host-claims | Re-derive every `province-host:` marker against the live host and require a later dated correction | `tools/round71-province-host-claims.py` | 71 |
+| round-scope | Grade a round's own scope as a verdict: frozen plan at the tip, no uncommitted record path, no ignored wave path | `tools/round72-round-scope.py` | 72 |
+| receipt-tip-binding | Bind every cited receipt to the revision it measured: header names an ancestor and the `rev..tip` delta touches only record paths | `tools/round72-receipt-tip-binding.py` | 72 |
+| round-scope-cases | Grade linked-worktree dirt, newer-round ignored work and nested submodule dirt in addition to the inherited scope cases | `tools/round73-round-scope-cases.py` | 73 |
+| receipt-claim-binding | Reject a three-token tip claim whose cited receipt header names another revision; real records use explicit revisions | `tools/round73-receipt-claim-binding.py` | 73 |
+| province-host-drift | Compare the newest recorded kernel/architecture/distribution triple with the live triple | `tools/round73-province-host-drift.py` | 73 |
+| selfdesc-canon | Resolve the capability repertoire from the newest capability table by round number regardless of heading markup | `tools/round74-selfdesc-canon.py` | 74 |
+| receipt-claim-v2 | Bind a self-record's receipt citations by explicit revision with paragraph-scoped claim grading | `tools/round74-receipt-claim-binding.py` | 74 |
+| province-host-drift-v2 | Require every `recorded at <rev>` host block to be byte-identical at its recorded revision and the tip | `tools/round74-province-host-drift.py` | 74 |
+| interpretation-pins | Bind the lane's two routed interpretation debts to boundary fixtures whose declared reading the committed module produces and whose reversed reading a mutated copy is caught producing | `tools/round75-interpretation-pins.py` | 75 |
+| survivor-probe | Certify the shipped receipt-claim arms by source mutation: five named mutants must each turn their owning selftest arm red | `tools/round75-survivor-probe.py` | 75 |
+| append-accepted | Grade every audit-undisclosed deletion event as accepted history through a committed, hash- and class-bound register with the temporal cutoff | `tools/round75-append-accepted.py` | 75 |
+| receipt-scope | Classify a self-record's citation population: fenced quotation excluded, self-description deltas non-shifting, every live citation bound/unbound/shifted/nonreceipt named, `--all-findings` lists each delta path | `tools/round76-receipt-scope.py` | 76 |
+| selfrecord-facts | Re-derive eight declared self-record facts at the revisions they name and count corrections whose stated value itself re-derives | `tools/round76-selfrecord-facts.py` | 76 |
+| append-exempt-class | Account every append-only audit event once — register row, strict exempt-head class row, restoration, disclosure — and preserve a multi-register introduction cutoff (partial: red on its own target, superseded by the round-77 and round-78 registers) | `tools/round76-append-exempt.py` | 76 |
+| citation-baseline | Bind a `measured/before/` receipt by header ancestry and byte reproducibility at its introducing commit while the at-the-tip delta rule still shifts ordinary receipts | `tools/round77-citation-baseline.py` | 77 |
+| append-registers | Account every audit event once across two registers with independent introduction cutoffs, the audit's `permitted` carriage class and the contract's `out_of_region` class, with rotation detection | `tools/round77-append-registers.py` | 77 |
+| selfrecord-round76 | Re-derive six sealed round-76 facts (work tip, gate tally, capability count, two population counts, closure pointer) and accept only value-bound corrections whose stated value re-derives | `tools/round77-selfrecord-round76.py` | 77 |
+| selfrecord-round77 | Re-derive six declared facts of the round-77 self-record at the sealed revision and grade dated value-bound corrections | `tools/round78-selfrecord-round77.py` | 78 |
+| append-registers-tip | Account every append-only audit event at the audited revision with ancestry-filtered, commit-bound register rows and both register digests | `tools/round78-append-registers.py` | 78 |
+| live-reconcile | Exercise the probe's MODEL_OK / MODEL_MISMATCH / DEAD verdicts end-to-end against the pinned llama.cpp child on an unregistered loopback port | `tools/round78-live-reconcile.py` | 78 |
+| selfrecord-round78 | Re-derive six declared facts of the round-78 self-record at the sealed revision and grade dated value-bound corrections whose new values re-derive at the tip | `tools/round79-selfrecord-round78.py` | 79 |
+| gate-arm-composition | Compose a round's own instrument selftests as one pre-report-gate arm, fail-closed on a red, malformed or absent instrument | `tools/pre-report-gate.py` (arm 10 `round78-instruments`) | 79 |
+| unregistered-census | Classify a serving listener by whether a registry row declares its port, graded by two fixture registries over the lane-owned pinned child | `tools/round79-unregistered-census.py`, `tools/kama-probe.sh listeners` | 79 |
+
+## Superseded head bytes (round 79; held so the audit grades the head re-derivation)
+
+Round 79 re-derived the banner and replaced the round-79 plan with the round-80 plan in place. The
+superseded bytes are held here byte-exactly, per the round-77/78 pattern:
+
+``````text
+**Current authority (round 78):** assigned axes are operability + calibration (`shokunin.conf`); Latest measured round: 78. Round 78 declared three claims: C1 calibration verified (six declared facts of the round-77 self-record re-derive or are answered by dated value-bound corrections, `mismatches=0 corrected=4`), C2 freshness verified (every base audit event accounted once at the audited revision, `events=248 unaccounted=0`, and register rows outside that population move no bucket), C3 operability verified (the probe's three verdicts exercised against a live pinned llama.cpp child, `model_ok=1 mismatch=1 dead=1`). Scores hold: operability 8, freshness 8, calibration 7, depth 7, coverage 9, adjacency 7; the three new capabilities enter the repertoire. The detailed head of the round is the `## Round 78` section below.
+### Planned (round 79)
+
+1. Calibration: extend the self-record harness to the round-78 record's own facts (the C2 predicate/ruling divergence's recorded status, the three new capability rows, the wave's dead-seat count) with the corrected count measured before the freeze — the class C1 round 77 missed and round 78 measured.
+2. Freshness: wire the three round-78 instruments into the pre-report gate as its own arm and re-anchor the gate registry row in the same commit, so a gate run at the tip covers the counters a round actually lands; keep the `out-of-population-row` and `uncommitted` arms red-capable.
+3. Coverage: turn the unregistered live listener observation (`127.0.0.1:1234`, four LFM3 ids) into a probe-visible census class — an `unregistered` report surface that names a serving listener the registry does not govern, without admitting a consumer pin (operator-owned).
 ``````

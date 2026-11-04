@@ -708,10 +708,54 @@ read_registry() { # $1 path
   [ "$REG_ROWS" -gt 0 ] || die "registry has no usable rows: $path"
 }
 
+# ---------------------------------------------------------------- registry ports (census class)
+# Round 79 (coverage): which listening ports the registry actually governs.  Tolerant by
+# design — `listeners` is a census, so a missing/unreadable registry leaves every class
+# at `-` with a warning instead of aborting the subcommand (unlike check/consumers).
+declare -a REG_PORTS=()
+REG_PORTS_STATUS=ok
+
+read_registry_ports() { # $1 path; sets REG_PORTS / REG_PORTS_STATUS
+  local path=$1
+  REG_PORTS=(); REG_PORTS_STATUS=ok
+  if [ ! -f "$path" ] || [ ! -r "$path" ]; then
+    REG_PORTS_STATUS=missing
+    warn "registry not readable for listeners census: $path"
+    return 0
+  fi
+  local id cpath spec declared rest port
+  while IFS=$'\t' read -r id cpath spec declared rest || [ -n "${id:-}" ]; do
+    case "${id:-}" in ''|'#'*) continue ;; esac
+    [ "$id" = "id" ] && continue
+    [ -n "${declared:-}" ] || continue
+    port=$(url_port "$declared")
+    case "$port" in ''|*[!0-9]*) continue ;; esac
+    REG_PORTS+=("$port")
+  done < "$path"
+}
+
+# $1 port, $2 verdict -> yes (model listener the registry declares) | no (ungoverned
+# model listener) | - (not a model surface, or the registry is unreadable)
+classify_registration() {
+  local port=$1 verdict=$2 declared
+  [ "$REG_PORTS_STATUS" = "ok" ] || { printf '%s' '-'; return 0; }
+  case "$verdict" in
+    MODEL_OK|MODEL_MISMATCH|MODEL_LOADING|UNAUTHORIZED_SERVICE) ;;
+    *) printf '%s' '-'; return 0 ;;
+  esac
+  if [ "${#REG_PORTS[@]}" -gt 0 ]; then
+    for declared in "${REG_PORTS[@]}"; do
+      [ "$declared" = "$port" ] && { printf 'yes'; return 0; }
+    done
+  fi
+  printf 'no'
+}
+
 # ---------------------------------------------------------------- subcommands
 cmd_listeners() {
   local -a ports=() scopes=()
   local port scope
+  read_registry_ports "$OPT_REGISTRY"
   if [ -n "$OPT_PORT" ]; then
     ports=("$OPT_PORT"); scopes=("override")
   else
@@ -721,8 +765,9 @@ cmd_listeners() {
   fi
 
   local -a json_rows=() table=()
-  table+=("$(printf 'port\tbind\towner\tverdict\treason\tserved_model\tevidence')")
+  table+=("$(printf 'port\tbind\towner\tverdict\treason\tserved_model\tevidence\tregistered')")
   local i n_model=0 n_dead=0 n_foreign=0 n_nothttp=0 n_unauth=0 n_loading=0
+  local n_governed=0 n_unregistered=0 reg
   for ((i=0; i<${#ports[@]}; i++)); do
     port=${ports[i]}
     classify "$port" "${OPT_EXPECT:-}"
@@ -734,21 +779,26 @@ cmd_listeners() {
       UNAUTHORIZED_SERVICE) n_unauth=$((n_unauth+1)) ;;
       MODEL_LOADING) n_loading=$((n_loading+1)) ;;
     esac
-    table+=("$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s' \
-      "$port" "${scopes[i]}" "${OWNER[$port]:--}" "$C_VERDICT" "$C_REASON" "$C_SERVED" "$C_EVIDENCE")")
-    json_rows+=("$(printf '    {"port":%s,"bind":%s,"owner":%s,"verdict":%s,"reason":%s,"served_model":%s,"evidence":%s}' \
+    reg=$(classify_registration "$port" "$C_VERDICT")
+    [ "$reg" = "yes" ] && n_governed=$((n_governed+1))
+    [ "$reg" = "no" ] && n_unregistered=$((n_unregistered+1))
+    table+=("$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' \
+      "$port" "${scopes[i]}" "${OWNER[$port]:--}" "$C_VERDICT" "$C_REASON" "$C_SERVED" "$C_EVIDENCE" "$reg")")
+    json_rows+=("$(printf '    {"port":%s,"bind":%s,"owner":%s,"verdict":%s,"reason":%s,"served_model":%s,"evidence":%s,"registered":%s}' \
       "$port" "$(jstr "${scopes[i]}")" "$(jstr "${OWNER[$port]:--}")" \
-      "$(jstr "$C_VERDICT")" "$(jstr "$C_REASON")" "$(jstr "$C_SERVED")" "$(jstr "$C_EVIDENCE")")")
+      "$(jstr "$C_VERDICT")" "$(jstr "$C_REASON")" "$(jstr "$C_SERVED")" "$(jstr "$C_EVIDENCE")" \
+      "$(jstr "$reg")")")
   done
 
   if [ "$JSON_OUT" -eq 1 ]; then
-    emit_json "$(printf '{\n  "schema": "kama-probe/v1",\n  "subcommand": "listeners",\n  "verdict_vocabulary": "%s",\n  "exit_codes": {"0": "probe completed", "2": "drift (listeners does not gate)", "1": "probe error"},\n  "summary": {"probed": %s, "model_endpoints": %s, "foreign_service": %s, "unauthorized_service": %s, "dead": %s, "not_http": %s, "model_loading": %s},\n  "listeners": [\n%s\n  ]\n}\n' \
-      "$VOCAB" "${#ports[@]}" "$n_model" "$n_foreign" "$n_unauth" "$n_dead" "$n_nothttp" "$n_loading" "$(json_array "${json_rows[@]}")")"
+    emit_json "$(printf '{\n  "schema": "kama-probe/v1",\n  "subcommand": "listeners",\n  "verdict_vocabulary": "%s",\n  "exit_codes": {"0": "probe completed", "2": "drift (listeners does not gate)", "1": "probe error"},\n  "summary": {"probed": %s, "model_endpoints": %s, "foreign_service": %s, "unauthorized_service": %s, "dead": %s, "not_http": %s, "model_loading": %s, "governed": %s, "unregistered": %s, "registry": "%s"},\n  "listeners": [\n%s\n  ]\n}\n' \
+      "$VOCAB" "${#ports[@]}" "$n_model" "$n_foreign" "$n_unauth" "$n_dead" "$n_nothttp" "$n_loading" "$n_governed" "$n_unregistered" "$REG_PORTS_STATUS" "$(json_array "${json_rows[@]}")")"
     return 0
   fi
   printf '%s\n' "${table[@]}" | print_table
-  printf 'probed=%s model_endpoints=%s foreign_service=%s unauthorized_service=%s dead=%s not_http=%s model_loading=%s\n' \
-    "${#ports[@]}" "$n_model" "$n_foreign" "$n_unauth" "$n_dead" "$n_nothttp" "$n_loading"
+  printf 'probed=%s model_endpoints=%s foreign_service=%s unauthorized_service=%s dead=%s not_http=%s model_loading=%s governed=%s unregistered=%s registry=%s\n' \
+    "${#ports[@]}" "$n_model" "$n_foreign" "$n_unauth" "$n_dead" "$n_nothttp" "$n_loading" \
+    "$n_governed" "$n_unregistered" "$REG_PORTS_STATUS"
 }
 
 # shared row builder: resolve a registry row's file value

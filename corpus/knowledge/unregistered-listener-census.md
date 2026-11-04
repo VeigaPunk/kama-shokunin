@@ -29,7 +29,8 @@ unchanged: this is a census dimension, not a new verdict, and `listeners` still 
 
 The router's `GET /models` is an inventory. It lists models that are not running (note 1:
 "If a model is not running, it will be added or updated according to the source"), and each
-object carries `status.value` — `loaded`, `loading`, `unloaded`, `sleeping`. A listener that
+object carries `status.value` — `loaded`, `loading`, `unloaded`, `sleeping`, and the same list
+documents `downloading` and `incomplete`. A listener that
 answers `GET /v1/models` with a list is therefore evidence that *something serves a model API
 there*, not that any model is loaded, and never that a declared consumer is ready. The class
 says exactly that: a serving listener the registry does not govern.

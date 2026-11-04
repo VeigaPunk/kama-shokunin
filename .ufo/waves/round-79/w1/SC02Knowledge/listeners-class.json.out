@@ -1,0 +1,357 @@
+# command: bash tools/kama-probe.sh listeners --json
+# rev: d6408a63f4ac4efd1d7161180aa62bf10f6f591a
+{
+  "schema": "kama-probe/v1",
+  "subcommand": "listeners",
+  "verdict_vocabulary": "MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP MODEL_LOADING",
+  "exit_codes": {
+    "0": "probe completed",
+    "2": "drift (listeners does not gate)",
+    "1": "probe error"
+  },
+  "summary": {
+    "probed": 33,
+    "model_endpoints": 7,
+    "foreign_service": 24,
+    "unauthorized_service": 0,
+    "dead": 2,
+    "not_http": 0,
+    "model_loading": 0,
+    "governed": 0,
+    "unregistered": 7,
+    "registry": "ok"
+  },
+  "listeners": [
+    {
+      "port": 53,
+      "bind": "loopback",
+      "owner": "-",
+      "verdict": "DEAD",
+      "reason": "connection-refused",
+      "served_model": "-",
+      "evidence": "rc=7 Failed to connect to 127.0.0.1:53 after 0 ms: Could not connect to server; GET /v1/models -> 000",
+      "registered": "-"
+    },
+    {
+      "port": 631,
+      "bind": "loopback",
+      "owner": "-",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "html-non-model",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 text/html; charset=utf-8 (Server: CUPS/2.4 IPP/2.1); 200|text/html; charset=utf-8 @ /",
+      "registered": "-"
+    },
+    {
+      "port": 1234,
+      "bind": "loopback",
+      "owner": "llama-server(pid=1505)",
+      "verdict": "MODEL_OK",
+      "reason": "expected-wildcard",
+      "served_model": "LFM3-1.7B,LFM3-1.7B-Uncensored,LFM3-Omni-2B,LFM3-VL-2B",
+      "evidence": "GET /v1/models -> 200 application/json; charset=utf-8 (Server: llama.cpp) (runtime=llama.cpp; expected=-; reason=expected-wildcard); GET /health -> 200|application/json; charset=utf-8",
+      "registered": "no"
+    },
+    {
+      "port": 5355,
+      "bind": "wildcard",
+      "owner": "-",
+      "verdict": "DEAD",
+      "reason": "timeout",
+      "served_model": "-",
+      "evidence": "rc=28 timeout (connect=2s max=5s); GET /v1/models -> 000",
+      "registered": "-"
+    },
+    {
+      "port": 7456,
+      "bind": "loopback",
+      "owner": "MainThread(pid=1506)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "html-non-model",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 200 text/html; charset=utf-8; 200|text/html; charset=utf-8 @ /; GET /metrics -> 200|text/html; charset=utf-8 (status-only liveness would false-pass)",
+      "registered": "-"
+    },
+    {
+      "port": 8188,
+      "bind": "loopback",
+      "owner": "systemd-socket-(pid=514556)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "non-2xx-non-model-http",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 application/octet-stream (Server: Python/3.13 aiohttp/3.14.5) (non-2xx HTTP from a non-model service); 200|text/html @ /",
+      "registered": "-"
+    },
+    {
+      "port": 8788,
+      "bind": "loopback",
+      "owner": "python(pid=1145282)",
+      "verdict": "MODEL_OK",
+      "reason": "expected-wildcard",
+      "served_model": "auto,gpt-5.3-codex-low,gpt-5.3-codex-low-fast,gpt-5.3-codex,gpt-5.3-codex-fast,gpt-5.3-codex-high,gpt-5.3-codex-high-fast,gpt-5.3-codex-xhigh,gpt-5.3-codex-xhigh-fast,gpt-5.2,composer-2.5,claude-opus-5-thinking-high,claude-opus-5-thinking-high-fast,gpt-5.6-sol-high,gpt-5.6-sol-high-fast,gpt-5.6-sol-xhigh,gpt-5.6-sol-xhigh-fast,claude-fable-5-thinking-high,claude-fable-5-thinking-xhigh,cursor-grok-4.5-high,cursor-grok-4.5-high-fast,gemini-3.7-flash-high,claude-sonnet-5-thinking-high,claude-sonnet-5-thinking-xhigh,gpt-5.6-luna-high,grok-4.7-low,grok-4.7-low-fast,grok-4.7-medium,grok-4.7-medium-fast,grok-4.7-high,grok-4.7-high-fast,grok-4.7-xhigh,grok-4.7-xhigh-fast,cursor-grok-4.6-low,cursor-grok-4.6-low-fast,cursor-grok-4.6-medium,cursor-grok-4.6-medium-fast,cursor-grok-4.6-high,cursor-grok-4.6-high-fast,cursor-grok-4.6-xhigh,cursor-grok-4.6-xhigh-fast,composer-2.5-fast,claude-opus-5-5-low,claude-opus-5-5-low-fast,claude-opus-5-5-medium,claude-opus-5-5-medium-fast,claude-opus-5-5-high,claude-opus-5-5-high-fast,claude-opus-5-5-xhigh,claude-opus-5-5-xhigh-fast,claude-opus-5-5-max,claude-opus-5-5-max-fast,claude-opus-5-low,claude-opus-5-low-fast,claude-opus-5-medium,claude-opus-5-medium-fast,claude-opus-5-high,claude-opus-5-high-fast,claude-opus-5-thinking-low,claude-opus-5-thinking-low-fast,claude-opus-5-thinking-medium,claude-opus-5-thinking-medium-fast,claude-opus-5-thinking-xhigh,claude-opus-5-thinking-xhigh-fast,claude-opus-5-thinking-max,claude-opus-5-thinking-max-fast,claude-opus-4-8-low,claude-opus-4-8-low-fast,claude-opus-4-8-medium,claude-opus-4-8-medium-fast,claude-opus-4-8-high,claude-opus-4-8-high-fast,claude-opus-4-8-xhigh,claude-opus-4-8-xhigh-fast,claude-opus-4-8-max,claude-opus-4-8-max-fast,claude-opus-4-8-thinking-low,claude-opus-4-8-thinking-low-fast,claude-opus-4-8-thinking-medium,claude-opus-4-8-thinking-medium-fast,claude-opus-4-8-thinking-high,claude-opus-4-8-thinking-high-fast,claude-opus-4-8-thinking-xhigh,claude-opus-4-8-thinking-xhigh-fast,claude-opus-4-8-thinking-max,claude-opus-4-8-thinking-max-fast,gpt-5.6-sol-none,gpt-5.6-sol-none-fast,gpt-5.6-sol-low,gpt-5.6-sol-low-fast,gpt-5.6-sol-medium,gpt-5.6-sol-medium-fast,gpt-5.6-sol-max,gpt-5.6-sol-max-fast,gemini-4-argon-low,gemini-4-argon-medium,gemini-4-argon-high,gpt-5.5-none,gpt-5.5-none-fast,gpt-5.5-low,gpt-5.5-low-fast,gpt-5.5-medium,gpt-5.5-medium-fast,gpt-5.5-high,gpt-5.5-high-fast,gpt-5.5-extra-high,gpt-5.5-extra-high-fast,claude-fable-5-1-low,claude-fable-5-1-medium,claude-fable-5-1-high,claude-fable-5-1-xhigh,claude-fable-5-1-max,claude-fable-5-1-thinking-low,claude-fable-5-1-thinking-medium,claude-fable-5-1-thinking-high,claude-fable-5-1-thinking-xhigh,claude-fable-5-1-thinking-max,claude-fable-5-low,claude-fable-5-medium,claude-fable-5-high,claude-fable-5-xhigh,claude-fable-5-max,claude-fable-5-thinking-low,claude-fable-5-thinking-medium,claude-fable-5-thinking-max,cursor-grok-4.5-low,cursor-grok-4.5-low-fast,cursor-grok-4.5-medium,cursor-grok-4.5-medium-fast,gemini-3.8-flash-low,gemini-3.8-flash-medium,gemini-3.8-flash-high,gemini-3.7-flash-low,gemini-3.7-flash-medium,muse-spark-1.3-minimal,muse-spark-1.3-low,muse-spark-1.3-medium,muse-spark-1.3-high,muse-spark-1.3-xhigh,muse-spark-1.3-max,gpt-5.6-terra-none,gpt-5.6-terra-none-fast,gpt-5.6-terra-low,gpt-5.6-terra-low-fast,gpt-5.6-terra-medium,gpt-5.6-terra-medium-fast,gpt-5.6-terra-high,gpt-5.6-terra-high-fast,gpt-5.6-terra-xhigh,gpt-5.6-terra-xhigh-fast,gpt-5.6-terra-max,gpt-5.6-terra-max-fast,claude-sonnet-5-5-low,claude-sonnet-5-5-medium,claude-sonnet-5-5-high,claude-sonnet-5-5-xhigh,claude-sonnet-5-5-max,claude-sonnet-5-low,claude-sonnet-5-medium,claude-sonnet-5-high,claude-sonnet-5-xhigh,claude-sonnet-5-max,claude-sonnet-5-thinking-low,claude-sonnet-5-thinking-medium,claude-sonnet-5-thinking-max,claude-4.6-sonnet-medium,claude-4.6-sonnet-medium-thinking,claude-opus-4-7-low,claude-opus-4-7-low-fast,claude-opus-4-7-medium,claude-opus-4-7-medium-fast,claude-opus-4-7-high,claude-opus-4-7-high-fast,claude-opus-4-7-xhigh,claude-opus-4-7-xhigh-fast,claude-opus-4-7-max,claude-opus-4-7-max-fast,claude-opus-4-7-thinking-low,claude-opus-4-7-thinking-low-fast,claude-opus-4-7-thinking-medium,claude-opus-4-7-thinking-medium-fast,claude-opus-4-7-thinking-high,claude-opus-4-7-thinking-high-fast,claude-opus-4-7-thinking-xhigh,claude-opus-4-7-thinking-xhigh-fast,claude-opus-4-7-thinking-max,claude-opus-4-7-thinking-max-fast,gpt-5.4-low,gpt-5.4-medium,gpt-5.4-medium-fast,gpt-5.4-high,gpt-5.4-high-fast,gpt-5.4-xhigh,gpt-5.4-xhigh-fast,claude-4.6-opus-high,claude-4.6-opus-max,claude-4.6-opus-high-thinking,claude-4.6-opus-max-thinking,claude-4.5-opus-high,claude-4.5-opus-high-thinking,gpt-5.2-low,gpt-5.2-low-fast,gpt-5.2-fast,gpt-5.2-high,gpt-5.2-high-fast,gpt-5.2-xhigh,gpt-5.2-xhigh-fast,gpt-5.6-luna-none,gpt-5.6-luna-none-fast,gpt-5.6-luna-low,gpt-5.6-luna-low-fast,gpt-5.6-luna-medium,gpt-5.6-luna-medium-fast,gpt-5.6-luna-high-fast,gpt-5.6-luna-xhigh,gpt-5.6-luna-xhigh-fast,gpt-5.6-luna-max,gpt-5.6-luna-max-fast,gemini-3.6-flash-minimal,gemini-3.6-flash-low,gemini-3.6-flash-medium,gemini-3.6-flash-high,gemini-3.1-pro,gpt-5.4-mini-none,gpt-5.4-mini-low,gpt-5.4-mini-medium,gpt-5.4-mini-high,gpt-5.4-mini-xhigh,gpt-5.4-nano-none,gpt-5.4-nano-low,gpt-5.4-nano-medium,gpt-5.4-nano-high,gpt-5.4-nano-xhigh,claude-haiku-5-5-low,claude-haiku-5-5-medium,claude-haiku-5-5-high,claude-haiku-5-5-xhigh,claude-haiku-5-5-max,claude-haiku-5-5-thinking-low,claude-haiku-5-5-thinking-medium,claude-haiku-5-5-thinking-high,claude-haiku-5-5-thinking-xhigh,claude-haiku-5-5-thinking-max,claude-4.5-sonnet,claude-4.5-sonnet-thinking,gpt-5.1-low,gpt-5.1,gpt-5.1-high,gemini-3-flash,gemini-3.5-flash,claude-4-sonnet,claude-4-sonnet-thinking,gpt-5-mini,kimi-k3-low,kimi-k3-high,kimi-k3-max,kimi-k2.7-code,glm-5.2-high,glm-5.2-max",
+      "evidence": "GET /v1/models -> 200 application/json (Server: cursor-shim/4.0 Python/3.14.8) (runtime=other; expected=-; reason=expected-wildcard); GET /health -> 200|application/json",
+      "registered": "no"
+    },
+    {
+      "port": 8789,
+      "bind": "loopback",
+      "owner": "python3(pid=1145412)",
+      "verdict": "MODEL_OK",
+      "reason": "expected-wildcard",
+      "served_model": "gpt-6.1-sol,gpt-6-luna",
+      "evidence": "GET /v1/models -> 200 application/json (Server: BaseHTTP/0.6 Python/3.14.8) (runtime=other; expected=-; reason=expected-wildcard)",
+      "registered": "no"
+    },
+    {
+      "port": 8790,
+      "bind": "loopback",
+      "owner": "python3(pid=1145912)",
+      "verdict": "MODEL_OK",
+      "reason": "expected-wildcard",
+      "served_model": "grok-4.20-0309-non-reasoning,grok-4.20-0309-reasoning,grok-4.20-multi-agent-0309,grok-4.3,grok-4.5,grok-4.6,grok-4.7,grok-build-0.1,grok-imagine-image,grok-imagine-image-2.0,grok-imagine-video,grok-imagine-video-1.5,grok-imagine-video-1.5-lite",
+      "evidence": "GET /v1/models -> 200 application/json (Server: BaseHTTP/0.6 Python/3.14.8) (runtime=other; expected=-; reason=expected-wildcard)",
+      "registered": "no"
+    },
+    {
+      "port": 8791,
+      "bind": "loopback",
+      "owner": "python3(pid=1145327)",
+      "verdict": "MODEL_OK",
+      "reason": "expected-wildcard",
+      "served_model": "deepseek-v4.1-flash",
+      "evidence": "GET /v1/models -> 200 application/json (runtime=other; expected=-; reason=expected-wildcard); GET /health -> 200|application/json",
+      "registered": "no"
+    },
+    {
+      "port": 8793,
+      "bind": "loopback",
+      "owner": "python3(pid=1145475)",
+      "verdict": "MODEL_OK",
+      "reason": "expected-wildcard",
+      "served_model": "glm-5.3-flash",
+      "evidence": "GET /v1/models -> 200 application/json (runtime=other; expected=-; reason=expected-wildcard); GET /health -> 200|application/json",
+      "registered": "no"
+    },
+    {
+      "port": 8795,
+      "bind": "loopback",
+      "owner": "python3(pid=1145360)",
+      "verdict": "MODEL_OK",
+      "reason": "expected-wildcard",
+      "served_model": "claude-opus-5-5,claude-opus-5-5-1m,claude-opus-5-5-fast,claude-opus-5-5-1m-fast,claude-sonnet-5-5,claude-sonnet-5-5-1m,claude-sonnet-5-5-fast,claude-sonnet-5-5-1m-fast,claude-haiku-5-5,claude-haiku-5-5-1m,claude-haiku-5-5-fast,claude-haiku-5-5-1m-fast",
+      "evidence": "GET /v1/models -> 200 application/json (Server: claude-shim/3.0 Python/3.14.8) (runtime=other; expected=-; reason=expected-wildcard); GET /health -> 200|application/json",
+      "registered": "no"
+    },
+    {
+      "port": 10086,
+      "bind": "loopback",
+      "owner": "kimi-webbridge(pid=17747)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "non-2xx-non-model-http",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 text/plain; charset=utf-8 (non-2xx HTTP from a non-model service); 404|text/plain; charset=utf-8 @ /",
+      "registered": "-"
+    },
+    {
+      "port": 18188,
+      "bind": "loopback",
+      "owner": "comfyui(pid=512643)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "non-2xx-non-model-http",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 application/octet-stream (Server: Python/3.13 aiohttp/3.14.5) (non-2xx HTTP from a non-model service); 200|text/html @ /",
+      "registered": "-"
+    },
+    {
+      "port": 23001,
+      "bind": "loopback",
+      "owner": "alma(pid=3769363)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "html-non-model",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 text/html; charset=utf-8; 404|text/html; charset=utf-8 @ /",
+      "registered": "-"
+    },
+    {
+      "port": 34827,
+      "bind": "loopback",
+      "owner": "MainThread(pid=1290036)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "non-2xx-non-model-http",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 text/plain (non-2xx HTTP from a non-model service); 404|text/plain @ /",
+      "registered": "-"
+    },
+    {
+      "port": 35125,
+      "bind": "loopback",
+      "owner": "MainThread(pid=3749395)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "non-2xx-non-model-http",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 text/plain (non-2xx HTTP from a non-model service); 404|text/plain @ /",
+      "registered": "-"
+    },
+    {
+      "port": 35417,
+      "bind": "loopback",
+      "owner": "MainThread(pid=917893)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "non-2xx-non-model-http",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 text/plain (non-2xx HTTP from a non-model service); 404|text/plain @ /",
+      "registered": "-"
+    },
+    {
+      "port": 36031,
+      "bind": "loopback",
+      "owner": "MainThread(pid=1420844)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "non-2xx-non-model-http",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 text/plain (non-2xx HTTP from a non-model service); 404|text/plain @ /",
+      "registered": "-"
+    },
+    {
+      "port": 36509,
+      "bind": "loopback",
+      "owner": "MainThread(pid=1115949)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "non-2xx-non-model-http",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 text/plain (non-2xx HTTP from a non-model service); 404|text/plain @ /",
+      "registered": "-"
+    },
+    {
+      "port": 38121,
+      "bind": "loopback",
+      "owner": "MainThread(pid=1098974)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "non-2xx-non-model-http",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 text/plain (non-2xx HTTP from a non-model service); 404|text/plain @ /",
+      "registered": "-"
+    },
+    {
+      "port": 39551,
+      "bind": "loopback",
+      "owner": "MainThread(pid=625904)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "html-non-model",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 200 text/html; charset=utf-8; 200|text/html; charset=utf-8 @ /; GET /metrics -> 200|text/html; charset=utf-8 (status-only liveness would false-pass)",
+      "registered": "-"
+    },
+    {
+      "port": 40921,
+      "bind": "loopback",
+      "owner": "MainThread(pid=539094)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "non-2xx-non-model-http",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 text/plain (non-2xx HTTP from a non-model service); 404|text/plain @ /",
+      "registered": "-"
+    },
+    {
+      "port": 41285,
+      "bind": "loopback",
+      "owner": "-",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "non-2xx-non-model-http",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 text/plain; charset=utf-8 (non-2xx HTTP from a non-model service); 404|text/plain; charset=utf-8 @ /",
+      "registered": "-"
+    },
+    {
+      "port": 42033,
+      "bind": "loopback",
+      "owner": "MainThread(pid=624827)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "html-non-model",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 200 text/html; charset=utf-8; 200|text/html; charset=utf-8 @ /; GET /metrics -> 200|text/html; charset=utf-8 (status-only liveness would false-pass)",
+      "registered": "-"
+    },
+    {
+      "port": 42035,
+      "bind": "loopback",
+      "owner": "MainThread(pid=835572)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "non-2xx-non-model-http",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 text/plain (non-2xx HTTP from a non-model service); 404|text/plain @ /",
+      "registered": "-"
+    },
+    {
+      "port": 42061,
+      "bind": "loopback",
+      "owner": "MainThread(pid=3744873)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "non-2xx-non-model-http",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 text/plain (non-2xx HTTP from a non-model service); 404|text/plain @ /",
+      "registered": "-"
+    },
+    {
+      "port": 43561,
+      "bind": "loopback",
+      "owner": "MainThread(pid=3875322)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "non-2xx-non-model-http",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 text/plain (non-2xx HTTP from a non-model service); 404|text/plain @ /",
+      "registered": "-"
+    },
+    {
+      "port": 43887,
+      "bind": "loopback",
+      "owner": "MainThread(pid=979859)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "non-2xx-non-model-http",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 text/plain (non-2xx HTTP from a non-model service); 404|text/plain @ /",
+      "registered": "-"
+    },
+    {
+      "port": 45207,
+      "bind": "loopback",
+      "owner": "MainThread(pid=4016121)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "non-2xx-non-model-http",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 text/plain (non-2xx HTTP from a non-model service); 404|text/plain @ /",
+      "registered": "-"
+    },
+    {
+      "port": 45257,
+      "bind": "loopback",
+      "owner": "MainThread(pid=603871)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "non-2xx-non-model-http",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 text/plain (non-2xx HTTP from a non-model service); 404|text/plain @ /",
+      "registered": "-"
+    },
+    {
+      "port": 45501,
+      "bind": "loopback",
+      "owner": "MainThread(pid=3819971)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "non-2xx-non-model-http",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 text/plain (non-2xx HTTP from a non-model service); 404|text/plain @ /",
+      "registered": "-"
+    },
+    {
+      "port": 45989,
+      "bind": "loopback",
+      "owner": "omp(pid=1978295)",
+      "verdict": "FOREIGN_SERVICE",
+      "reason": "non-2xx-non-model-http",
+      "served_model": "-",
+      "evidence": "GET /v1/models -> 404 text/plain;charset=utf-8 (non-2xx HTTP from a non-model service); 404|text/plain;charset=utf-8 @ /",
+      "registered": "-"
+    }
+  ]
+}
+EXIT=0

@@ -380,7 +380,12 @@ class Record:
         return bool(raw) and "mismatches=1" in raw
 
 
-CORRECTION_RE = re.compile(
+# The record's own bullet shape wraps every token in backticks (round-78 style); a plain
+# `corrected F<n> old=... new=...` line is accepted too so a fixture needs no markup.
+CORRECTION_BULLET_RE = re.compile(
+    r"`corrected (F\d)` old=`([^`]*)` new=`([^`]*)` at=`([0-9a-fA-F]+)` "
+    r"date=`(\d{4}-\d{2}-\d{2})`")
+CORRECTION_PLAIN_RE = re.compile(
     r"corrected (F\d) old=(\S+) new=(\S+) at=([0-9a-fA-F]+) date=(\d{4}-\d{2}-\d{2})")
 
 
@@ -388,9 +393,11 @@ def corrections(repo: Path, rev: str) -> list[dict]:
     raw = show(repo, rev, LESSON_PATH)
     if raw is None:
         return []
+    text = norm(raw)
+    matches = list(CORRECTION_BULLET_RE.finditer(text)) or list(
+        CORRECTION_PLAIN_RE.finditer(text))
     return [{"fact": m.group(1), "old": m.group(2), "new": m.group(3),
-             "at": m.group(4), "date": m.group(5)}
-            for m in CORRECTION_RE.finditer(norm(raw))]
+             "at": m.group(4), "date": m.group(5)} for m in matches]
 
 
 def audit(repo: Path, sealed: str, tip: str) -> dict:

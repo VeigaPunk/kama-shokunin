@@ -3209,3 +3209,47 @@ this round; the closure's non-author verification remains the authority.
 Owed by round 79: wire the three round-78 instruments into the pre-report gate as their own arm and
 re-anchor the SKILL row in the same commit; extend the self-record harness to the round-78 record;
 turn the unregistered-listener observation into a probe-visible census class.
+
+## Round 79 — the round-78 record is graded, the gate runs a round's own instruments, an unregistered listener becomes a class (2026-11-04)
+
+Frozen plan `plans/round-79-claims.md` (freeze `331037039c30909aa2163b2d1de22a7964f90420`; base
+`ee53f1a25eab93a8ab55bbb877e49e2e731df535`; sealed revision C1 grades
+`7a3cd98243b69fcbee0cc9e31878782bd8459320`). Three claims, three distinct axes, all verified on
+their receipts:
+
+- **C1 calibration (lowest assigned axis, 7)** — `tools/round79-selfrecord-round78.py` re-derives
+  six declared facts of the round-78 self-record at the sealed revision and grades dated,
+  value-bound corrections. Before: `SELFRECORD_R78_ENUM claims=6 stale=2 corrected=0` exit 1
+  (F5: the record calls ancestor `22cce544` "the tip accounting"; F6: the pre-correction run is
+  prose). After: `SELFRECORD_R78 claims=6 mismatches=0 corrected=2 unbacked=0` exit 0; selftest
+  `pass=9 fail=0`. The F6 receipt is a reproduction of the pre-fix run at `fa65ce2c`
+  (`mismatches=1`, `EXIT=1`), and the F5 correction names the revision as an ancestor.
+- **C2 operability** — `tools/pre-report-gate.py` gains arm 10 `round78-instruments`: it runs the
+  three round-78 instruments' selftests and requires each to end with its own
+  `<NAME>_SELFTEST pass=N fail=0`; red, malformed or absent fails the arm closed. Selftest
+  `PRE_REPORT_SELFTEST pass=22 fail=0` → `pass=26 fail=0` (four new cases: red stub, absent module,
+  green stubs, malformed summary); scored gate `arms=10`. The SKILL pre-report-gate row and the
+  module's PREDICATE/docstring are re-anchored in the same round.
+- **C3 coverage** — `bash tools/kama-probe.sh listeners` appends a `registered` census column
+  (`yes`/`no`/`-`) and `governed`/`unregistered`/`registry` summary keys; the new
+  `tools/round79-unregistered-census.py` starts the pinned `llama-b11755` child on a free
+  unregistered port, writes two scratch registries and proves the same listener reads
+  `registered=no` (unregistered) without the port declared and `registered=yes` (governed) with
+  it: `UNREGISTERED_CENSUS port=<p> unregistered=1 governed=1 class_missing=0`, exit 0; the base
+  probe scores `class_missing=1`, exit 1. Selftest `pass=4 fail=0`. The live-host leg names the
+  seven model-API listeners outside the registry (`1234`, `8788`–`8795`) and gates nothing.
+
+Frontier: registry 292 → 293 rows (S553, llama.cpp router `GET /models` at `39febd2a`, 16-word
+located quote, census exit 0; the INI-preset candidate rejected with its flip); one knowledge
+entry (`unregistered-listener-census`) and its coverage-map row; `corpus/QUALITY.md` gains KQ130
+from the two mined mistakes (`tip-names-an-ancestor`, `prose-only-evidence`). Round-78 routed
+defects R78V1–R78V7 are disposed in SCORECARD §Round 79 (V1–V4 fixed with tip-run receipts, V5 by
+supersession, V6/V7 recorded).
+
+Wave: one v1 wave, 14 seats (4 executor, 3 scribe, 2 scout, 1 connector, 1 reviewer, 2 critic,
+1 mutation-tester; attack 4/14 = 29 %). Seat results and dead seats:
+`.ufo/waves/round-79/w1-results.json`; the L1 re-derived every finding it used, and the closure's
+non-author verification remains the authority.
+
+Owed by round 80: grade the corrections' new-value path with an independent receipt; re-measure
+the three llama.cpp pins from a live `pin-watch` run; extend the class to a second engine.

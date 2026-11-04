@@ -605,3 +605,14 @@ a control that skips the claimed work before any data (`plans/round-78-claims.md
 | ID | Admit only when | Reject or limit when | Motivating lesson |
 |---|---|---|---|
 | KQ129 | A frozen claim names, before data, the shortcut its counter admits — the concrete control input that skips the claimed work — and the round record carries that control's receipt: the landed counter's committed output and exit on that input. Check: the claim's frozen text names the control, and the round's `measured/` tree carries the control receipt with its exit. | The shortcut is discovered during attack instead of named at freeze; the record asserts the control in prose with no committed run; the do-nothing control reaches the counter's after line (the counter cannot distinguish work from no work); or an earlier round's control receipt is reused unchanged for a new counter. | `corpus/lessons/round-78.md` §Gate and §Corrections; `plans/round-78-claims.md` §C1–C3 controls; `considerthese/2026-10-26.md` proposal 3. |
+
+## Criterion added — round 79 (2026-11-04; no outside review yet)
+
+KQ129 stays in force. This row carries the two round-79 mined mistakes — a record that calls an
+ancestor "the tip", and a record that cites a run whose output is not committed — into runnable
+admission checks. Captured-by at the round-78 base was `none`: the round-78 closure found both
+by reading, not by a counter.
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ130 | A record's "tip" claim names a revision, and that revision equals the tip at the record's own revision (`tip-accounting=rev:<r>/is-tip:true` re-derives); a run the record cites as evidence has its output committed, and the citation names the receipt path plus the revision it measured. Check: `python3 tools/round79-selfrecord-round78.py --repo .` prints `SELFTEST`-backed `mismatches=0` with F5/F6 fresh, and any `mismatches=1` on F5/F6 is answered by one value-bound correction whose `new` value re-derives at the tip. | The word "tip" is used for an ancestor revision; a run is asserted "in the lesson" with no committed output; a correction's `new` value is prose rather than a re-derivable token; or a 41-character `at` token is accepted. | `corpus/lessons/round-79.md` §Mistakes 1 and 2 (`tip-names-an-ancestor`, `prose-only-evidence`), captured by F5/F6; round-78 closure R78V1/R78V2. |
