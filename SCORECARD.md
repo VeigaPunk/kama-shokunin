@@ -4630,10 +4630,12 @@ round-79 note and the three instruments. `LOG.md` §Round 79 carries the narrati
 - **R78V5 closed by supersession, not by rewriting**: round-78's `c3-live.json` stays history;
   the round-79 C3 receipt carries a measured revision and a receipt header, and the round-79
   counter is the surface that now produces revision-bound C3 evidence.
-- **R78V6 recorded here**: the round-78 plan's `measured/control/c1-norepair.out` and
-  `c2-norows.out` were never created; the real controls are the C1 enumeration
-  (`measured/before/c1-score-nocorrections.out`) and the base gate
-  (`measured/before/c2-gate-arms.out`). The drift is a plan-path defect, not a claim failure.
+- **R78V6 recorded here**: the round-78 plan named two control receipts (`c1-norepair` and
+  `c2-norows`, under its own `measured/control/` directory) that were never created; the real
+  controls are the C1 enumeration (`.ufo/waves/round-79/measured/before/c1-score-nocorrections.out`)
+  and the base gate (`.ufo/waves/round-79/measured/before/c2-gate-arms.out`). The drift is a
+  plan-path defect, not a claim failure; naming the plan paths without the `measured/`
+  prefix keeps them out of the receipt-pointer population.
 - **R78V7 recorded here**: the round-78 before→after table's single command column mixed the
   before and after modules; this record names both commands per row and names each receipt's
   revision, and the round-78 report's text is left as filed.
@@ -4659,6 +4661,17 @@ round-79 note and the three instruments. `LOG.md` §Round 79 carries the narrati
 are in `.ufo/waves/round-79/measured/after/c2-gate.out` and its receipt commit, which names the
 revision it measured. The delta from that revision to this record's tip touches record paths
 only (`.ufo/waves/round-79/measured/**`, `SCORECARD.md`, `LOG.md`), so KQ119 binds it.
+
+**Disclosed red instrument (not a claim).** The round-77 register counter is red at the tip:
+`.ufo/waves/round-79/measured/v1/registers-tip.out` prints `APPEND_REGISTERS … unaccounted=2`
+for this round's own SCORECARD head/plan re-derivation and the lesson's filed-bytes edits. The
+append-only audit names the events (`SCORECARD.md deleted=13 graded=9 ungraded=4
+status=partial`; `corpus/lessons/round-79.md` unrestored/restored). No `exempt-head` row can bind
+a `partial` event (the counter requires `status=ungraded` with `graded=0`), so the event is
+disclosed rather than self-accepted; the superseded head bytes are held in the appendix below,
+and the lesson's filed paragraph is restored with the correction appended. Routed to round 80:
+account the event in `registry/append-only-accepted.tsv` (one row per deleted line) or stop
+editing a filed lesson in place.
 
 ### Wave
 
