@@ -22,6 +22,11 @@ Landed modules and their receipts:
 | `round74-receipt-claim-binding.py` (C2) | `0f231fac27a2b49e99a8d186162f62942a7f9328bf0dcb8d987eabc98051ab44` | `RECEIPT_CLAIM_V2_SELFTEST pass=15 fail=0` | c2 v2_killed=2 clean=True |
 | `round74-province-host-drift.py` (C3) | `118ae079a7f5a18fa40548940eea8d5e8b6fdfbf28c953c997b911f2dba6bad7` | `PROVINCE_HOST_DRIFT_V2_SELFTEST pass=10 fail=0` | c3 v2_killed=1 clean=True |
 
+C2 build attribution per the integration commit `07994dfc`: "EX02 dead at spawn;
+C2 built by L1" — EX02ClaimV2's provider died on a 429 during the wave; the module
+was landed and revised during this seat and its tested bytes are what this seat
+graded. EX02's preserved receipts live under `.ufo/waves/round-74/w1/EX02ClaimV2/`.
+
 C1/C3 bytes were byte-stable across this entire seat (sha256 before/after diff
 empty). C2 byte volatility after grading is disclosed below (F2h).
 

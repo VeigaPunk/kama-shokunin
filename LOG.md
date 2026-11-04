@@ -2943,8 +2943,10 @@ Attempt 2 (attempt 1 died `lane-dead-no-report` at launch +30s: watchdog lines 2
 KQ47 receipt). Frozen plan `plans/round-74-claims.md` (freeze `df18ad1e`, base `868dd701`,
 controls + before receipts in the same commit). ONE v1 wave of 13 seats (spec/dispatch
 `b0b903a0`, band 8–16, attack 4/13 ≈ 30.8%: reviewer, critic, mutation-tester, revenger;
-1 connector; L1 is the planner seat). Seat EX02ClaimV2 died at spawn (empty scratch, zero
-output — reported, never replaced); the L1 built the frozen C2 module as integration work.
+1 connector; L1 is the planner seat). Seat EX02ClaimV2 did NOT die — it completed a 15-arm
+build; the L1's emergency pre-WAVE-DONE build overwrote its deliverable twice (concurrent-write incident,
+lesson Mistakes 3). The committed C2 module is the L1's re-certified replacement; EX02's committed report
+and receipts are the evidence of the seat's work.
 
 - **C1 calibration 7→7 (R73-D1).** `tools/round74-selfdesc-canon.py`: resolves the newest
   capability table by round number across bold/unbolded/demonstrated heading forms; exits 1

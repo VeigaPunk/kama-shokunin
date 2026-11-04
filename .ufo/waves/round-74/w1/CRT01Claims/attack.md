@@ -168,11 +168,12 @@ the multi-block preservation case the frozen scorer does not exercise.
 
 ## C2 — operability (`tools/round74-receipt-claim-binding.py`)
 
-Module landed during this seat (EX02ClaimV2, tested bytes sha256
+Module landed during this seat (tested bytes sha256
 `0f231fac27a2b49e99a8d186162f62942a7f9328bf0dcb8d987eabc98051ab44`, selftest
-`RECEIPT_CLAIM_V2_SELFTEST pass=15 fail=0`). All C2 attack fixtures were built and
-oracle-graded BEFORE the module landed (pre-registration, F2a-F2f below); the
-module was then run over every one of them:
+`RECEIPT_CLAIM_V2_SELFTEST pass=15 fail=0`; build attribution per integration
+commit `07994dfc`: "EX02 dead at spawn; C2 built by L1"). All C2 attack fixtures
+were built and oracle-graded BEFORE the module landed (pre-registration, F2a-F2f
+below); the module was then run over every one of them:
 
 ```
 c2_wrapped        V2 rc=1 wrapped-claim    ORACLE rc=1 wrapped-claim

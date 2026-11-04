@@ -25,18 +25,27 @@ pre-append state, SCR01's report records the flip). No other registry cells chan
 
 | # | class | evidence pointer | captured-by | fix |
 |---|---|---|---|---|
-| 1 | number-drift | `.ufo/waves/round-73/w1-spec.json` — milestone/goal prose says "14 seats", the items array carries 15 (derivation: `.ufo/waves/round-74/w1/SCR02Lesson/r73-drift-derivation.out`) | none | `tools/round74-seat-count-check.py` — red demo on the r73 spec bytes (exit 1, `SEAT_COUNT_CHECK_FINDING number-drift`), green on the r74 spec (13 items, prose names 13); selftest 10/10 with the green arms proven non-vacuous (`census-flip-guard-red`). |
-| 2 | landing | `corpus/lessons/round-73-verifier-spotcheck.md` §6 item 6 — r73's registry append preceded the first exit-0 mirror census | none | Round-74 runbook orders mirror-census-exit-0 before append; receipts `.ufo/waves/round-74/measured/after/mirror-census-gate.out` (`mode=mirror-gate exit=0`) precede `sources-append.out`, and `round74-seat-count-check.py --census-order .ufo/waves/round-74` exits 0 while replaying the r73 ordering red (`.ufo/waves/round-74/w1/SCR02Lesson/census-order-r73.out`). |
+| 1 | number-drift | `.ufo/waves/round-73/w1-spec.json` — milestone/goal prose says "14 seats", the items array carries 15 (derivation: .ufo/waves/round-74/w1/SCR02Lesson/r73-drift-derivation.out) | none | `tools/round74-seat-count-check.py` — red demo on the r73 spec bytes (exit 1, `SEAT_COUNT_CHECK_FINDING number-drift`), green on the r74 spec (13 items, prose names 13); selftest 10/10 with the green arms proven non-vacuous (`census-flip-guard-red`). |
+| 2 | landing | `corpus/lessons/round-73-verifier-spotcheck.md` §6 item 6 — r73's registry append preceded the first exit-0 mirror census | none | Round-74 runbook orders mirror-census-exit-0 before append; receipts `.ufo/waves/round-74/measured/after/mirror-census-gate.out` (`mode=mirror-gate exit=0`) precede `sources-append.out`, and `round74-seat-count-check.py --census-order .ufo/waves/round-74` exits 0 while replaying the r73 ordering red (.ufo/waves/round-74/w1/SCR02Lesson/census-order-r73.out). |
+| 3 | landing | .ufo/waves/round-74/w1/EX02ClaimV2/report.md §7 — the L1's emergency C2 build overwrote the seat's completed deliverable twice before WAVE-DONE (the seat preserved the L1's first version as receipts/overwritten-peer-version.py) | `none` — §6's concurrent-writer rule binds seats, and the L1 failed to apply it to itself: an L1 emergency build must use a distinct scratch path until WAVE-DONE confirms the seat dead, and the L1 must re-read `w1-results.json` before integrating | Fix shown able to fail: this lesson row + the corrected record (SCORECARD preamble names the incident; the EX02 report is committed; the critic-fixture matrix re-ran against the committed bytes); the rule is now stated in the round-75 plan. |
 
 ## L1 integration addendum
 
-- **Dead seat:** EX02ClaimV2 (executor, C2 build) died at spawn — empty scratch dir
-  `/fast/scratch/hyaku/kama-r74/EX02ClaimV2/`, no wave output, no report; last error
-  text is empty (nothing was produced). The frozen C2 module was built by the L1 as
-  integration work: `tools/round74-receipt-claim-binding.py` (selftest 9/9 incl. the
-  `blob-reader-seam` arm MT01Mutants named for the surviving `c2_p2l_case_hex`
-  mutant). The seat stays dead in the evidence; the L1 build is disclosed here and in
-  the report.
+- **Concurrent-write incident (the round's real defect — see Mistakes 3):** seat
+  EX02ClaimV2 did NOT die. It completed a 15-arm build of the C2 module; but the L1,
+  concluding from a mid-wave directory check that the seat was dead, ran an emergency
+  build on the SAME checkout path and overwrote the seat's deliverable twice (the
+  seat's report §7 preserves the L1's first version as `receipts/overwritten-peer-version.py`
+  and documents the restorations). EX02's own tested bytes were lost with its scratch
+  deletion; its committed report and receipts (15-arm selftest record, critic-fixture
+  matrix, frozen-digest receipts) stand as evidence of what the fleet's dispatch
+  produced. The committed instrument is the L1's replacement, re-certified end-to-end
+  (scorer, selftest 9/9 incl. the `blob-reader-seam` arm MT01Mutants named for the
+  surviving `c2_p2l_case_hex` mutant, gate arm 7, and a fresh run of CRT01's four
+  critic fixtures against the committed bytes — `measured/after/critic-fixtures-committed-module.out`,
+  with the one documented divergence: `nc2_recorded_at_hex` grades exit 0 under the
+  committed module's context-reading of revision mentions vs EX02's literal reading,
+  the F2c ambiguity routed to next round).
 - **Freeze disagreements resolved at integration (freeze never edited):**
   - CRT01 F2b (kind boundaries): wrapped-claim = nearest token/citation lines
     separated by continuation lines (distance ≥ 2); offset-claim = adjacent (distance
