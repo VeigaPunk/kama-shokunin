@@ -4812,7 +4812,7 @@ gains KQ132 from the mined `self-record-states-intent` mistake.
   the append-only lesson's `## Freeze divergences` section written before the first commit) and
   names them here under KQ131 rather than booking them as accepted history.
 
-### Round-79 routed defects — status
+### Routed-defect dispositions for the prior record
 
 - **R79V1 fixed**: the banner and the operability row are re-derived in this file; the round-79
   claim table's verdict is corrected by the appended subsection above (append-only, never a
@@ -4831,7 +4831,7 @@ gains KQ132 from the mined `self-record-states-intent` mistake.
   `round76-instruments` entry), and the validate-warning inventory is stated above.
 - **Round-79's report-gate defect fixed**: `tools/round78-live-reconcile.py`'s selftest now
   writes under `TMPDIR`/`--scratch` instead of `.ufo/waves/round-78/measured/after/`, with the
-  red-before/after receipts in `measured/defects/`.
+  red-before/after receipts `measured/defects/r79-live-reconcile-before.out` and `measured/defects/r79-live-reconcile-after.out`.
 
 **Capabilities — canonical list as of round 80**
 
