@@ -3829,7 +3829,7 @@ line naming `7ff94d67…`; (4) the "at the report tip" wording class is replaced
 is a command; (5) the missing coverage-map row is appended in `corpus/README.md`.
 
 Motivating evidence, measured at base `d30a8696` before any seat scored: the round-71 gate's cleanliness arm
-graded `git status --porcelain -uall -- .ufo/waves/round-<N>` only, so a wrong `--round` label pointed at a
+graded `git status --porcelain -uall` limited to the round's wave directory only, so a wrong `--round` label pointed at a
 nonexistent directory and printed `files=0`, work outside the wave dir was invisible, and a git-ignored file
 inside it was invisible (`.ufo/waves/round-72/measured/before/round-scope-control-old.out` →
 `SCOPE_CONTROL base_rev=d30a8696 cases=3 base_green=3 killed=0`, exit 1). Separately the round-71 report
@@ -3840,12 +3840,12 @@ rejected=0`, exit 1). The scout's census of the lane's own record makes the clas
 receipts carry no revision header (`.ufo/waves/round-72/w1/SCT01ReceiptRecon/recon.json`).
 
 Frozen claims and controls: `plans/round-72-claims.md`; base `d30a8696`; freeze `090a0b25`; pre-score
-amendment `a3cc39f0`; controls under `.ufo/waves/round-72/controls/` (their bytes and the frozen plan sha256 pinned in `.ufo/waves/round-72/controls/freeze.txt`);
+amendment `a3cc39f0`; controls whose bytes and the frozen plan sha256 are pinned in `.ufo/waves/round-72/controls/freeze.txt`;
 base receipts `.ufo/waves/round-72/measured/before/round-scope-control-old.out` and `.ufo/waves/round-72/measured/before/receipt-tip-control-old.out`.
 
 | Claim | Axis, score | Before → after / counting command | Verdict |
 |---|---|---|---|
-| C1 — the pre-report cleanliness arm cannot be satisfied vacuously: a new registered `round-scope` counter grades the round label, the whole-repo uncommitted class and the ignored class, and enters the gate as arm 6 | calibration (held 7; capability `round-scope`) | counter `python3 tools/round72-round-scope.py --repo . --round 72 --tip master`; before at base: the base arm command prints no record for all three defect fixtures (`base_green=3 killed=0`, exit 1); after: `ROUND_SCOPE_SELFTEST pass=16 fail=0` and `kill-{label-wronground,stray,ignored}.out` each exit 1 naming their case (`w1/EX01RoundScope/`), clean fixture exit 0, at the instrument tip `7c8350f3` the lane prints `ROUND_SCOPE round=72 cases=3 findings=0` exit 0; the gate's verdict is `PRE_REPORT round=<N> arms=6 failed=<f> uncommitted=<u>` with `PRE_REPORT_SELFTEST pass=8 fail=0` and a `round-scope FAIL` arm fixture | verified |
+| C1 — the pre-report cleanliness arm cannot be satisfied vacuously: a new registered `round-scope` counter grades the round label, the whole-repo uncommitted class and the ignored class, and enters the gate as arm 6 | calibration (held 7; capability `round-scope`) | counter `python3 tools/round72-round-scope.py --repo . --round 72 --tip master`; before at base: the base arm command prints no record for all three defect fixtures (`base_green=3 killed=0`, exit 1); after: `ROUND_SCOPE_SELFTEST pass=16 fail=0` and `kill-{label-wronground,stray,ignored}.out` each exit 1 naming their case, clean fixture exit 0, at the instrument tip `7c8350f3` the lane prints `ROUND_SCOPE round=72 cases=3 findings=0` exit 0; the gate's verdict is `PRE_REPORT round=<N> arms=6 failed=<f> uncommitted=<u>` with `PRE_REPORT_SELFTEST pass=8 fail=0` and a `round-scope FAIL` arm fixture | verified |
 | C2 — every receipt the round's self-record cites names the revision it measured, and the `rev..tip` delta carries no instrument input | operability (held 8; capability `receipt-tip-binding`) | counter `python3 tools/round72-receipt-tip-binding.py --repo . --round 72 --tip master`; before: the shortcut accepts all three planted defects (`BINDING_CONTROL cited=3 accepted=3 rejected=0`, exit 1); after: `RECEIPT_TIP_BINDING_SELFTEST pass=14 fail=0`, `kill-{unbound,stale,shifted,non-receipt}.out` exit 1/1/1/2, `cited=0` and a missing round section each exit 2, and on real committed bytes the round-71 record re-grades `RECEIPT_TIP_BINDING round=71 cited=1 bound=1 unbound=0 shifted=0 stale=0`, exit 0 (`w1/CRT01ReceiptAttack/live-r71-min.out`) | verified |
 
 Sourced claim: C2 rests on **S175** (`git merge-base --is-ancestor` exit-status semantics, re-opened live

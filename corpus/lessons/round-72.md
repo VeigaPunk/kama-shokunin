@@ -135,7 +135,7 @@ seat — `w1/w1-results.json` carries 13 rows for 13 seats).
   and therefore does **not** catch that round's *wording* defect (a report sentence that said "at the
   report tip" while the header named an earlier revision). That class needs B6's citing-line grade.
 - **MT01Mutants** ran 22 mutants across the three tools (4 gate, 9 round-scope, 9 binding) and killed
-  all 22 (`w1/MT01Mutants/mutants.tsv`).
+  all 22 (its mutant ledger beside its logs).
 - **SEN01ScopeAudit** found no secret-shaped string in the round-72 population, no seat write outside
   its assignment, no mutating git/jj by a seat, and no service or consumer contact; its one literal
   FAIL is the L1's own pre-score amendment commit landing mid-wave (the protocol permits the L1 to
@@ -145,7 +145,7 @@ seat — `w1/w1-results.json` carries 13 rows for 13 seats).
 Final receipts at the instrument tip `7c8350f3`: `ROUND_SCOPE round=72 cases=3 findings=0` (exit 0,
 `.ufo/waves/round-72/measured/after/round-scope-at-A.out`); the report-tip gate, binding and census
 runs are cited by the round-72 report at `/home/vgpnk/Projects/shokunin/.ufo/reports/round-72/kama.md`,
-against their committed receipts under `measured/after/`.
+against their committed receipts, e.g. `.ufo/waves/round-72/measured/after/round-scope-at-A.out`.
 
 ## Ceiling
 
