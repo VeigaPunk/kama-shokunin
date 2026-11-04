@@ -4399,3 +4399,15 @@ before the first `## ` heading. The first-filed banner is held here byte-exactly
 ``````text
 (`measured/after/gate-selftest.out`, `gate-run.out`).
 ``````
+
+### Correction (2026-11-04) — gate-shape
+
+Supersedes: §Round 77 population sentence's "the round-76 `append-exempt` sub-check is retired from the gate".
+Corrected: **the whole `round76-instruments` arm is retired**, not one sub-check: after the round-77
+`tools/` commits, its frozen `receipt-scope` rule shifts every pre-round baseline receipt (the defect
+C1 fixes) and its `selfrecord-facts` harness aborts on its own sealed record once the round-76 closure
+exists. The gate now carries **nine arms** (`PRE_REPORT round=77 arms=9 failed=0 uncommitted=0`,
+`measured/after/gate-run.out`) and the round-77 arm 10 grades the citation population and the sealed
+facts with the baseline class. `PRE_REPORT_SELFTEST pass=22 fail=0` is unchanged; the three fail-closed
+wiring checks now target arm 10. The retired rules stay in the tree as history; their red is recorded
+here, not hidden.

@@ -3160,3 +3160,8 @@ Wave: one v1 wave, 13 seats (4 executor, 3 scribe, 1 scout, 1 connector, 1 revie
 before the three counters landed and its certification is inconclusive (its report says so);
 C1/C2/C3 seat receipts were captured by L1 because the executor seats declined to execute;
 C3's frozen line is missed by one correction.
+
+Correction (2026-11-04, round 77) — the gate shape: the whole `round76-instruments` arm is retired
+(its baseline-shifting receipt rule and its closure-resolving fact harness are superseded by arm 10),
+so the gate carries nine arms; `PRE_REPORT round=77 arms=9 failed=0 uncommitted=0`. The round entry
+above names one sub-check; that is superseded by this line.
