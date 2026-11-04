@@ -5080,7 +5080,7 @@ found 18 stale rows; C1's five corrections answer 7. The remaining eight distinc
 here (append-only; the filed bytes stand). C1's claim is unchanged — it grades six declared facts —
 but the population was too narrow, and this block is the honest distribution:
 
-- **U1** §Round 81 C2 row, fourth cell: `selftest pass=16 fail=0` → the cited `debt-selftest.out`
+- **U1** §Round 81 C2 row, fourth cell: `selftest pass=16 fail=0` → the cited `.ufo/waves/round-81/measured/after/debt-selftest.out`
   prints `pass=22` (and the round-82 tip prints `pass=25` after the row-introduction repair).
 - **U2** the head banner carried the same `pending=1` (duplicate of F1's cell); the round-82 banner
   states the graded buckets and the `pending` convention instead.
