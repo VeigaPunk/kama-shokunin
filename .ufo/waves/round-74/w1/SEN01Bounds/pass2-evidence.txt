@@ -1,0 +1,126 @@
+Pass 2 (end-of-run) — 2026-11-04 00:52:03.060689
+
+tools/round74-*.py present: ['/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round74-seat-count-check.py']
+### secret-sweep/api-key-secret-token
+$ grep -rEnI -e '(?i)(api[_-]?key|apikey|secret[_-]?key|access[_-]?key|auth[_-]?token)\s*[:=]\s*[\'"][^\'"]+[\'"]' <targets>
+(no output)
+stderr: grep: warning: ? at start of expression
+
+
+### secret-sweep/openai-sk
+$ grep -rEnI -e 'sk-[a-zA-Z0-9]{20,}' <targets>
+(no output)
+
+### secret-sweep/github-token
+$ grep -rEnI -e 'gh[pousr]_[a-zA-Z0-9]{36}' <targets>
+(no output)
+
+### secret-sweep/slack-token
+$ grep -rEnI -e 'xox[baprs]-[0-9a-zA-Z]{10,}' <targets>
+(no output)
+
+### secret-sweep/aws-akia
+$ grep -rEnI -e 'AKIA[0-9A-Z]{16}' <targets>
+(no output)
+
+### secret-sweep/bearer
+$ grep -rEnI -e '(?i)bearer\s+[a-zA-Z0-9_\-\.]{20,}' <targets>
+(no output)
+stderr: grep: warning: ? at start of expression
+
+
+### secret-sweep/cookie-session
+$ grep -rEnI -e '(?i)(connect\.sid|sessionid|set-cookie)\s*[:=]' <targets>
+(no output)
+stderr: grep: warning: ? at start of expression
+
+
+### secret-sweep/op-ref
+$ grep -rEnI -e 'op://[a-zA-Z0-9_/-]+' <targets>
+/fast/scratch/hyaku/kama-r74/RVW01Plan/base/.ufo/waves/round-58/w1-results.json:394:   "output": "{\n  \"seat\": \"S02ScratchAndSecrets\",\n  \"axis\": \"operability\",\n  \"milestone\": \"round-58 falsification and frontier\",\n  \"report\": \".ufo/waves/round-58/w1/out/S02ScratchAndSecrets.md\",\n  \"verdict\": \"clean on credentials/op:///private URLs; two scratch-portability defects found\",\n  \"findings\": [\n    {\n      \"id\": \"F1\",\n      \"severity\": \"high\",\n      \"attacks\": \"frozen C2 kill rule ('any nonzero counter at the measured tip -> C2 not met')\",\n      \"location\": \"tools/round58-c2-counter.py:109-111 (no os.makedirs on the scratch root; siblings at round58-c1-counter.py:57-61 and round58-battery-exec-check.py:183-186 do create it)\",\n      \"behavior\": \"uncaught FileNotFoundError/NotADirectoryError, exit 1, no predicate line, --out never written\",\n      \"receipts\": [\n        \"env -u TMPDIR HYAKU_SCRATCH=$S/no-such-base -> FileNotFoundError .../kama-r58/c2-pu86e0gw, exit 1 (p1-c2-missing-scratch-base.out)\",\n        \"TMPDIR=/dev/null -> NotADirectoryError '/dev/null/c2-8yttkgod', exit 1 (p2-c2-bad-tmpdir.out)\",\n        \"control TMPDIR=$S/missing-c1 on c1-counter -> met=True, exit 0 (p3-c1-missing-tmpdir.out)\"\n      ],\n      \"impact\": \"exit 1 is the documented 'predicate not met' code, so a scratch-path typo silently records a false C2 failure instead of exit 2 could-not-evaluate\",\n      \"smallest_remediation\": \"os.makedirs(root, exist_ok=True) before TemporaryDirectory; exit 2 on OSError\"\n    },\n    {\n      \"id\": \"F2\",\n      \"severity\": \"medium\",\n      \"attacks\": \"portability of the frozen C1 artifact set\",\n      \"location\": \"21 committed files / 36 literal occurrences\",\n      \"detail\": \"tests/round58-battery-variants/*.py (all 15) line 10 LANE=/home/vgpnk/Projects/shokunin/kama-shokunin and scratch=/fast/scratch/hyaku/kama-r56/l1-battery at genuine:66 B1:67 B2:70 B3:66 N01:66 N02:66 N03:66 N04:66 N05:66 N06:68 N07:67 N08:66 N09:66 N10:69 N11:66; controls/checkers/hash-only.py:5; round58-c2-counter.py:67 --fleet-repo default /home/vgpnk/Projects/shokunin; HYAKU_SCRATCH default /fast/scratch/hyaku at exec-check:184, c1:59, c2:111; .ufo/waves/round-58/census/start.out:102; untracked w1.ready:1\",\n      \"note\": \"inert under the harness (mkdir/write_text/write_bytes/TemporaryDirectory patched); inherited from tools/round56-env-leg-battery.py:10,66 and frozen by the behaviour-preserving variants, so remediate by parameter/doc, not by editing frozen bytes\"\n    },\n    {\n      \"id\": \"F3\",\n      \"severity\": \"medium\",\n      \"attacks\": \"lane write scope outside .ufo/waves/round-58/\",\n      \"detail\": \"unharnessed run at 2026-10-27 16:51:52 rewrote 5 files under .ufo/waves/round-56/measured/ (4 changed bytes, pid= only) and created /fast/scratch/hyaku/kama-r56/l1-battery; git status shows 4 M\",\n      \"attribution\": \"[INFERENCE] not this seat (nothing run in the lane before 16:54)\",\n      \"guard_verified\": \"TMPDIR=$S/tmp2 c1-counter --checker round58-battery-exec-check.py -> met=True exit 0 with measured-dir mtimes byte-identical before/after\"\n    }\n  ],\n  \"clean\": {\n    \"credentials\": \"0 hits for op://, AKIA, ghp_, sk-, xox[baprs]-, BEGIN *PRIVATE KEY, password, passwd, secret, api_key, apikey, Authorization:, Bearer across the round-58 scope; only token= (3), which are verdict tokens (c2-counter.py:125, controls/c2-*.out)\",\n    \"private_urls\": \"none; only public docs.python.org (round58-battery-exec-check.py:13 docstring) and man7.org in untracked seat outputs\",\n    \"hardcoded_tmp\": \"none in code; only prose in build_spec.py:87,130, w1-dispatch.json, w1-spec.json, w1/out/swarm-registry.json and the concession at round58-c1-counter.py:16\",\n    \"tmpdir_precedence\": \"--work > $TMPDIR > $HYAKU_SCRATCH/kama-r58; $TMPDIR used verbatim as dir=, so TMPDIR=/tmp lands scratch in /tmp (not executed; /tmp writes barred); c2 has no --work flag\"\n  },\n  \"receipts_dir\": \".ufo/waves/round-58/w1/out/S02ScratchAndSecrets/\",\n  \"tools_installed\": \"none\",\n  \"production_edits\": \"none\",\n  \"scratch\": \"removed after copying receipts\"\n}",
+
+
+### secret-sweep/private-key
+$ grep -rEnI -e '-----BEGIN [A-Z ]*PRIVATE KEY-----' <targets>
+/fast/scratch/hyaku/kama-r74/RVW01Plan/base/.ufo/waves/round-50/w1/out/X17Cleanup/hygiene.md:305:  `server.token='…'`, `ghp_…`, `ANTHROPIC_API_KEY=…`, `-----BEGIN RSA PRIVATE KEY-----`)
+
+
+### secret-sweep/jwt
+$ grep -rEnI -e 'eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}' <targets>
+(no output)
+
+### fleet-root git status --porcelain
+$ git -C /home/vgpnk/Projects/shokunin status --porcelain
+ M .scratch/goal-20261103-hyaku-run15.md
+ M .scratch/run15-state.json
+?? .scratch/run13-state.json
+?? .scratch/run15-kernel.py
+?? after
+
+
+### /tmp top-10 by size
+$ du -sh /tmp/* 2>/dev/null | sort -h | tail -10
+47M	/tmp/kit-cache-qa-smoke
+51M	/tmp/lc-v3final
+58M	/tmp/p61-gate-saffron
+66M	/tmp/devin-overflows-1000
+78M	/tmp/rcbase
+90M	/tmp/lh-mine
+95M	/tmp/p61-gate-starfall
+100M	/tmp/p61-gate-bogberry
+530M	/tmp/lh_sample.jsonl
+28G	/tmp/polish61-m47tumble-cache
+
+
+### pacman lock
+$ ls /var/lib/pacman/db.lck
+(no output)
+stderr: ls: cannot access '/var/lib/pacman/db.lck': No such file or directory
+
+
+### lane git log authors -15
+$ git -C kama-shokunin log --format='%an <%ae>' -15
+kama-shokunin <kama@shokunin.local>
+kama-shokunin <kama@shokunin.local>
+protocol-shokunin <protocol@shokunin.local>
+kama-shokunin <kama@shokunin.local>
+kama-shokunin <kama@shokunin.local>
+kama-shokunin <kama@shokunin.local>
+kama-shokunin <kama@shokunin.local>
+kama-shokunin <kama@shokunin.local>
+kama-shokunin <kama@shokunin.local>
+kama-shokunin <kama@shokunin.local>
+protocol-shokunin <protocol@shokunin.local>
+kama-shokunin <kama@shokunin.local>
+kama-shokunin <kama@shokunin.local>
+kama-shokunin <kama@shokunin.local>
+kama-shokunin <kama@shokunin.local>
+
+
+### kama lane git status --porcelain
+$ git -C kama-shokunin status --porcelain
+ M PROVINCE.md
+?? .ufo/waves/round-74/assimilation/
+?? .ufo/waves/round-74/measured/pinwatch/
+?? .ufo/waves/round-74/w1.ready
+?? .ufo/waves/round-74/w1.ready.dispatched
+?? .ufo/waves/round-74/w1/SCR01Sources/
+?? .ufo/waves/round-74/w1/SEN01Bounds/
+?? tools/round74-seat-count-check.py
+
+
+### kama lane git status --porcelain -- tools/
+$ git -C kama-shokunin status --porcelain -- tools/
+?? tools/round74-seat-count-check.py
+
+
+### freeze sha256 re-verification
+$ sha256sum <freeze-pinned files>
+7d09d94efd5728661eb1af51b4b6b5ee797032aaf4e50d3bc0c6d9ad96c9c28e  /home/vgpnk/Projects/shokunin/kama-shokunin/plans/round-74-claims.md
+9ecb77f8e507cae1aa02f219100186d0b450b479aaa8ad1f04a157173cc6c8e9  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-74/controls/build-survivors.py
+451e51af8e9d6be8d9e267ae55e9e21e1d6a1896672a2292a91e4bbbfa47a687  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-74/controls/score-survivors.py
+2f6f9ac201b7f88bddb02b59c76393b3ee8deb1b6099c9f42795ef122bd411f5  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-74/controls/probe-canon-base.py
+e7d316ec0c1e2c76fa3677b5aed92a2c264e03d137a3a1cf2e6fe49c9500c004  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-74/controls/fixtures-meta.json
+1a7903f371f1ead368d790738092597df37711de5be028d21a3c26b422a2a486  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-74/measured/before/score-survivors-base.out
+bf1d9cd7b89200bedede14fed7f9982f6ed87b5d2066dad51762b0e7e16bcd72  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-74/measured/before/probe-canon-base.out
+
