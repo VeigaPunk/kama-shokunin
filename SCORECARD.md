@@ -52,22 +52,21 @@ tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.servic
 
 The live plan follows; historical plans remain as filed (round 78's in `plans/round-78-claims.md`, executed in the §Round 78 section below; round 77's at the end of the §Round 77 section).
 
-### Planned (round 82)
+### Planned (round 83)
 
-1. Operability: repay round 81's own `pending` append-only events with late-acceptance rows
-   (`python3 tools/round81-late-rows.py --repo . --round 82 --write` once the round's record edits
-   are committed) and re-run `python3 tools/round81-append-debt.py --repo . --round 82`; a
+1. Operability: bind the `--late` register path to a per-row introduction (the round-82 limit: a
+   register read from disk is `unbound-register`) and accept round 82's own `pending` events; a
    `pending` count that does not fall to the next round's base is a finding, not a pass.
-2. Freshness: re-run `python3 tools/pin-watch.py check` on the next release cadence and grade each
-   `behind` relation row as a recheck of the pinned docs (a newer release is a trigger, never proof
-   the held knowledge is wrong); carry the `b11963` anchor relation forward.
-3. Coverage/operability: K05 declared-versus-served context capacity across real consumers stays
-   blocked on an authorized serving runtime (operator-owned); the three registered consumers keep
-   their last recorded `DEAD`.
+2. Calibration: grade the round-82 record's own declared facts with population facts bound at freeze
+   (the round-82 F2 divergence), and make the correction container's `fix` leg reject a token that
+   appears only in the lesson itself.
+3. Freshness: write the pin-recheck rows the round-82 `SK01` receipt makes mechanical (llama.cpp
+   `holds` at=b12103, one line shifted) and grade the SGLang and vLLM `behind` rows once a located
+   document exists; the verdict vocabulary is in `corpus/knowledge/pin-recheck-trigger.md`.
 
 ## Retired
 
-None. 6 axes and 44 capabilities remain active. Neither assigned axis is retired: the registered consumers still sample DEAD (`registry/history/latest.tsv`; restoring a serving runtime is operator-owned), while the lane-owned llama.cpp fixture reaches `MODEL_OK` on an unregistered loopback port (`.ufo/waves/round-78/measured/after/c3-live.json`), so the surface is not permanently gone. Retirement would need evidence of permanent absence or of saturation, and neither is observed.
+None. 6 axes and 46 capabilities remain active. Neither assigned axis is retired: the registered consumers still sample DEAD (`registry/history/latest.tsv`; restoring a serving runtime is operator-owned), while the lane-owned llama.cpp fixture reaches `MODEL_OK` on an unregistered loopback port (`.ufo/waves/round-78/measured/after/c3-live.json`), so the surface is not permanently gone. Retirement would need evidence of permanent absence or of saturation, and neither is observed.
 
 ## Move log
 
@@ -131,6 +130,8 @@ Mirror of the round-81 canonical capability list that §Round 81 carries (a mirr
 
 | Capability | What it can now do | Evidence pointer | First-working round |
 |---|---|---|---|
+| late-delta | Re-derive a late register's round delta against the frozen generator: carried rows bound byte-wise to the base revision, new rows by cell and by accepting/deletion round order | `tools/round82-late-delta.py` | 82 |
+| selfrecord-round81 | Re-derive six declared facts of the round-81 self-record at the sealed revision and grade dated value-bound corrections whose fix path carries the new token at the tip | `tools/round82-selfrecord-round81.py` | 82 |
 | sources-registry | Curate where kama learns: tier-scoped, revision-anchored rows; contract-v1 census clean | `corpus/SOURCES.md` | 10 |
 | append-debt | Grade the append-only acceptance population under a late-acceptance rule: a later round's row binds by strict ancestry and round order and accepts what the frozen cutoff cannot | `tools/round81-append-debt.py`, `registry/append-only-late.tsv` | 81 |
 | ollama-offline-evidence-replay | Reconcile caller-supplied `/api/tags` + `/api/ps` captures fail-closed | `tools/kama-ollama-evidence.py` | 14 |
@@ -178,7 +179,7 @@ Mirror of the round-81 canonical capability list that §Round 81 carries (a mirr
 
 ## Saturation
 
-Saturation line **8/10** (declared round 10, unchanged); stagnation window **N = 4** rounds. Derived at the measured commit by `tools/round42-selfdesc-reconcile.py` (kept current in round 49; on this host re-derived by direct pasteable commands, see the banner): score vector operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7 (from `## Axes`); capability first-working rounds 10, 14, 16, 20, 25, 30, 41, 42, 43, 46, 47, 61, 67, 68, 69, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81 (highest canonical list, §Round 81); the assigned axes are operability + calibration and calibration 7 is below the line, so nudge inactive. The last capability entered is round 81's `append-debt`; round 80's `selfrecord-round79`, `engine-pin-relations` and `class-engine-register`; the nudge remains inactive because the lowest assigned axis (calibration 7) remains below saturation. (The superseded round-64 sentence — "`live-completion-request-plane` stays unadmitted until a non-author closure rules on C1" — is closed by history: the round-64 closure ruled `rejected-honest-stop` and no such capability ever entered; the round-61 sentence naming `live-ollama-lifecycle` as the last capability entered was true through round 66; the round-68 sentence naming `receipt-pointer-audit` as the last capability entered was true through round 68.)
+Saturation line **8/10** (declared round 10, unchanged); stagnation window **N = 4** rounds. Derived at the measured commit by `tools/round42-selfdesc-reconcile.py` (kept current in round 49; on this host re-derived by direct pasteable commands, see the banner): score vector operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7 (from `## Axes`); capability first-working rounds 10, 14, 16, 20, 25, 30, 41, 42, 43, 46, 47, 61, 67, 68, 69, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82 (highest canonical list, §Round 82); the assigned axes are operability + calibration and calibration 7 is below the line, so nudge inactive. The last capabilities entered are round 82's `late-delta` and `selfrecord-round81`; round 81's `append-debt`; round 80's `selfrecord-round79`, `engine-pin-relations` and `class-engine-register`; the nudge remains inactive because the lowest assigned axis (calibration 7) remains below saturation. (The superseded round-64 sentence — "`live-completion-request-plane` stays unadmitted until a non-author closure rules on C1" — is closed by history: the round-64 closure ruled `rejected-honest-stop` and no such capability ever entered; the round-61 sentence naming `live-ollama-lifecycle` as the last capability entered was true through round 66; the round-68 sentence naming `receipt-pointer-audit` as the last capability entered was true through round 68.)
 
 ## Historical head sections (superseded in round 42)
 
