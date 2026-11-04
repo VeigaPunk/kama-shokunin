@@ -1,0 +1,107 @@
+{
+  "seat": "CN01SiblingScan",
+  "lane": "kama",
+  "round": 83,
+  "wave": "w1",
+  "role": "connector",
+  "judged_on": "adjacency",
+  "read_only": true,
+  "generated": "2026-11-04",
+  "scope": {
+    "lanes": ["chousa", "tabi", "souji", "tsukuroi", "kengaku", "tameshi", "mori", "kaidoku", "kasegi", "mado"],
+    "paths": [
+      "/home/vgpnk/Projects/shokunin/.ufo/reports/round-*/<lane>.md",
+      "/home/vgpnk/Projects/shokunin/<lane>-shokunin/corpus/lessons/"
+    ],
+    "report_files_searched": 645,
+    "lesson_files_searched": 1286,
+    "report_range_per_lane": {
+      "chousa": "round-1..round-73",
+      "tabi": "round-1..round-61",
+      "souji": "round-1..round-57",
+      "tsukuroi": "round-1..round-76",
+      "kengaku": "round-1..round-82",
+      "tameshi": "round-1..round-82",
+      "mori": "round-1..round-87",
+      "kaidoku": "round-1..round-79",
+      "kasegi": "round-1..round-59",
+      "mado": "round-1..round-82"
+    },
+    "surfaces": {
+      "S1": "register rows bound to their own introduction commit (git blame) as an acceptance rule",
+      "S2": "graded recheck row keyed to an upstream release relation, byte comparison deciding the verdict; kama holds corpus/knowledge/pin-recheck-trigger.md",
+      "S3": "self-record counter grading a previous round's declared facts with value-bound corrections"
+    }
+  },
+  "commands": [
+    {
+      "cmd": "grep -rn 'git blame' <10 lesson dirs> .ufo/reports/round-*/{chousa,tabi,souji,tsukuroi,kengaku,tameshi,mori,kaidoku,kasegi,mado}.md",
+      "result": "0 hits"
+    },
+    {
+      "cmd": "grep -rlE 'git blame|append-only-late' <lane>-shokunin/{tools,scripts} (10 lanes)",
+      "result": "0 files in 10/10 lanes"
+    },
+    {
+      "cmd": "grep -rniE 'introduc[a-z]* commit|per-row introduction|row.?s own introduction' <same report+lesson paths>",
+      "result": "6 hits; 5 recorded as S1 adjacencies, 1 non-binding (kengaku r29 containment)"
+    },
+    {
+      "cmd": "grep -rniE 'release[- ]pin|pin[- ]recheck|pin row|recheck row' <10 lesson dirs>",
+      "result": "99 hits (tabi 74, mori 15, tameshi 3, tsukuroi 1, kaidoku 1, others 0)"
+    },
+    {
+      "cmd": "grep -rniE 'release[- ]pin|holds=16|drifted=7|recheck row' <lane reports>",
+      "result": "26 hits"
+    },
+    {
+      "cmd": "grep -rniE 'self-?assessment|self-?record|SELFRECORD' <10 lesson dirs>",
+      "result": "367 hits (tabi 117, tsukuroi 116, kaidoku 33, tameshi 30, souji 22, mori 21, kengaku 15, mado 7, chousa 3, kasegi 3)"
+    },
+    {
+      "cmd": "grep -rniE 'self-?assessment|SELFRECORD|self-?record' <lane reports>",
+      "result": "212 hits"
+    }
+  ],
+  "findings": [
+    {"id": "F01", "surface": "S1", "lane": "souji", "round": 1, "file": ".ufo/reports/round-1/souji.md", "line": "17", "claim": "all 109 b2f2efa files have introducing commits that are ancestors of `origin/master` → 0 NOTPUSHED", "verdict": "adjacent", "note": "per-file introduction commit (git log --diff-filter=A + merge-base) as pushed-ness rule; not per-row register acceptance"},
+    {"id": "F02", "surface": "S1", "lane": "mori", "round": 16, "file": "mori-shokunin/corpus/lessons/round-16-verifier-spotcheck.md", "line": "50-51", "claim": "Every receipt's `started_at` precedes the commit that first adds it.", "verdict": "adjacent", "note": "artifact-to-introduction-commit binding, acceptance condition is timestamp order"},
+    {"id": "F03", "surface": "S1", "lane": "tameshi", "round": 57, "file": "tameshi-shokunin/corpus/lessons/round-57.md", "line": "74", "claim": "pipeline-introduction commit is not the deciding-receipts commit", "verdict": "adjacent", "note": "commit-attribution mismatch mined as a mistake, no register rule"},
+    {"id": "F04", "surface": "S1", "lane": "tabi", "round": 23, "file": "tabi-shokunin/corpus/lessons/round-23.md", "line": "153", "claim": "a change and its LOG entry bound to different commits; fix `c6-landed-log-binding`: per-row commit → `LOG.md` membership", "verdict": "adjacent", "note": "per-row commit to LOG membership, not to an event window or a blame introduction"},
+    {"id": "F05", "surface": "S1", "lane": "kaidoku", "round": 67, "file": "kaidoku-shokunin/corpus/lessons/round-67.md", "line": "3-4", "claim": "the operative freeze is the commit that first adds `.ufo/waves/round-67/claims.json`", "verdict": "adjacent", "note": "single container introduction, not per-row register"},
+    {"id": "F06", "surface": "S2", "lane": "tabi", "round": 29, "file": "tabi-shokunin/corpus/lessons/round-29-verifier-spotcheck.md", "line": "77", "claim": "both give `population=23 resolved=23 unresolved=0 holds=16 drifted=7`, exit 0", "verdict": "adjacent", "note": "nearest prior art: release-pin recheck over its own SOURCES rows at Chromium 156"},
+    {"id": "F07", "surface": "S2", "lane": "tabi", "round": 29, "file": "tabi-shokunin/corpus/lessons/round-29-verifier-spotcheck.md", "line": "73", "claim": "An exact-substring span recomputation over all 23 rows gives holds=16 and drifted=7", "verdict": "adjacent", "note": "byte/string comparison deciding the verdict; applied to SOURCES rows, not an engine-ref relation register"},
+    {"id": "F08", "surface": "S2", "lane": "tsukuroi", "round": 56, "file": "tsukuroi-shokunin/corpus/lessons/round-56-verifier-spotcheck.md", "line": "59", "claim": "`RECHECK_SERVICES: PASS (12 rows, 12 match, 0 drift)`", "verdict": "adjacent", "note": "per-row recheck with match/drift verdict on service invariants, not an upstream release relation"},
+    {"id": "F09", "surface": "S2", "lane": "mori", "round": 53, "file": ".ufo/reports/round-53/mori.md", "line": "118-119", "claim": "46 release-pinned rows re-read at v7.3 with pinned copies fetched by two independent channels", "verdict": "adjacent", "note": "release-pinned row re-read, no graded recheck-row register"},
+    {"id": "F10", "surface": "S2", "lane": "mado", "round": 78, "file": "mado-shokunin/corpus/lessons/round-78.md", "line": "86-87", "claim": "the five value-bound rows that a present-day host change would break", "verdict": "none", "note": "value binding inside a host counter's cases, not a recheck register"},
+    {"id": "F11", "surface": "S3", "lane": "tabi", "round": 24, "file": "tabi-shokunin/corpus/lessons/round-24.md", "line": "65", "claim": "`scripts/check-selfassessment.mjs` class `m1-selftest-tally`", "verdict": "adjacent", "note": "declared-tally vs observed counter; grades current documents"},
+    {"id": "F12", "surface": "S3", "lane": "tabi", "round": 29, "file": "tabi-shokunin/corpus/lessons/round-29-verifier-spotcheck.md", "line": "57", "claim": "`measure/c2-selfassessment-rev.json.txt` at `ab080992`: `mismatches=0`, `counted=[]`", "verdict": "adjacent", "note": "doc-bound counter reading, not a prior-round fact regrade"},
+    {"id": "F13", "surface": "S3", "lane": "tabi", "round": 32, "file": "tabi-shokunin/corpus/lessons/round-32.md", "line": "133-134", "claim": "A correction paragraph therefore clears a stale tally when *any* accepted number in it equals the oracle tally", "verdict": "adjacent", "note": "disclosed looseness (E27): correction not value-bound to old/new tokens"},
+    {"id": "F14", "surface": "S3", "lane": "chousa", "round": 34, "file": "chousa-shokunin/corpus/lessons/round-34-verifier-spotcheck.md", "line": "37", "claim": "`SELF_AUDIT_MISMATCHES=1` (the single mismatch `audit-tool-digest` carries an in-set disposition: superseded by `audit-tool-digest-v3`)", "verdict": "adjacent", "note": "self-audit set with disposition tags; no sealed revision, no value-bound correction block"},
+    {"id": "F15", "surface": "S3", "lane": "kaidoku", "round": 79, "file": ".ufo/reports/round-79/kaidoku.md", "line": "97", "claim": "**`mismatches 2`** naming `omp-pin` (record `:8`, pin at `:12`) and `kimi-pin` (record `:4126`, pin at `:4722`)", "verdict": "adjacent", "note": "pointer-bind counter grading record line pointers against pins"},
+    {"id": "F16", "surface": "S3", "lane": "mori", "round": 24, "file": "mori-shokunin/corpus/lessons/round-24-verifier-spotcheck.md", "line": "98", "claim": "counts mismatches between a lane self-record (the dispatch ledger's `at`) and repo state (commit times)", "verdict": "adjacent", "note": "closure observation of a self-record, recorded not owned"}
+  ],
+  "counts": {
+    "total_findings": 16,
+    "overlap": 0,
+    "adjacent": 15,
+    "none": 1,
+    "by_surface": {
+      "S1": {"overlap": 0, "adjacent": 5, "none": 0},
+      "S2": {"overlap": 0, "adjacent": 4, "none": 1},
+      "S3": {"overlap": 0, "adjacent": 6, "none": 0}
+    }
+  },
+  "contested_scope": null,
+  "kama_r83_claim_distinct": true,
+  "distinctness": {
+    "S1": "No sibling binds a register row's own introduction commit (git blame) as an acceptance rule; 0 'git blame' hits in 645 reports + 1,286 lessons and 0 files in 10/10 tools/scripts trees. Five adjacent uses of the introduction-commit primitive serve pushed-ness, receipt dating, LOG coupling, or single-container freeze identity.",
+    "S2": "Tabi r29 is the nearest prior art (release-pin recheck, holds/drifted by exact-substring comparison), but it grades its own SOURCES.md rows at one Chromium tag from receipt-derived refetch records. Kama keys a relation register by (engine, ref), uses a four-value verdict, re-derives from two committed extracts under a header sha256 check, and a control makes the byte comparison (not the declared word) decide. No sibling holds registry/engine-pin-relations.tsv or a per-relation recheck-row register.",
+    "S3": "Tabi's check-selfassessment is the nearest prior art but grades current documents and accepts any stated number as supersession (tabi r32 E27). Kama grades a prior round's six facts read with git show at the sealed revision, with exact old/new tokens, matching at, and fix-path tip bytes outside correction-restatement regions. Chousa (disposition-tagged self-audit), kaidoku (line-pointer bind), and mori (closure observation) are adjacent, not competing."
+  },
+  "bounds": [
+    "Read-only: no sibling repo, fleet-root file, or lane file was touched; writes confined to the seat dir.",
+    "Coverage is lanes and report ranges present (reports stop at r59-r87 per lane); absence after a lane's last filed report is not claimed.",
+    "Verdicts are textual adjacency; no sibling instrument was executed."
+  ]
+}

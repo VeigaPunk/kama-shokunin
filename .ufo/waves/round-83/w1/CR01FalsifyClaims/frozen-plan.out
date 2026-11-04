@@ -1,0 +1,219 @@
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show master:plans/round-83-claims.md
+# round-83 claims (kama) — frozen plan
+
+Base revision `30d8eac394a8714fad3dc792b74a45a25b4366a2` (round-82 non-author closure tip). Sealed
+revision C2 grades `b1ba614b51255a3dcfe3e0946f32f8e31bd65c09` (the round-82 lane tip the round-82
+report cites). Three claims, three distinct axes, each measured on its own receipt. Frozen before any
+seat scored; every control is built and committed before its data run.
+
+Axis assignment (`../shokunin.conf`, read at the base): **operability + calibration**. Lowest assigned
+axis at the base: calibration 7 (operability 8) — C2 works it. Saturation line 8/10 with a four-round
+stagnation window: calibration sits below the line, so the nudge is inactive and the lowest-axis
+obligation binds. C1 and C3 move the operability and freshness surfaces the round actually changes.
+
+## C1 — operability: the late register's on-disk path binds per row, round 82's pending events are repaid, and the pending count must fall
+
+Frozen predicate (three legs, one receipt each; all three must print their line and exit 0):
+
+> **Leg A (default register path).** `python3 tools/round81-append-debt.py --repo <lane> --round 83`
+> prints one `APPEND_DEBT round=83 base=30d8eac394a8 events=76 accepted=53 late=35 pending=<p>
+> unaccepted=0 bad_rows=0 bad_declarations=0 out_of_population=0` line and exits 0 only under the
+> round-81 predicate (unchanged rule sentences: exact cells, strict descendant, `N > M`, base split,
+> `pending`) with the round-83 base and the round-83 late register — 20 new rows over the eight
+> round-82 record-edit events (`962bd251`, `a251cbab`, `0d7c7c3e`, `7ad14e6c` ×2 files, `6a160310`,
+> `8a3e8af2`, `9efa6f1c`; 1+1+10+1+1+2+3+1 undeclared lines) and the 15 carried round-82 rows.
+>
+> **Leg B (on-disk register path).** `python3 tools/round81-append-debt.py --repo <lane> --round 83
+> --late registry/append-only-late.tsv` prints the SAME summary line as leg A and exits 0. A register
+> read from a caller-supplied path is bound to that path's committed identity: the path must resolve
+> inside the repository working tree (`git rev-parse --show-prefix` + the path's commit-tracked
+> presence), its file introduction and its per-row introductions are resolved at the audited revision
+> with the same `git blame` rule the default path uses, and each row is graded exactly as leg A grades
+> it. A path outside the repository, or a tracked path whose rows have no resolvable introduction, is
+> `could-not-evaluate` (exit 2) — never a per-row `unbound-register` verdict, and never a silently
+> empty register. `late=0 unaccepted=23 bad_rows=103` is the base state and is not a pass.
+>
+> **Leg C (pending falls).** `python3 tools/round83-pending-falls.py --repo <lane> --round 83` prints
+> one `PENDING_FALLS round=83 from=82 declared=8 window=8 accepted=8 unaccepted=0 falls=yes` line and
+> exits 0 only when the count the round-82 final-gate receipt declares
+> (`.ufo/waves/round-82/measured/after/gate.out` → `pending=8`) equals the size of the population
+> window that receipt's base opened (events with undisclosed lines committed after
+> `aaf974dbd3b6adb2ef914dc7293cda92b4e05551` and at or before the round-83 base), every window event
+> is covered by a committed late-register row at the graded tip, and `unaccepted` is 0. A window event
+> left uncovered is a finding and the leg exits 1: a `pending` count that does not fall at the next
+> round's base is a finding, never a pass.
+
+Base state (measured at the freeze tip, receipts committed before the data): leg A
+`APPEND_DEBT round=83 base=30d8eac394a8 events=76 accepted=53 late=15 pending=0 unaccepted=8 bad_rows=0
+bad_declarations=0 out_of_population=0`, exit 1; leg B `… late=0 unaccepted=23 bad_rows=103 …`, exit 1,
+103 `unbound-register` findings; leg C `… declared=8 window=8 accepted=0 unaccepted=8 falls=no`,
+exit 1.
+
+Target: leg A and leg B both print `events=76 accepted=53 late=35 pending=<p> unaccepted=0 bad_rows=0
+bad_declarations=0 out_of_population=0` (exit 0), and leg C prints `falls=yes` (exit 0). `pending` is
+the round's own post-base events and rises with each later record commit by design (the round-81
+convention); the graded buckets are the target.
+
+Controls (committed as receipts before data):
+1. **base run** of leg A with no round-83 rows: `unaccepted=8`, exit 1.
+2. **base run** of leg B: `late=0 unaccepted=23 bad_rows=103`, exit 1.
+3. **base run** of leg C: `accepted=0 unaccepted=8 falls=no`, exit 1.
+4. **selftest mutants**, each red: a leg-B path outside the repository (`outside-repo`), a tracked
+   leg-B path whose rows predate their events (`not-descendant`), a leg-B path that is not tracked at
+   the audited revision (`untracked-path`), a late row whose note names round 81 (not 83), a row whose
+   accepting round does not exceed its deletion round, a duplicated row, a missing row, an extra row;
+   for leg C: a receipt whose declared count disagrees with the window (`declared-mismatch`), a window
+   event left uncovered (`window-uncovered`), a receipt naming another round.
+
+The frozen generator `tools/round81-late-rows.py` stays byte-intact; the round-83 rows are produced by
+`generate … --round 83` and appended. The round-82 byte copy `registry/append-only-late-r82.tsv` stays
+committed and is read by neither leg (the round-82 divergence 2 disposition).
+
+## C2 — calibration (lowest assigned axis): the round-82 record's six declared facts re-derive at the sealed revision or are answered by dated value-bound corrections, with population facts bound at freeze
+
+Frozen predicate (this block is the counter's `PREDICATE`, the receipt label and the SCORECARD row):
+
+> `python3 tools/round83-selfrecord-round82.py --repo <lane>` prints one `SELFRECORD_R82 claims=6
+> mismatches=0 corrected=3 unbacked=0` line and exits 0 only when each of the six facts the round-82
+> self-record declares re-derives from the tree at the sealed revision
+> `b1ba614b51255a3dcfe3e0946f32f8e31bd65c09` and matches the same fact re-derived at the graded tip,
+> or is answered by exactly one committed `corrected F<n> old=<token> new=<token> at=<40-hex>
+> date=<ISO> fix=<path>` block in `corpus/lessons/round-83.md` `## Corrections` whose `old` is the
+> sealed declared token, whose `at` is the sealed revision, whose `new` equals the fact's tip witness
+> token, and whose `fix` path's tip bytes contain the literal `new` token as a whole token **outside
+> any correction-restatement region** (a `#### round-<N> correction` block or a `LOG-CORRECTION`
+> line), while the token also occurs at the tip in at least one file outside `corpus/lessons/`; a
+> token that appears only under `corpus/lessons/`, or only inside a correction-restatement region, is
+> `unbacked` — the correction container's `fix` leg rejects a token that appears only in the lesson
+> itself. It exits 1 naming every unanswered fact. A fact that holds at the sealed revision needs no
+> correction; a correction for a holding or unnamed fact, a duplicated correction, a correction
+> outside `## Corrections`, a wrong `at`, a wrong `old`, or a `fix` whose tip bytes lack the token is
+> `unbacked` and is also a mismatch.
+
+The six facts (declared by the round-82 record, observed from the tree):
+
+| id | record location (sealed `b1ba614b`) | declared token | witness (population bound at freeze) |
+|---|---|---|---|
+| F1 | `LOG.md` §Round 82 C1 bullet, `selftest \`pass=18 fail=0\`` | `log82-c1-selftest=18` | `.ufo/waves/round-82/measured/after/c1-selftest.out` → `SELFRECORD_R81_SELFTEST pass=23 fail=0` |
+| F2 | `SCORECARD.md` §Round 82 C1 row, `selftest \`pass=22 fail=0\`` | `sc82c1-selftest=22` | the same `c1-selftest.out` → `pass=23` |
+| F3 | `SCORECARD.md` `## Axes` calibration row, `--selftest` → `pass=22 fail=0` | `calib82-selftest=22` | the same `c1-selftest.out` → `pass=23` |
+| F4 | `LOG.md` §Round 82 C2 bullet, `APPEND_DEBT_SELFTEST pass=22 → pass=25` | `log82-c2-debt-selftest=25` | `.ufo/waves/round-82/measured/after/c2-debt-selftest.out` → `APPEND_DEBT_SELFTEST pass=25 fail=0` (holds) |
+| F5 | `LOG.md` §Round 82 `Frontier: registry 302 → 305 rows` | `log82-frontier-rows=305` | `corpus/SOURCES.md` at the declared population revision `b1ba614b` → **305** rows (holds; the tip adds this round's own rows and must not move the witness) |
+| F6 | `LOG.md` §Round 82 C2 bullet, `LATE_DELTA round=82 base=aaf974dbd3b6 population=103 carried=88 new=15 bad=0` | `log82-late-delta=15` | `.ufo/waves/round-82/measured/after/c2-late-delta.out` → `… new=15 bad=0` (holds) |
+
+F1, F2 and F3 are stale at the base (the committed `c1-selftest.out` prints 23, the record says 18 and
+22 twice); F4, F5 and F6 hold and must not be corrected — the direction test. Every fact is read with
+`git show <rev>:<path>`, never from the worktree: the round's own record commit cannot refute a fact.
+F5's population is bound to the sealed revision declared in this table, not to the graded tip — the
+round-82 F2 divergence, closed at freeze instead of disclosed after data.
+
+Three corrections (F1–F3 stale; F4–F6 hold):
+
+```
+corrected F1 old=log82-c1-selftest=18 new=log82-c1-selftest=23 at=b1ba614b51255a3dcfe3e0946f32f8e31bd65c09 date=2026-11-04 fix=LOG.md
+corrected F2 old=sc82c1-selftest=22 new=sc82c1-selftest=23 at=b1ba614b51255a3dcfe3e0946f32f8e31bd65c09 date=2026-11-04 fix=SCORECARD.md
+corrected F3 old=calib82-selftest=22 new=calib82-selftest=23 at=b1ba614b51255a3dcfe3e0946f32f8e31bd65c09 date=2026-11-04 fix=SCORECARD.md
+```
+
+Record fixes the corrections bind (append-only; the filed §Round 82 and §Round 81 bytes are not
+rewritten): `LOG.md` gains an appended `LOG-CORRECTION round=82 field=c1-selftest old=pass=18 new=pass=23`
+entry carrying `log82-c1-selftest=23`; `SCORECARD.md` gains an appended `#### round-83 correction`
+block carrying `sc82c1-selftest=23` and `calib82-selftest=23`. The head calibration row is re-anchored
+in place to round 83 (a `pending` event, not append-only silence) and the appended block names the
+superseded `pass=22` twice.
+
+Target line: `SELFRECORD_R82 claims=6 mismatches=0 corrected=3 unbacked=0`, exit 0.
+
+Controls (committed as receipts before data):
+1. **enumeration** `--enumerate` at the freeze tip: `SELFRECORD_R82_ENUM claims=6 stale=3 corrected=0`,
+   exit 1.
+2. **no-corrections** `--no-corrections` at the tip: `SELFRECORD_R82 claims=6 mismatches=3 corrected=0`,
+   exit 1 — the target is unreachable without the three correction blocks.
+3. **selftest** with, each red: a correction outside `## Corrections`, a wrong-`at` correction, a
+   wrong-`old` correction, a `fix` whose tip bytes lack the `new` token, a `new` token present only
+   under `corpus/lessons/` (`lesson-only-token`), a `new` token present in the fix path only inside a
+   correction-restatement region (`token-only-in-correction-region`), a near-token that contains the
+   `new` token as a prefix (`near-token-new`), a duplicated correction, a correction for the holding
+   F4, and green on the honest set.
+
+## C3 — freshness: every `behind` relation row the engine register holds carries a graded recheck row whose verdict the counter re-derives from committed anchor extracts
+
+Frozen predicate (one leg, one receipt):
+
+> `python3 tools/round83-pin-rechecks.py --repo <lane> --register registry/engine-pin-relations.tsv
+> --rows registry/pin-recheck-rows.tsv` prints one `PIN_RECHECK rows=5 graded=4 holds=4 reworded=0
+> moved=0 drifted=0 ungraded=1 bad=0` line and exits 0 only when every data row of the relation
+> register has exactly one recheck row keyed by `(engine, ref)`; a graded row declares a verdict from
+> {`holds`, `reworded`, `moved`, `drifted`}, the newest tag observed at its `date`, the pin-side and
+> newest-side anchor extracts (each a committed file whose first line is
+> `# url=<https-url> sha256=<64-hex> ref=<ref> lines=<a>-<b>`), a quote of at most 25 words on each
+> side, and the line numbers those quotes sit on; and the counter re-derives the verdict from the two
+> committed extracts — `holds` requires the pin-side quote to occur verbatim in the newest extract,
+> `reworded`/`moved`/`drifted` require it to be absent there and the newest-side quote to be non-empty
+> and different from it. A row is `ungraded` only when the relation names a ref the lane holds no
+> document for, and it must then carry `verdict=ungraded` and a `note` naming the missing document;
+> `ungraded` never counts as graded. A row whose key names no relation row, whose extract is missing or
+> whose header digest disagrees with the extract bytes, whose quote exceeds 25 words, whose quote does
+> not occur at its declared line, or whose verdict contradicts the byte comparison is `bad`. It exits
+> 1 naming every finding and 2 when a register is absent or unreadable.
+
+Target: `PIN_RECHECK rows=5 graded=4 holds=4 reworded=0 moved=0 drifted=0 ungraded=1 bad=0`, exit 0 —
+relations 1, 2, 4 and 5 graded by `holds` from the round-82 `SK01` read (the newest llama.cpp tag is
+`b12110`, which is byte-identical to `b12103`), relation 3 (`llama.cpp b7200`, the cross-lane kengaku
+role) ungraded because the lane holds no document at that ref. Before: `registry/pin-recheck-rows.tsv`
+does not exist — `could-not-evaluate: no registry/pin-recheck-rows.tsv`, exit 2. The four graded rows
+are mechanical from the round-82 receipt; the round's own work is the register, the extracts, the
+counter and the verdict re-derivation.
+
+The relation register's live numbers are re-read this round (`python3 tools/pin-watch.py check --pins
+registry/engine-pins.tsv`); a moved `newest` changes the row's `date` and tag, never its verdict rule.
+
+Controls (committed as receipts before data):
+1. **absent register**: the leg prints `could-not-evaluate: no registry/pin-recheck-rows.tsv`, exit 2.
+2. **control fixture**: a register row declaring `drifted` over two byte-identical extracts must be
+   `bad` (exit 1) — the byte comparison, not the declared word, decides.
+3. **selftest mutants**, each red: a missing row for a relation, a duplicated row, a row for a
+   nonexistent relation, `holds` where the pin quote is absent at newest, `drifted` where it is
+   present, a 26-word quote, a quote that does not occur at its declared line, an extract whose header
+   digest disagrees with its bytes, an `ungraded` row without a note.
+
+Also this round (freshness correction, not a separate claim): `corpus/knowledge/pin-recheck-trigger.md`
+line 5 ships an unrunnable recheck command (`--repo`; `tools/pin-watch.py` takes `--pins`) — round-82
+`SK01` D1. The command cell is corrected in place to
+`python3 tools/pin-watch.py check --pins registry/engine-pins.tsv` and an appended correction block
+names the superseded text.
+
+## Axis and verdict rules
+
+C1 operability 8 → 8 (the late-acceptance instrument gains the on-disk path binding and a pending-fall
+leg; the score holds because the class is already held). C2 calibration 7 → 7 (three stale facts of the
+round-82 record repaired value-bound, three proved holding; the score holds). C3 freshness 8 → 8 (four
+relation rows gain graded rechecks; the score holds). No axis is claimed to move in score; each move is
+measured on its line. No axis may be harmed: no change to depth/coverage/adjacency claims, and every
+edit to an append-only file is an append.
+
+## Frontier step (not a claim)
+
+- `corpus/SOURCES.md`: six rows opened this round — `S566` llama.cpp `tools/server/README.md` at the
+  newest tag `b12110`, `S567` SGLang `docs/docs/basic_usage/native_api.mdx` at `v0.5.23`, `S568` the
+  same file at the pinned `v0.5.22`, `S569` vLLM `docs/design/prefix_caching.md` at `v0.33.0`, `S570`
+  the same file at the pinned `v0.32.0`, `S571` `git-scm.com/docs/git-blame` (the C1 per-row
+  introduction rule's ground). Each row carries its URL, access date and a ≤25-word located quote in
+  the lesson's `## Gate`; a refused row keeps its reason and flip.
+- One admitted knowledge entry on the recheck-register ground (`corpus/knowledge/pin-recheck-rows.md`)
+  citing `S567`/`S569`, with its `corpus/README.md` coverage row; the entry and its rows are C3's
+  sourced claim.
+- One mined mistake into `corpus/lessons/round-83.md` `## Mistakes` (class · evidence pointer ·
+  captured-by · fix shown able to fail) and one `corpus/QUALITY.md` criterion.
+- `considerthese/2026-10-26.md`: proposal 4 (a daily pin-gap line) was executed by round 41's
+  `pin-watch`; the remaining proposals stay named as pending. No new proposal is claimed this round
+  (the C3 register is the pin-gap line's row-level successor, not the proposal itself).
+- Assimilation: `Assimilation: none` — the three claims repair lane instruments and the round's source
+  budget is spent on C3's anchors; the `shokuknow` package theme is not adopted this round.
+
+## Shape
+
+ONE v1 wave, 15 seats (band 8–16): 5 executor, 3 scribe, 2 scout, 1 connector, 2 reviewer, 1 critic,
+1 mutation-tester — attack seats 4/15 = 26.7 % (≥25 %); at most 2 connector seats (1). No residual call.
+
+exit=0

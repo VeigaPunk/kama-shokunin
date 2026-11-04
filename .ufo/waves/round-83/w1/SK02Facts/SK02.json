@@ -1,0 +1,157 @@
+{
+  "lane": "/home/vgpnk/Projects/shokunin/kama-shokunin",
+  "sealed": "b1ba614b51255a3dcfe3e0946f32f8e31bd65c09",
+  "tip_first_read": "743c106065363be0cebd1036e6c33d7e6ae632dc",
+  "tip_last_read": "ece8a6468641a833caf65ab46dc0fa4377e2f4f5",
+  "facts": [
+    {
+      "id": "F1",
+      "declared": "log82-c1-selftest=18",
+      "witness": "log82-c1-selftest=23",
+      "verdict": "stale",
+      "file": "LOG.md",
+      "line": 3432,
+      "declared_string": "selftest `pass=18 fail=0`",
+      "witness_source": ".ufo/waves/round-82/measured/after/c1-selftest.out",
+      "witness_line": "SELFRECORD_R81_SELFTEST pass=23 fail=0"
+    },
+    {
+      "id": "F2",
+      "declared": "sc82c1-selftest=22",
+      "witness": "sc82c1-selftest=23",
+      "verdict": "stale",
+      "file": "SCORECARD.md",
+      "line": 4970,
+      "declared_string": "selftest `pass=22 fail=0` (`measured/after/c1-selftest.out`)",
+      "witness_source": ".ufo/waves/round-82/measured/after/c1-selftest.out",
+      "witness_line": "SELFRECORD_R81_SELFTEST pass=23 fail=0"
+    },
+    {
+      "id": "F3",
+      "declared": "calib82-selftest=22",
+      "witness": "calib82-selftest=23",
+      "verdict": "stale",
+      "file": "SCORECARD.md",
+      "line": 18,
+      "declared_string": "and `--selftest` -> `pass=22 fail=0`",
+      "witness_source": ".ufo/waves/round-82/measured/after/c1-selftest.out",
+      "witness_line": "SELFRECORD_R81_SELFTEST pass=23 fail=0"
+    },
+    {
+      "id": "F4",
+      "declared": "log82-c2-debt-selftest=25",
+      "witness": "log82-c2-debt-selftest=25",
+      "verdict": "holds",
+      "file": "LOG.md",
+      "line": 3436,
+      "declared_string": "`APPEND_DEBT_SELFTEST pass=22 -> pass=25`",
+      "witness_source": ".ufo/waves/round-82/measured/after/c2-debt-selftest.out",
+      "witness_line": "APPEND_DEBT_SELFTEST pass=25 fail=0"
+    },
+    {
+      "id": "F5",
+      "declared": "log82-frontier-rows=305",
+      "witness": "log82-frontier-rows=305",
+      "verdict": "holds",
+      "file": "LOG.md",
+      "line": 3444,
+      "declared_string": "Frontier: registry 302 -> 305 rows",
+      "witness_source": "corpus/SOURCES.md registry rows",
+      "witness_command": "git -C <lane> show <rev>:corpus/SOURCES.md | grep -c '^| S[0-9]'",
+      "witness_values": {
+        "b1ba614": 305,
+        "master_743c1060": 305,
+        "master_ece8a646": 305,
+        "base_aaf974db": 302
+      }
+    },
+    {
+      "id": "F6",
+      "declared": "log82-late-delta=15",
+      "witness": "log82-late-delta=15",
+      "verdict": "holds",
+      "file": "LOG.md",
+      "lines": "3437-3438",
+      "declared_string": "LATE_DELTA round=82 base=aaf974dbd3b6 population=103 carried=88 new=15 bad=0",
+      "witness_source": ".ufo/waves/round-82/measured/after/c2-late-delta.out",
+      "witness_line": "LATE_DELTA round=82 base=aaf974dbd3b6 population=103 carried=88 new=15 bad=0"
+    }
+  ],
+  "draft_table_compared": {
+    "path": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-83/w1/EX03SelfRecord/round83-selfrecord-round82.py",
+    "declared": [18, 22, 22, 25, 305, 15],
+    "witness": [23, 23, 23, 25, 305, 15],
+    "sha256": "62bd3dcd88f09229bbf7f1e53e8b97d83ff4e041ee5f322456559832a8e4c7fc",
+    "lane_copy_path": "/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round83-selfrecord-round82.py",
+    "lane_copy_sha256": "62bd3dcd88f09229bbf7f1e53e8b97d83ff4e041ee5f322456559832a8e4c7fc"
+  },
+  "differences": [
+    {
+      "kind": "values",
+      "detail": "NONE. The draft's declared vector [18,22,22,25,305,15] and witness vector [23,23,23,25,305,15] equal the six sealed facts exactly; the draft marks F1-F3 stale/corrected and F4-F6 holding, matching them."
+    },
+    {
+      "kind": "placement-vs-plan-prose",
+      "detail": "The plan's own record-fix prose places the three new tokens only inside restatement regions (a LOG-CORRECTION line; a `#### round-83 correction` block). The draft strips those regions, so that placement grades all three corrections `unbacked`: SELFRECORD_R82 claims=6 mismatches=3 corrected=0 unbacked=3, exit 1 (receipt reach-A.out). The target line is reachable only when each new token is also written in its declared fix path outside those regions: claims=6 mismatches=0 corrected=3 unbacked=0, exit 0 (receipt reach-C.out). L1 must place log82-c1-selftest=23 in LOG.md and sc82c1-selftest=23 + calib82-selftest=23 in SCORECARD.md outside the correction restatements."
+    },
+    {
+      "kind": "token-boundary",
+      "detail": "The draft's whole_token accepts the token followed by space, comma, ')' or EOL but REJECTS a trailing '.' (also '-', '_', '~', '=', alnum). A correction sentence ending `...calib82-selftest=23.` is graded unbacked (receipt reach-B.out: F2 corrected, F3 unbacked). Write the backing occurrences without trailing sentence punctuation."
+    },
+    {
+      "kind": "restatement-block-extent",
+      "detail": "A `#### round-<N> correction` block appended at EOF extends to EOF: a token line appended after it with no intervening heading of level <=4 is also stripped (probe on outside_restatements: kept_token=False). Appending a `## Round 83 -` heading after the block resets the region (kept_token=True)."
+    },
+    {
+      "kind": "sealed-vs-tip-binding",
+      "detail": "The draft reads declared tokens at the sealed revision (extract_facts always uses SEALED) and witnesses at the tip; F5's population is read at SEALED per the plan's freeze binding. No value effect today: the three witness receipts are byte-identical at b1ba614 and at tip (sha256 equal), and SOURCES registry rows are 305 at b1ba614 and 305 at the read-time tips."
+    }
+  ],
+  "receipts": [
+    {
+      "path": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-83/w1/SK02Facts/tip-honest.out",
+      "cmd": "python3 .ufo/waves/round-83/w1/EX03SelfRecord/round83-selfrecord-round82.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin",
+      "rev": "ece8a6468641a833caf65ab46dc0fa4377e2f4f5",
+      "summary": "SELFRECORD_R82 claims=6 mismatches=3 corrected=0 unbacked=0",
+      "exit": 1
+    },
+    {
+      "path": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-83/w1/SK02Facts/tip-enumerate.out",
+      "cmd": "python3 .ufo/waves/round-83/w1/EX03SelfRecord/round83-selfrecord-round82.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --enumerate",
+      "rev": "ece8a6468641a833caf65ab46dc0fa4377e2f4f5",
+      "summary": "SELFRECORD_R82_ENUM claims=6 stale=3 corrected=0",
+      "exit": 1
+    },
+    {
+      "path": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-83/w1/SK02Facts/tip-nocorr.out",
+      "cmd": "python3 .ufo/waves/round-83/w1/EX03SelfRecord/round83-selfrecord-round82.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --no-corrections",
+      "rev": "ece8a6468641a833caf65ab46dc0fa4377e2f4f5",
+      "summary": "SELFRECORD_R82 claims=6 mismatches=3 corrected=0 unbacked=0",
+      "exit": 1
+    },
+    {
+      "path": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-83/w1/SK02Facts/tip-selftest.out",
+      "cmd": "python3 .ufo/waves/round-83/w1/EX03SelfRecord/round83-selfrecord-round82.py --selftest",
+      "summary": "SELFRECORD_R82_SELFTEST pass=16 fail=0",
+      "exit": 0
+    },
+    {
+      "path": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-83/w1/SK02Facts/reach-A.out",
+      "cmd": "scratch-clone fixture at 01f9f56c (plan-prose placements only), tool --repo <clone>",
+      "summary": "SELFRECORD_R82 claims=6 mismatches=3 corrected=0 unbacked=3",
+      "exit": 1
+    },
+    {
+      "path": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-83/w1/SK02Facts/reach-B.out",
+      "cmd": "scratch-clone fixture at 66c33707 (tokens outside restatements; F3 followed by '.')",
+      "summary": "SELFRECORD_R82 claims=6 mismatches=1 corrected=2 unbacked=1",
+      "exit": 1
+    },
+    {
+      "path": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-83/w1/SK02Facts/reach-C.out",
+      "cmd": "scratch-clone fixture at 979e6a7b (tokens outside restatements, no trailing '.')",
+      "summary": "SELFRECORD_R82 claims=6 mismatches=0 corrected=3 unbacked=0",
+      "exit": 0
+    }
+  ]
+}

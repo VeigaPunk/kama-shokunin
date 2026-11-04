@@ -1,0 +1,12 @@
+PIN_RECHECK_SELFTEST_OK green-honest exit=0 PIN_RECHECK rows=3 graded=2 holds=2 reworded=0 moved=0 drifted=0 ungraded=1 bad=0
+PIN_RECHECK_SELFTEST_FAIL missing-row exit=0 want=1 want_class=missing-row findings=[('missing-row', 'engine=engtwo ref=v1 no recheck row for this relation key')]
+PIN_RECHECK_SELFTEST_FAIL duplicate-row exit=0 want=1 want_class=duplicate-row findings=[('duplicate-row', 'engine=engone ref=b1 second recheck row at rows.tsv:5')]
+PIN_RECHECK_SELFTEST_FAIL unknown-row exit=0 want=1 want_class=unknown-row findings=[('unknown-row', 'engine=ghost ref=r9 no relation row for this recheck key (rows.tsv:5)')]
+PIN_RECHECK_SELFTEST_FAIL holds-but-absent exit=0 want=1 want_class=verdict-contradicts-bytes findings=[('verdict-contradicts-bytes', 'engine=engone ref=b1 declared holds but the pin quote does not occur verbatim in the newest extract')]
+PIN_RECHECK_SELFTEST_FAIL drifted-but-present exit=0 want=1 want_class=verdict-contradicts-bytes findings=[('verdict-contradicts-bytes', 'engine=engone ref=b1 declared drifted but the pin quote is present in the newest extract with a present newest quote')]
+PIN_RECHECK_SELFTEST_FAIL quote-26-words exit=0 want=1 want_class=quote-too-long findings=[('quote-too-long', 'engine=engone ref=b1 pin: 26 words > 25 (punctuation counts)'), ('quote-too-long', 'engine=engone ref=b1 newest: 26 words > 25 (punctuation counts)')]
+PIN_RECHECK_SELFTEST_FAIL quote-not-at-line exit=0 want=1 want_class=quote-not-at-line findings=[('quote-not-at-line', 'engine=engone ref=b1 pin: quote not on extract body line 1 (upstream line 10) of extracts/engone-b1.txt')]
+PIN_RECHECK_SELFTEST_FAIL digest-mismatch exit=0 want=1 want_class=digest-mismatch findings=[('digest-mismatch', 'engine=engone ref=b1 extracts/engone-b1.txt: header sha256 e243f49b2144debcce21f3ad712e3367b506112137a63f17cb33949c24f85db2 != sha256(bytes after header) 5534e3b3e22ff397e2fc64d62c3c00a568aedd9da7c63d1a8a11d75c6feae57e')]
+PIN_RECHECK_SELFTEST_FAIL ungraded-without-note exit=0 want=1 want_class=ungraded-without-note findings=[('ungraded-without-note', 'engine=engtwo ref=v1 ungraded row needs a note naming the missing document (must cite the ref)')]
+PIN_RECHECK_SELFTEST_FAIL verdict-vocabulary exit=0 want=1 want_class=verdict-vocabulary findings=[('verdict-vocabulary', "engine=engone ref=b1 verdict 'expanded' not in holds, reworded, moved, drifted, ungraded")]
+PIN_RECHECK_SELFTEST pass=1 fail=10

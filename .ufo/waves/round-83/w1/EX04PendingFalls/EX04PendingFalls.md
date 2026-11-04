@@ -1,0 +1,18 @@
+# EX04 — pending falls
+- Axis: operability; committed evidence binding; strict seat isolation.
+- Complete module: `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-83/w1/EX04PendingFalls/round83-pending-falls.py` (189 lines).
+- Reads receipt, plan and late register at one captured committed tip.
+- Recomputes audit population and receipt-base..declared-base window; covers all undisclosed triples.
+- Base clone: `30d8eac394a8714fad3dc792b74a45a25b4366a2`; committed draft plus frozen plan (plan postdates base).
+- Base run: `declared=8 window=8 accepted=0 unaccepted=8 falls=no`, exit 1.
+- EX02's 20 rows appended and committed: `declared=8 window=8 accepted=8 unaccepted=0 falls=yes`, exit 0.
+- Selftest: `PENDING_FALLS_SELFTEST pass=5 fail=0`, exit 0; all five requested arms named.
+- JSON green run exit 0; dirty receipt ignored exit 0; committed wrong-round/missing receipts each exit 2.
+- Reviewer worktree-receipt attack resolved by committed receipt/plan reads.
+- Verbatim stdout/stderr: `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-83/w1/EX04PendingFalls/receipts/`.
+- Exact absolute commands, exits and clone revisions: `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-83/w1/EX04PendingFalls/receipts/runs.json`.
+- Machine report: `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-83/w1/EX04PendingFalls/EX04.json` (includes initial failures and superseded preliminary JSON).
+- No production changes, installs or lane gate. LSP unavailable (no exposed tool).
+- Scope conflict: trailer's sibling report lies outside hard seat scope; report retained at `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-83/w1/EX04PendingFalls/EX04PendingFalls.md`.
+- Parent should file the draft and run the integrated frozen commands; row-quality checks remain C1 A/B.
+- Scratch removed before handoff; no retained fixture tree.
