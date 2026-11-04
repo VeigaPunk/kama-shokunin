@@ -4,3 +4,4 @@ corpus/README.md is append-only; coverage and frontier corrections are appended 
 corpus/SOURCES.md is append-only by row; only status, recheck and used-by cells may change in place under KQ22.
 corpus/lessons/*.md files are append-only; filed lessons remain and corrections are appended under KQ26.
 registry/append-only-accepted.tsv is append-only; accepted-history rows are appended, never edited in place, and the counter reads the row set committed at the audit revision.
+SCORECARD.md head sections ## Axes, ## Planned, ## Retired, ## Saturation and ## Capabilities are re-derived in place each round; only the dated round sections below them are appended.
