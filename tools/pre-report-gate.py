@@ -228,7 +228,7 @@ PREDICATE = (
     "and the three round-78 instrument selftests arm 10 composes "
     "(round78-selfrecord-round77, round78-append-registers, round78-live-reconcile; each "
     "must end with its own `<NAME>_SELFTEST pass=N fail=0` summary) and the round-81 "
-    "acceptance counter's own selftest arm 11 composes (round81-append-debt) are all green AND no "
+    "acceptance counter's own selftest, which arm 11 composes (round81-append-debt), are all green AND no "
     "path under `.ufo/waves/round-<N>/` is uncommitted; it exits 1 naming every failed arm "
     "otherwise."
 )
