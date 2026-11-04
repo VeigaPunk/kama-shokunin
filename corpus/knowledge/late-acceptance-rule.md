@@ -70,3 +70,15 @@ the base population.
   (`.ufo/waves/round-81/measured/after/debt-green.out`); `pending=1` is the round's own first
   post-base record edit, which round 82 must accept. 88 rows re-derived by
   `tools/round81-late-rows.py --check` → `LATE_ROWS check=ok rows=88`.
+
+## Round-81 addendum (hardening after the L1 mutation battery)
+
+The `recheck:` line above states `APPEND_DEBT_SELFTEST pass=16 fail=0`; the committed module's selftest
+grew to **22 arms** before the round closed. The L1 mutation battery (the dedicated mutation-tester seat
+did not spawn) escaped four mutants against the 16-arm selftest and each escape became an arm: a frozen
+register row with the wrong mechanical class (`frozen-wrong-class`), a frozen row naming an
+out-of-population event (`frozen-out-of-population`), the population split's pending class
+(`split-pending`), and the base cross-check (`resolve-base-*`). Re-run:
+`python3 tools/round81-append-debt.py --selftest` → `APPEND_DEBT_SELFTEST pass=22 fail=0`. Two mutants
+remain equivalent, not caught: a `count=0` short-count variant (the `[1-9][0-9]*` regex makes it
+unreachable) and a frozen-row `covered.add` reorder that changes no graded bucket.

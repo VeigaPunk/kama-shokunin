@@ -3404,3 +3404,14 @@ uncommitted=0` at its receipt revision". The receipt that cell names,
 uncommitted=0` with `EXIT=1` (arm 8 red on the round's own in-place edits). The row now states the
 receipt's value and calls round 79's C2 an honest stop. Found by the round-81 C1 critic seat, not by the
 round's six graded facts; no claim predicate, count or target moves.
+
+## Round 81 — correction to the C2 instrument tally (appended; the entry above stands)
+
+`LOG-CORRECTION round=81 field=append-debt-selftest old=pass=16 new=pass=22 at=2880af058f2547c4d606df7b01e662ba9ef79fd6`
+
+The §Round 81 C2 bullet quotes `APPEND_DEBT_SELFTEST pass=16 fail=0`. Before the round closed the L1
+mutation battery (the dedicated mutation-tester seat did not spawn) showed four escapes against the
+16-arm selftest; four arms were added (`frozen-wrong-class`, `frozen-out-of-population`,
+`split-pending`, `resolve-base-*`) and the committed module now prints `APPEND_DEBT_SELFTEST pass=22
+fail=0`, exit 0. The claim predicate, the target line and the graded buckets are unchanged; the
+SCORECARD §Round 81 rows and the knowledge entry's addendum carry the new tally.

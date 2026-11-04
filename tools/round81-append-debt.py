@@ -103,6 +103,23 @@ def population(data):
     return out
 
 
+def split(events, graded):
+    """{(commit, file): event} keys whose commit satisfies ``graded(commit)`` — the graded
+    population; every other event is ``pending`` (the graded round's own record edits)."""
+    return {key for key in events if graded(key[0])}
+
+
+def resolve_base(plan_text, requested):
+    """The frozen plan's declared base; a caller-supplied ``--base`` must equal it."""
+    match = BASE_RE.search(plan_text or "")
+    if not match:
+        raise CouldNotEvaluate("the frozen plan declares no `Base revision`")
+    plan_base = match.group(1)
+    if requested and requested != plan_base:
+        raise CouldNotEvaluate(f"--base {requested} differs from the frozen plan's {plan_base}")
+    return plan_base
+
+
 def parse_register(text, label):
     """[(commit, file, line_sha256, count, class, note, line_number)] or CouldNotEvaluate."""
     if "\r" in text:
@@ -330,10 +347,11 @@ def selftest() -> int:
     frozen = [(A, "SCORECARD.md", H1, "1", "in-place-edit", "subject; accepted", 2)]
     cases = []
 
-    def run(rows, late_rows, *, graded_keys=graded, desc=None, intro=late_intro):
+    def run(rows, late_rows, *, graded_keys=graded, desc=None, intro=late_intro,
+            frozen_ok=None):
         return grade(all_events, rows, late_rows,
                      graded_keys=graded_keys,
-                     frozen_precedes=lambda c: c == A,
+                     frozen_precedes=frozen_ok or (lambda c: c == A),
                      late_intro=intro,
                      is_strict_descendant=(desc or (lambda e, r: r != e)))
 
@@ -398,6 +416,34 @@ def selftest() -> int:
     r = run(frozen, [late_row(B, "SCORECARD.md", H2,
                               note="round-5 accepts round-80 subject; x")])
     cases.append(("reverse-round", r, 1, "same-round"))
+    # 15 frozen register row carrying the wrong mechanical class
+    r = run([(A, "SCORECARD.md", H1, "1", "removal", "subject; accepted", 2)],
+            [late_row(B, "SCORECARD.md", H2)])
+    cases.append(("frozen-wrong-class", r, 1, "class-mismatch"))
+    # 16 frozen register row naming an event outside the base population changes no bucket
+    r = run(frozen + [(C, "LOG.md", H1, "1", "in-place-edit", "subject; x", 3)],
+            [late_row(B, "SCORECARD.md", H2)], frozen_ok=lambda c: True)
+    cases.append(("frozen-out-of-population", r, 1, "out-of-population"))
+    # 17 the population split: the post-base event is pending, never graded
+    graded_split = split(all_events, lambda commit: commit in {A, B})
+    split_ok = len(graded_split) == 2 and len(all_events) - len(graded_split) == 1
+    cases.append(("split-pending",
+                  {"summary": {"unaccepted": 0 if split_ok else 1, "bad_rows": 0,
+                               "bad_declarations": 0, "out_of_population": 0}}, 0, None))
+    # 18-20 the base resolution: absent, mismatched, matching
+    plan_text = f"# fixture plan\n\nBase revision `{'a' * 40}`\n"
+    for label, requested, expect_raise in (("base-absent", "a" * 40, True),
+                                           ("base-mismatch", "b" * 40, True),
+                                           ("base-ok", "a" * 40, False)):
+        raised = False
+        try:
+            got = resolve_base(plan_text if label != "base-absent" else "no base here", requested)
+        except CouldNotEvaluate:
+            raised = True
+        ok = (raised == expect_raise) and (raised or got == "a" * 40)
+        cases.append((f"resolve-{label}", {"summary": {"unaccepted": 0 if ok else 1,
+                                                       "bad_rows": 0, "bad_declarations": 0,
+                                                       "out_of_population": 0}}, 0, None))
     fail = 0
     for name, result, want_exit, want_class in cases:
         s = result["summary"]
@@ -413,7 +459,7 @@ def selftest() -> int:
         if not ok:
             fail += 1
             print(f"APPEND_DEBT_SELFTEST_FAIL {name} exit={got} want={want_exit} "
-                  f"summary={s} findings={result['findings'][:2]}")
+                  f"summary={s} findings={result.get('findings', [])[:2]}")
     print(f"APPEND_DEBT_SELFTEST pass={len(cases) - fail} fail={fail}")
     return 0 if fail == 0 else 1
 
@@ -453,13 +499,7 @@ def main(argv=None):
         plan_text = show(repo, to, PLAN.format(round=args.round))
         if plan_text is None:
             raise CouldNotEvaluate(f"no frozen plan at {to}:{PLAN.format(round=args.round)}")
-        m = BASE_RE.search(plan_text)
-        if not m:
-            raise CouldNotEvaluate("the frozen plan declares no `Base revision`")
-        plan_base = m.group(1)
-        if args.base and args.base != plan_base:
-            raise CouldNotEvaluate(f"--base {args.base} differs from the frozen plan's {plan_base}")
-        base = plan_base
+        base = resolve_base(plan_text, args.base)
         if not is_ancestor(repo, base, to) and base != to:
             raise CouldNotEvaluate(f"base {base} is not an ancestor of the audited revision {to}")
 
@@ -483,7 +523,7 @@ def main(argv=None):
         frozen_rows = parse_register(register_text, "frozen register")
         late_rows = parse_register(late_text, "late register")
         events = population(data)
-        graded_keys = {key for key in events if is_ancestor(repo, key[0], base)}
+        graded_keys = split(events, lambda commit: is_ancestor(repo, commit, base))
         cache = {}
 
         def frozen_precedes(commit):
