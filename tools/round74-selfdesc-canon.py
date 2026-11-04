@@ -513,9 +513,10 @@ def run_selftest(repo: Path, work: Path) -> int:
     if not ok:
         print("    out: " + out.strip()[:300])
 
-    # arm: CLI misuse — no --repo, and --repo naming a non-directory path.
-    proc = _run_cli([])
-    ok = proc.returncode == 2
+    # arm: CLI misuse — an unrecognized argument (argparse usage exit, cwd
+    # independent), and --repo naming a non-directory path.
+    proc = _run_cli(["--definitely-not-a-real-flag"])
+    ok = proc.returncode == 2 and "usage:" in (proc.stdout + proc.stderr)
     _record(outcomes, "cli-misuse", ok, "exit={}".format(proc.returncode))
     notdir = work / "notdir"
     notdir.write_text("x", encoding="utf-8")
