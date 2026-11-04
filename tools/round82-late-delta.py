@@ -91,7 +91,23 @@ def parse_rows(text, source):
     return rows
 
 
-def check(want, have, base_rows, round_number, base):
+def subject_rounds(repo: Path, want):
+    """(commit, file) -> the deletion round its commit subject declares (`round-<M>: ...`)."""
+    rounds = {}
+    for row in want:
+        key = row[:2]
+        if key in rounds:
+            continue
+        proc = subprocess.run(["git", "-C", str(repo), "log", "-1", "--format=%s", row[0]],
+                              capture_output=True, text=True)
+        if proc.returncode != 0:
+            raise CouldNotEvaluate(f"git log failed for {row[0]}")
+        match = re.search(r"round-([0-9]+)", proc.stdout)
+        rounds[key] = int(match.group(1)) if match else None
+    return rounds
+
+
+def check(want, have, base_rows, round_number, base, rounds=None):
     """want: generator rows; have: [(cells, line)] tip; base_rows: [(cells, line)] at the base.
 
     Returns (bad, carried, new, findings)."""
@@ -151,6 +167,11 @@ def check(want, have, base_rows, round_number, base):
             bad += 1
             findings.append(f"note-not-later {row[0]} {row[1]} {row[2][:16]}: "
                             f"round {accepting} does not follow round {deletion}")
+        subject = (rounds or {}).get(row[:2])
+        if rounds is not None and subject is not None and deletion != subject:
+            bad += 1
+            findings.append(f"note-wrong-deletion-round {row[0]} {row[1]} {row[2][:16]}: "
+                            f"note names round {deletion}, the commit subject names round {subject}")
     for key, (cells, number) in have_by_key.items():
         if key not in want_keys:
             bad += 1
@@ -176,7 +197,8 @@ def evaluate(repo: Path, round_number: int, to=None, late=LATE, audit_json=None)
     want = generator.generate(repo, round_number, revision, base, population)
     have = parse_rows(show(repo, revision, late), f"{late} at {revision[:12]}")
     base_rows = parse_rows(show(repo, base, late), f"{late} at {base[:12]}")
-    bad, carried, new, findings = check(want, have or [], base_rows or [], round_number, base)
+    bad, carried, new, findings = check(want, have or [], base_rows or [], round_number, base,
+                                        subject_rounds(repo, want))
     return {"round": round_number, "base": base, "population": len(want),
             "carried": carried, "new": new, "bad": bad, "findings": findings}
 
@@ -234,8 +256,10 @@ def selftest(repo="."):
 
     cases = []
 
+    rounds = {(commit_a, "SCORECARD.md"): 80, (commit_b, "LOG.md"): 81}
+
     def run(name, w, tip, base, round_number=82, want_bad=0, want_new=None, want_carried=None):
-        bad, carried, new, _findings = check(w, tip, base, round_number, "f" * 40)
+        bad, carried, new, _findings = check(w, tip, base, round_number, "f" * 40, rounds)
         ok = bad == want_bad
         if want_new is not None:
             ok = ok and new == want_new
@@ -261,13 +285,16 @@ def selftest(repo="."):
     run("carried-rewritten", want, rewritten, base_have, want_bad=1)
     old_note = [(row(want[1][0], want[1][1], want[1][2], want[1][3], want[1][4],
                      'round-81 accepts round-80 "y"; accepted'), 3)]
-    run("new-note-wrong-round", want, base_have + old_note, base_have, want_bad=1)
+    run("new-note-wrong-round", want, base_have + old_note, base_have, want_bad=2)
     same_round = [(row(want[1][0], want[1][1], want[1][2], want[1][3], want[1][4],
                        'round-82 accepts round-82 "y"; accepted'), 3)]
-    run("note-not-later", want, base_have + same_round, base_have, want_bad=1)
+    run("note-not-later", want, base_have + same_round, base_have, want_bad=2)
     no_round = [(row(want[1][0], want[1][1], want[1][2], want[1][3], want[1][4],
                      "accepted history; no round"), 3)]
     run("note-no-round", want, base_have + no_round, base_have, want_bad=1)
+    wrong_deletion = [(row(want[1][0], want[1][1], want[1][2], want[1][3], want[1][4],
+                            'round-82 accepts round-79 "y"; accepted'), 3)]
+    run("note-wrong-deletion-round", want, base_have + wrong_deletion, base_have, want_bad=1)
 
     # integration arm: the frozen generator is importable and its generator is the one used
     try:

@@ -249,9 +249,27 @@ CORRECTION = re.compile(
     r"\s+fix=(\S+)")
 
 
+def section_exact(text, heading):
+    """The section whose heading line, stripped, is exactly `## <heading>`."""
+    lines = text.splitlines()
+    start = None
+    for index, line in enumerate(lines):
+        if line.strip() == "## " + heading:
+            start = index
+            break
+    if start is None:
+        return None
+    end = len(lines)
+    for index in range(start + 1, len(lines)):
+        if lines[index].startswith("## "):
+            end = index
+            break
+    return "\n".join(lines[start:end])
+
+
 def corrections(lesson_text):
-    """Only blocks inside the lesson's `## Corrections` section are corrections."""
-    block = section(lesson_text or "", "Corrections") or ""
+    """Only blocks inside a heading that is exactly `## Corrections` are corrections."""
+    block = section_exact(lesson_text or "", "Corrections") or ""
     return CORRECTION.findall(block)
 
 
@@ -295,8 +313,10 @@ def grade(facts, corr, read, sealed=SEALED):
         if at != sealed:
             problems.append(f"at={at[:12]} is not the sealed revision")
         fixed = read("TIP", fix)
-        if fixed is None or new not in fixed:
-            problems.append(f"fix={fix} does not carry new token at the tip")
+        if fix == LESSON:
+            problems.append(f"fix={fix} is the corrections container itself")
+        elif fixed is None or re.search(re.escape(new) + r"(?![0-9A-Za-z_.~-])", fixed) is None:
+            problems.append(f"fix={fix} does not carry the new token as a whole token at the tip")
         if problems:
             unbacked += 1
             mismatches += 1
@@ -482,6 +502,21 @@ def selftest():
         return honest()[("TIP", LESSON)].replace("fix=LOG.md", "fix=corpus/lessons/round-80.md")
     run("fix-without-token", unfixed,
         {("TIP", "corpus/lessons/round-80.md"): "no token here\n"}, 1, 1, 4)
+
+    def near_token(sealed):
+        return honest()[("TIP", LESSON)].replace("new=sc81c2-pending=4", "new=sc81c2-pending=44")
+    run("near-token-new", near_token,
+        {("TIP", "SCORECARD.md"): "sc81c2-pending=44 log81-frontier-rows=302 skill81-gate-arms=11 "
+                                   "calib81-newest-closure=round-81-verifier-spotcheck.md"},
+        1, 1, 4)
+
+    def fix_self(sealed):
+        return honest()[("TIP", LESSON)].replace("fix=SCORECARD.md", "fix=corpus/lessons/round-82.md")
+    run("fix-self-referential", fix_self, {}, 4, 4, 1)
+
+    def near_heading(sealed):
+        return honest()[("TIP", LESSON)].replace("## Corrections\n", "## Corrections considered and rejected (not applied)\n")
+    run("near-corrections-heading", near_heading, {}, 5, 0, 0)
 
     def insert(lesson, line):
         return lesson.replace("\n\n## Mistakes", "\n" + line + "\n\n## Mistakes")
