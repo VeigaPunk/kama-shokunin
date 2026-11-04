@@ -79,3 +79,82 @@ Class · evidence pointer · captured-by · fix.
    `ap.error`; the first green re-run at sha256 `94ae3b4a…` printed `pass=14`, and the settled bytes `a9a4e8d3…` print `RECEIPT_TIP_BINDING_SELFTEST pass=16 fail=0`;
    the class: a selftest's own harness is an input, so a fixture suite that only exercises the declared
    argument shape cannot see a missing-argument path.
+
+## L1 integration addendum (round 72, measured at the instrument tip `7c8350f3`)
+
+Wave dispositions (13 seats, one v1 wave; 3 executor / 3 scribe / 1 scout / 1 connector / 1 revenger
+probe / 1 reviewer / 1 critic / 1 mutation-tester / 1 sentinel; attack share 4/13 = 31%; no dead
+seat — `w1/w1-results.json` carries 13 rows for 13 seats).
+
+- **EX01RoundScope** built `tools/round72-round-scope.py` (16 selftest arms; `kill-{label-wronground,
+  stray,ignored}` each exit 1 naming its case; `clean` exit 0; `allow`/`subdir-repo`/`json` arms
+  green) and recorded that the base arm prints no record for all three defect fixtures. Its scope
+  note is kept as a limit: the whole-repo case makes the arm red mid-wave by design.
+- **EX02ReceiptBinding** built `tools/round72-receipt-tip-binding.py` (14 selftest arms, including
+  `empty-population` and `missing-round-section` → exit 2), and its three kill receipts plus the
+  non-receipt exit-2 arm are the C2 evidence.
+- **EX03GateArm6** wired arm 6 (`round-scope`) into `tools/pre-report-gate.py` with `{round}`
+  substitution, `ROUND_SCOPE` verdict matching and two new selftest fixtures (red arm → `failed=1`;
+  green arm → `failed=0`), giving `PRE_REPORT_SELFTEST pass=8 fail=0` and
+  `PRE_REPORT round=<N> arms=6 …`.
+- **SCR01SourceRow** opened `git-check-ignore` live (retained bytes, located 18-word quote, page
+  footer "last updated in 2.52.0"), appended **S543** only after a scratch-mirror census exit 0,
+  and extended S175/S542 `used-by` (old→new recorded in its report). Its id-collision check found
+  9 collisions with `shoukuknow/merge/kama` (S330, S333, S334, S335, S346, S347, S352, S353, S363),
+  which is why nothing was bulk-appended.
+- **SCR02KnowledgeEntry** wrote `corpus/knowledge/receipt-tip-binding.md` (120 lines, provenance trio
+  citing S175 + S543), the `corpus/README.md` coverage-map section (closing the round-71 spot-check
+  §8 item 5 defect, and naming the three entries that still have no row) and `QUALITY.md` KQ119.
+- **SCR03RegistryLog** amended the `Pre-report gate` row to six arms and the `Census waiver boundary`
+  row to include exit `2`, added the `Round scope` and `Receipt-tip binding` rows with their frozen
+  predicates verbatim, appended the `LOG.md` round entry with the routed-defect-3 correction
+  (`0b61e118…` → `7ff94d67…`) and drafted this lesson's Gate/Mistakes.
+- **SCT01ReceiptRecon** enumerated 101 citations across the lane's round-70/71 self-record and a real
+  report: 55 of 77 citations carry no revision header, and it named the round-71 report's
+  revision/claim mismatches — the class C2 now grades mechanically.
+- **CON01Overlap** placed both instruments against the fleet: tameshi owns the `rev=` binding
+  (receipt-revision-gate, receipt-commit-bind, receipt-window), souji r57 the durability triple,
+  chousa the pin, tsukuroi the same-revision check, kotodama the `moved_past` computation it refuses
+  to grade; kaidoku r42 treats ignored residue as advisory only and mori excludes ignored paths on
+  purpose. C2's only original leg is the instrument-input allow-list over `rev..tip`; C1's is the
+  graded ignored class bound to the lane's own frozen plan.
+- **LAB01Probes** confirmed all four hypotheses on this host (git 2.56.0): porcelain omits ignored
+  paths without `--ignored`; a nonexistent wave dir yields zero records; `merge-base --is-ancestor`
+  exits 1/0 with 128 for errors; porcelain marks `!! ` ignored, `?? ` untracked, `A ` staged.
+- **RVW01RoundScopeAttack** ran 27 invocations on a byte-identical snapshot of the landed counter:
+  A1–A4b, A6 missing/mislabelled, A7 default submodule and all allow-list boundary probes killed.
+  Survivors: linked-worktree dirt invisible from the primary checkout (A5), a valid *older*-round
+  label hiding another round's wave work (A6e), and `submodule.<name>.ignore=all` hiding dirty
+  submodule content (A7sub2). Routed to round 73 with their fixtures; the frozen kill rule does not
+  name any of them.
+- **CRT01ReceiptAttack** attacked the binding gate on `a9a4e8d3`: B3 (brace-expansion missing member)
+  and B5 (default record list) killed; B1 (plausible ancestor taken after the measurement), B2
+  (instrument edit before the header) and B6 (record-only delta with a non-tip header) survive, and
+  the decisive re-run on real bytes gives `RECEIPT_TIP_BINDING round=71 cited=1 bound=1 unbound=0
+  shifted=0 stale=0` exit 0 — the counter reproduces the round-71 record's own invariance argument,
+  and therefore does **not** catch that round's *wording* defect (a report sentence that said "at the
+  report tip" while the header named an earlier revision). That class needs B6's citing-line grade.
+- **MT01Mutants** ran 22 mutants across the three tools (4 gate, 9 round-scope, 9 binding) and killed
+  all 22 (`w1/MT01Mutants/mutants.tsv`).
+- **SEN01ScopeAudit** found no secret-shaped string in the round-72 population, no seat write outside
+  its assignment, no mutating git/jj by a seat, and no service or consumer contact; its one literal
+  FAIL is the L1's own pre-score amendment commit landing mid-wave (the protocol permits the L1 to
+  commit; no seat did), and it recorded a residual `core.fsmonitor` exec vector in C1's git calls
+  (git honours repo config) as a static note.
+
+Final receipts at the instrument tip `7c8350f3`: `ROUND_SCOPE round=72 cases=3 findings=0` (exit 0,
+`.ufo/waves/round-72/measured/after/round-scope-at-A.out`); the report-tip gate, binding and census
+runs are cited by the round-72 report at `/home/vgpnk/Projects/shokunin/.ufo/reports/round-72/kama.md`,
+against their committed receipts under `measured/after/`.
+
+## Ceiling
+
+What the green receipts do not show. **C1:** the counter grades the worktree it is pointed at, so a
+linked worktree's dirt is invisible (A5), an older valid round label hides another round's wave work
+(A6e), and a repository-level `submodule.<name>.ignore=all` hides dirty submodule content (A7sub2);
+the allow-list is a literal path/prefix match, so a broad entry suppresses a whole subtree by design.
+**C2:** the binding is one-sided (`header..tip`), so a receipt whose bytes predate its own header is
+bound (B2); the delta is graded by path, not by the claiming sentence, so a record-only delta passes a
+header that is not the tip and a prose "at the tip" goes ungraded (B6); brace expansion is mechanical,
+so a fenced example citation is read as a citation (B4). No claim says the registered consumers serve:
+they keep their last recorded `DEAD` state and nothing was sampled.
