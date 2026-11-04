@@ -1,0 +1,37 @@
+BASE counter: APPEND_EXEMPT events=241 register=53 exempt=47 restored=95 disclosed=5 unaccounted=41 cutoff=10f37171fb696c542586cbee96ea4a509ab74afc introductions=2 rotation_safe=1
+BASE findings41 = 0 (SCORECARD=0, SOURCES=0, consumer=0)
+strict rows demanded by C2 content checks: 0
+commit       file        cnt sections                 <=ACC(intro) <=EXM(intro) <=to
+
+== NC1 (base + 9 rows), OLD counter, exit=1
+APPEND_EXEMPT events=241 register=53 exempt=47 restored=95 disclosed=5 unaccounted=41 cutoff=10f37171fb696c542586cbee96ea4a509ab74afc introductions=2 rotation_safe=1
+APPEND_EXEMPT_FINDING unaccounted 83bee7faf5a733ac7a7bc47cde29cba23c6cefb7 corpus/knowledge/consumer-registry.md missing valid exempt row
+APPEND_EXEMPT_FINDING unaccounted ea72c3eae4ecc68dab2b0a08153c9c1d2e16df21 corpus/knowledge/consumer-registry.md missing valid exempt row
+non-unaccounted findings on the 9 rows: 1 rotation/post-introduction lines
+
+== NC2 deletion inside ## Errata (deleted line 32: b'The box changed under this registry. Everything ')
+   audit: deleted=1 graded=1 ungraded=0 permitted=0 status=unrestored undisclosed=1
+   C2 ruling (c): line sits INSIDE the only=## Errata region -> out_of_region must NOT apply (graded=1>0); not exempt-head (no exempt titles on this file), not permitted (A-corr file) -> class must be unaccounted/finding without an accepted-register row
+
+== NC3 deletion outside ## Errata (deleted line 4)
+   audit: deleted=1 graded=0 ungraded=1 permitted=0 status=ungraded
+   C2 ruling (c): every deleted line lies outside the declared region -> out_of_region applies (graded=0==0, permitted==0)
+
+== NC4 fresh graded deletion + same-commit accepted row (self-bless)
+   deleted corpus/README.md line 3: b'Proprietary memory for the local model serving & endpoint he'
+   OLD counter exit=1: APPEND_EXEMPT events=242 register=53 exempt=47 restored=94 disclosed=5 unaccounted=43 cutoff=10f37171fb696c542586cbee96ea4a509ab74afc introductions=2 rotation_safe=1
+   audit at NC4: graded=1 status=unrestored undisclosed=[{'line_sha256': '9370e658356bcdeb0e58499a45e66fff817fd7f8beb0f11548165110bfdfd9c2', 'count': 1, 'classes': ['removal']}]
+   accepted-tool under ruling (a) 'ancestor of audit revision': accepted=54 unaccepted=0 bad_rows=0 (the same-commit row is VALID)
+   accepted-tool under strict 'own introduction cutoff' (<= 10f37171fb69): accepted=53 post-introduction findings=1
+   base register alone at NC4 (old counter path): unaccepted=1 (finding exists as expected)
+
+== NC5 normal append with a young row, OLD counter exit=1
+   APPEND_EXEMPT events=241 register=53 exempt=47 restored=95 disclosed=5 unaccounted=41 cutoff=10f37171fb696c542586cbee96ea4a509ab74afc introductions=2 rotation_safe=0 | APPEND_EXEMPT_FINDING rotation 461d2adbf2b3fe596a53c
+   introductions at NC5: ['10f37171fb696c542586cbee96ea4a509ab74afc', 'c2aa7fb2c02dd95a185b728d5863f9ae492ecef4']
+   C2 rule: append is a modification, --diff-filter=A unchanged -> no re-introduction -> rotation must NOT fire; ruling (a) admits the row
+
+== NC6 delete+re-add register carrying one new row, OLD counter exit=1
+   APPEND_EXEMPT events=241 register=53 exempt=47 restored=95 disclosed=5 unaccounted=41 cutoff=10f37171fb696c542586cbee96ea4a509ab74afc introductions=3 rotation_safe=1
+   introductions=3 (2 original + re-add)
+== NC6c delete+re-add register UNCHANGED, OLD counter exit=1, rotation findings=1
+   C2 subset rule: re-add rows vs previous VERSION (last existing blob): 9-row re-add is a non-subset -> rotation; unchanged re-add is a subset -> safe

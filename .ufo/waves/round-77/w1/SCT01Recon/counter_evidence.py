@@ -5,7 +5,8 @@ from collections import Counter
 
 LANE = "/home/vgpnk/Projects/shokunin/kama-shokunin"
 BASE = "cc6e1d3cf202ee3e17cd07f42fc63d2dca5f3bb7"
-S = "/fast/scratch/hyaku/kama-r77/SCT01Recon"
+import os
+S = os.path.dirname(os.path.abspath(__file__))
 spec = importlib.util.spec_from_file_location("aa", LANE + "/tools/append-only-audit.py")
 aa = importlib.util.module_from_spec(spec); spec.loader.exec_module(aa)
 
