@@ -1,0 +1,20 @@
+# source opened 2026-11-04 by kama round 79 (L1)
+# url: https://raw.githubusercontent.com/ggml-org/llama.cpp/39febd2adb947b70da35e95f9351b3bf58ad170a/tools/server/README.md
+# http: 200 bytes: 135608 sha256: 8fd5abde2fb52de3b30f30a170631d4c0d92febecc8da44d0541e48b132b35c6
+# local tree file (same build): tools/server/README.md sha256 8fd5abde2fb52de3b30f30a170631d4c0d92febecc8da44d0541e48b132b35c6
+# located quote (line 2227, router GET /models, note 1): If a model is not running, it will be added or updated according to the source
+        "text"
+      ]
+    },
+    ...
+  }]
+}
+```
+
+Note:
+1. Adding `?reload=1` to the query params will refresh the list of models. The behavior is as follow:
+    - If a model is running but updated or removed from the source, it will be unloaded
+    - If a model is not running, it will be added or updated according to the source
+2. When the model is loaded, the info from `/v1/models` is forwarded to router's `/v1/models`. This includes metadata about the model and the runtime instance.
+
+Each object in `data` has the same `architecture` object as [`GET /v1/models`](#get-v1models-openai-compatible-model-info-api) of a direct server. The server computes both arrays offline. It does not load the model, download files, or run inference. `output_modalities` comes from the GGUF metadata, plus `audio` when the projector file can generate speech. `input_modalities` comes from the projector file. A native decision model shows `decisions` before its first load, after unload, and while it sleeps:
