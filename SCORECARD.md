@@ -4900,9 +4900,9 @@ authority.
 | C1 — the round-80 self-record's six declared facts re-derive at the sealed revision or are answered by dated value-bound corrections | calibration (lowest assigned axis, 7) | exit 1 `SELFRECORD_R80_ENUM claims=6 stale=6 corrected=0` (`measured/before/c1-enum.out`; F1–F6 all stale) → exit 0 `SELFRECORD_R80 claims=6 mismatches=0 corrected=6 unbacked=0` (`measured/after/c1-green.out`) | `python3 tools/round81-selfrecord-round80.py --repo .` | **verified**; selftest `pass=13 fail=0` (`measured/after/c1-selftest.out`); no-corrections control `mismatches=6` exit 1 (`measured/control/c1-no-corrections.out`) |
 | C2 — the append-only acceptance population is graded under a late-acceptance rule, and every pre-round undeclared deletion event is repaid by a committed late row | operability (held 8; capability `append-debt`) | exit 1 `APPEND_DEBT round=81 base=e7d2fd729cf8 events=63 accepted=53 late=0 pending=0 unaccepted=10 bad_rows=0 bad_declarations=0 out_of_population=0` (`measured/before/debt-base.out`) → exit 0 `APPEND_DEBT round=81 base=e7d2fd729cf8 events=63 accepted=53 late=10 pending=1 unaccepted=0 bad_rows=0 bad_declarations=0 out_of_population=0` (`measured/after/debt-green.out`; `pending` is the round's own post-base events and rises with each later record commit — 1 at the receipt revision; the graded buckets `accepted`/`late`/`unaccepted` are the claim) | `python3 tools/round81-append-debt.py --repo . --round 81` | **verified**; selftest `pass=16 fail=0` (`measured/after/debt-selftest.out`); row check `LATE_ROWS check=ok rows=88` (`measured/after/late-check.out`) |
 
-Frontier: registry 297 → 301 rows (`S558` corrects S557's dead locator by supersession, `S559`
-`git-merge-base` and `S560` `git-diff-tree` ground C2's ancestry and record rules, `S561` rejects the
-vLLM v0.33.0 quickstart with its flip; census exit 0); one admitted knowledge entry
+Frontier: registry 297 → 302 rows (`S558` corrects S557's dead locator by supersession, `S559`
+`git-merge-base` grounds C2's ancestry rule, `S560` and its scope supersession `S562` ground the
+`-z`/`--numstat` record shape, `S561` rejects the vLLM v0.33.0 quickstart with its flip; census exit 0); one admitted knowledge entry
 (`late-acceptance-rule`) and its coverage-map row; `corpus/QUALITY.md` KQ133 from the mined
 `number-drift` mistake; the round's Gate records 3 admits + 1 reject plus the S557 Gate erratum (R80V3).
 

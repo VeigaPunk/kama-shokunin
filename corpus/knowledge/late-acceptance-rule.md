@@ -1,11 +1,15 @@
-source: S559 (git-merge-base `--is-ancestor`) and S560 (git-diff-tree `-z --name-status`); the rule itself is the lane's own re-runnable instrument `tools/round81-append-debt.py`
+source: S559 (git-merge-base `--is-ancestor`), S560 (git-diff-tree `-z`) and S562 (git-diff-tree `--numstat`, which supersedes S560's scope); the rule itself is the lane's own re-runnable instrument `tools/round81-append-debt.py`
 verified-at: 2026-11-04 (lane base `e7d2fd729cf8204c89c32534303bc9f2a97fcee4`, sealed record `a2af1af59faf6cf66fe854559293c4e4b441aff3`)
 recheck: `python3 tools/round81-append-debt.py --repo . --round 81` prints `APPEND_DEBT … unaccepted=0 bad_rows=0` and `python3 tools/round81-append-debt.py --selftest` prints `APPEND_DEBT_SELFTEST pass=16 fail=0`
 
 # Late acceptance: a register row may be introduced by a later round, never by the same one
 
 The lane's append-only audit grades a deletion event per (commit, path) pair and lists the deleted
-lines no restoration or disclosure accounts for. Two ledgers can answer an event:
+lines no restoration or disclosure accounts for. Its population is git's own diff output: deleted
+lines come from `git diff -U0 --text --no-renames` and per-file counts from
+`git diff --numstat -z --no-renames` (`tools/append-only-audit.py:401,468`), so `--numstat`, `-z`
+and `--no-renames` are the options that ground the record shape (S560, S562) — never
+`--name-status`, which the audit does not call. Two ledgers can answer an event:
 
 - `registry/append-only-accepted.tsv` — the frozen acceptance register (round 75). A row is
   `commit, file, line_sha256, count, class, note`, and its commit must be an ancestor of the

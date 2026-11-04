@@ -27,6 +27,16 @@ in the filed row (`…/docs/api-openai-compatibility.mdx`) returns HTTP 404 over
 defect R80V2; `S558` supersedes it rather than editing the filed row (contract v1 rule 2). The row's
 stated digest and byte count were correct all along, and the response notes are 294-295, not 293-294.
 
+### Gate erratum — S560 (scope)
+
+`S560`'s scope cell says the audit's event population is "`--name-status` with `-z` and `--no-renames`".
+The audit never calls `--name-status`: deleted lines come from `git diff -U0 --text --no-renames`
+(`tools/append-only-audit.py:401`) and counts from `git diff --numstat -z --no-renames` (`:468`). The
+row's quoted `-z` sentence still holds — it explicitly covers `--numstat` — so `S562` supersedes the
+scope (same page, `--numstat` at rendered line 3551 and `--no-renames` at 3876, quote in the row); the
+knowledge entry now cites `S562` for the shape and `S560` only for `-z`. Caught by the wave's
+knowledge seat (`w1/SC04Knowledge.md` finding 3), not by the round's own Gate.
+
 ## Corrections
 
 `corrected F1 old=c1-selftest=pass=9 new=c1-selftest=pass=11 at=a2af1af59faf6cf66fe854559293c4e4b441aff3 date=2026-11-04`
