@@ -3382,3 +3382,14 @@ Wave: one v1 wave, 14 seats (3 executor, 3 scribe, 2 scout, 1 connector, 2 revie
 
 Owed by round 82: accept round 81's own pending events with late rows, re-run `pin-watch` on the next
 release cadence, and keep K05 blocked until an authorized serving runtime exists.
+
+## Round 81 — correction to the C2 line (appended; the entry above stands)
+
+`LOG-CORRECTION round=81 claim=C2 pending=0 -> pending=1 at=1b96317f690dbe9f42675099a004e150aaa54419`
+
+The C2 bullet above quotes `pending=0`; `pending` is the graded round's own post-base events and rises
+with each later record commit, so the retained receipt
+`.ufo/waves/round-81/measured/after/debt-green.out` — which carries its own `# rev:` header — prints
+`pending=1` at `1b96317f`, while the graded buckets (`accepted=53 late=10 unaccepted=0 bad_rows=0
+bad_declarations=0 out_of_population=0`) are unchanged. The SCORECARD banner and the §Round 81 C2 row
+name `pending=1` and say what the value is; no claim predicate moves.
