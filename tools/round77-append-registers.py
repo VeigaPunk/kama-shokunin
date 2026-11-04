@@ -256,7 +256,8 @@ def evaluate(repo, revision, audit, accepted_tool, exempt_tool):
 
 def selftest(audit, accepted_tool, exempt_tool):
     """Exercise the real audit and register history in isolated fixture repos."""
-    scratch = Path(os.environ['TMPDIR']).resolve()
+    # Scratch discipline (round-77 §7): honour TMPDIR; fall back to the platform temp.
+    scratch = Path(os.environ.get('TMPDIR') or tempfile.gettempdir()).resolve()
     fails = 0
     arms = ('audit-fixture-green', 'missing-row', 'wrong-count', 'wrong-class',
             'inside-region', 'rotation-reintroduced', 'permitted-overclaim')
