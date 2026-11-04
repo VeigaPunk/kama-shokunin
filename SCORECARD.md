@@ -4383,7 +4383,7 @@ Population at `rev=d86ce85b`: `SKILL.md` 1736 lines sha256 `f18c9bcc…` (unchan
 (S549 rejected as a duplicate, S550 admitted own-work); filtered knowledge entries 49 (two new);
 gate `PRE_REPORT_SELFTEST pass=22 fail=0`; the round-76 `append-exempt` sub-check is retired from
 the gate because its shared-cutoff rule is red by construction once the exempt register grows
-(`measured/after/gate-selftest.out`, `gate-run.out`).
+(`measured/after/gate-selftest.out`, `measured/after/gate-run.out`).
 
 ## Superseded head bytes (round 77; held so the audit grades the head re-derivation restored)
 
@@ -4392,4 +4392,10 @@ before the first `## ` heading. The first-filed banner is held here byte-exactly
 
 ``````text
 **Current authority (round 76):** assigned axes are operability + calibration (`shokunin.conf`); Latest measured round: 76. Round 76 declared three claims: C2 calibration verified (the round-75 self-record's eight facts re-derive or are superseded by value-bound corrections, `mismatches=0 corrected=5`), C1 operability and C3 freshness honest misses (their frozen targets were unsatisfiable as written; both instruments, registers and arms landed and the measurements that disprove the targets precede any green run). Scores hold: operability 8, freshness 8, calibration 7, depth 7, coverage 9, adjacency 7; the three new capabilities enter the repertoire. The detailed head of the round is the `## Round 76` section below.
+``````
+
+## Superseded bytes (round 77 receipt-name repair; held so the audit grades the edit restored)
+
+``````text
+(`measured/after/gate-selftest.out`, `gate-run.out`).
 ``````
