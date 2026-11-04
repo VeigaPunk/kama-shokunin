@@ -50,3 +50,8 @@ is not an undocumented side door. The response notes put `created` at the model'
 `owned_by` at the Ollama username defaulting to `"library"` — inventory fields, no residency field. The
 limit above is therefore the same on both routes: a models list is an inventory, and residency lives on
 `/api/ps` (`GET /v1/models` never claims a model is loaded).
+
+Provenance boundary: S010 already holds the docs-site page `docs.ollama.com/api/openai-compatibility`
+(2026-09-23) for the same surface, so S557 is not a discovery — it pins the same route to the release's
+own bytes (`v0.40.11`, `docs/api/openai-compatibility.mdx`, sha256 `44071a12…`) with line anchors, which is
+what a recheck needs when the docs site moves ahead of the tag.
