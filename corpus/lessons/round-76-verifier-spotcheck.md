@@ -183,3 +183,20 @@ parens elided) and predates this round; the round's re-quote is the paraphrase i
 Status `ok` (real report, all cited commits landed and pushed). **Not admitted**:
 C2 verifies, C1 and C3 are honest misses on frozen targets that cannot hold as written, and no
 axis is harmed. Verdict `rejected-honest-stop`.
+
+## 6. Correction to D6 (appended; supersedes the "uncommitted" clause above)
+
+The §4 D6 sentence as first filed says the SCR03 draft was uncommitted at closure. Before this
+artifact landed, the lane committed it: `956d13d1` ("round-76: wave results (13/13 seats
+settled) and the scribe's final corrections draft", 03:37:29 -0300, parent `fd4b9ca3`) adds the
+22 draft lines plus `w1-results.json`. This artifact is that commit's descendant. The
+observation stands corrected: the draft is committed, not uncommitted, and the round's tip
+advanced past the report's cited `fd4b9ca3` by one permitted post-report lane entry (13/13 seat
+settlement evidence; the report itself disclosed the missing results file). D6's substance
+remains: the committed draft names a proposed receipt path
+`.ufo/waves/round-76/measured/after/pre-report-selftest.out` that does not exist (the actual
+receipt is `gate-selftest.out`) and is explicitly labelled a draft; the lane must apply it to
+`LOG.md` with the pointer repaired or discard it next round, never let a later round treat the
+draft as a landed correction. No claim, axis or trend changes: `956d13d1` touches only
+`.ufo/waves/round-76/w1/`. Step-1 ancestry re-tested after the advance: `fd4b9ca3` and
+`956d13d1` are both ancestors of `refs/heads/master`.
