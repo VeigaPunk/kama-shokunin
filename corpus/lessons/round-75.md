@@ -131,3 +131,13 @@ audit's event grades restored:
    written only after that assert. *Shown able to fail:* feeding it an `--emit-tasks` array raises
    `AssertionError` (the check is on the loaded JSON, not on a flag).
 ``````
+
+## Restored paragraph (the superseded Mistakes 4 text, kept verbatim)
+
+The append-only contract forbids deleting the original pointer, so it is restored here exactly as
+first filed; the reworded lines above stand as the correction:
+
+```
+   *Evidence:* `.ufo/waves/round-75/controls/build-spec.py` (the emit step now asserts the
+   shape); the rejected first output was not committed.
+```
