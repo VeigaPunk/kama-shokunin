@@ -14,8 +14,8 @@ round 74 adds arm 7 and moves the arm count 6 -> 7):
     the five reconciled instruments (selfdesc reconciler, newest-closure counter,
     receipt-pointer audit, worktree-landing check, round-scope counter) plus the three
     round-74 v2 counters arm 7 composes (selfdesc canon, receipt-claim binding,
-    province host drift), the round-75 trio arm 8 composes and the round-76 trio arm 9
-    composes are all green AND no path under `.ufo/waves/round-<N>/` is uncommitted; it
+    province host drift), the round-75 trio arm 8 composes and the round-77 and round-78 trios arms 9
+    and 10 compose are all green AND no path under `.ufo/waves/round-<N>/` is uncommitted; it
     exits 1 naming every failed arm otherwise.
 
 The round-71 receipt -- `PRE_REPORT round=71 arms=5 failed=0 uncommitted=0` -- is that
@@ -38,15 +38,15 @@ Arms, in fixed order, every one run with cwd = --repo:
   8 round75-instruments tools/round75-interpretation-pins.py   --repo <repo>
                       tools/round75-survivor-probe.py          --repo <repo>
                       tools/round75-append-accepted.py         --repo <repo>
-  9 round76-instruments tools/round76-receipt-scope.py         --repo <repo> --round <N>
-                      tools/round76-selfrecord-facts.py        --repo <repo>
-                      tools/round76-append-exempt.py           --repo <repo>
- 10 round77-instruments tools/round77-citation-baseline.py     --selftest
+  9 round77-instruments tools/round77-citation-baseline.py     --selftest
                       tools/round77-append-registers.py        --selftest
                       tools/round77-selfrecord-round76.py      --selftest
- 11 round78-instruments tools/round78-selfrecord-round77.py    --selftest
+ 10 round78-instruments tools/round78-selfrecord-round77.py    --selftest
                       tools/round78-append-registers.py        --selftest
                       tools/round78-live-reconcile.py          --selftest
+
+The arm count is `len(ARM_ORDER)` at run time; the numbered list above follows it. The retired
+round-76 arm's counters stay in `VERDICT_RE`/`_DEFECT_ARMS` as history and are not an arm.
 
 `round-scope` is the round-72 C1 addition -- the sixth arm the gate has ever had, executed
 fifth because `ARM_ORDER` derives every instrument arm from `ARM_SPECS` and keeps the
@@ -189,7 +189,7 @@ instrument. Scored verdicts now carry `arms=10`; historical nine-arm receipts ab
 retain their original meaning. One composite wiring selftest extends the 21 existing
 cases to 22 without changing their individual pass counts.
 
-Round 79 adds arm 11, `round78-instruments`, after all existing arms: it runs the three
+Round 79 adds arm 10, `round78-instruments`, after all existing arms: it runs the three
 round-78 instruments' `--selftest` and requires each to end with its own summary prefix
 (`SELFRECORD_R77_SELFTEST`, `APPEND_REGISTERS_SELFTEST`, `LIVE_RECONCILE_SELFTEST`), so a
 foreign or malformed summary fails closed. Four wiring cases (red stub, absent module, green

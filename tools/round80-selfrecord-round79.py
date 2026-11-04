@@ -54,6 +54,10 @@ ROW_COUNT = re.compile(r"^\|[ ]*S[0-9]{3,}[ ]*\|")
 SELFTEST_RE = re.compile(r"PRE_REPORT_SELFTEST pass=([0-9]+) fail=([0-9]+)")
 GATE_RE = re.compile(r"PRE_REPORT round=79 arms=([0-9]+) failed=([0-9]+) uncommitted=([0-9]+)")
 FILTERED = ("engine-sides", "processes")
+# F2 counts the population the record declares at its own revision: later growth by the grading
+# round is not a record error, so the fact is re-derived at the sealed revision on both legs
+# (freeze divergence 4). Every other fact is graded at the tip as well.
+SEALED_BOUND = {"F2"}
 
 
 class CouldNotEvaluate(Exception):
@@ -244,7 +248,8 @@ def score(repo: Path, sealed: str, tip: str, lesson: str, use_corrections: bool)
     for fact, _ in FACTS:
         declared = sealed_facts[fact]["declared"]
         seen_sealed = sealed_facts[fact]["observed"]
-        seen_tip = tip_facts[fact]["observed"]
+        seen_tip = (sealed_facts[fact]["observed"] if fact in SEALED_BOUND
+                    else tip_facts[fact]["observed"])
         fresh = declared == seen_sealed == seen_tip
         fact_blocks = by_fact.get(fact, [])
         ok = None

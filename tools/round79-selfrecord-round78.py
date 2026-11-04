@@ -20,9 +20,10 @@ PREDICATE (frozen: plans/round-79-claims.md section C1):
 Facts (each declared value is parsed from the record's own bytes at the sealed revision;
 each observed value is derived from the tree at that same revision):
 
-  F1 axes            the record's "Scores hold: ..." sentence vs the sealed `## Axes` table
-  F2 capabilities    "the three new capabilities enter the repertoire" vs the canonical
-                     table's rows whose first-working round is 78
+  F1 lowest-axis     the record's "the lowest assigned axis (calibration 7) carries C1"
+                     sentence vs the sealed `## Axes` table over the assigned pair
+  F2 population      "sources registry 292 rows ...; filtered knowledge entries 51" vs the
+                     sealed source-row count and filtered knowledge-blob count
   F3 wave shape      the record's "One v1 wave of 12 seats (3 executor, ...)" sentence vs
                      `.ufo/waves/round-78/w1-spec.json` at the sealed revision
   F4 wave dead seats "Three seats returned output (...); nine returned empty" vs

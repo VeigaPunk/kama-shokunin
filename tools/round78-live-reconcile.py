@@ -285,9 +285,16 @@ def main() -> int:
                 lines.append(f'{arm} exit={code} LIVE_RECONCILE_FINDING {detail}')
             passed = sum(r['exit'] == 1 and r.get('finding', '').startswith(r['arm'] if r['arm'] != 'wrong-expect' else 'verdict') for r in receipts)
             lines.append(f'LIVE_RECONCILE_SELFTEST pass={passed} fail={len(ARMS) - passed}')
-            after.mkdir(parents=True, exist_ok=True)
-            (after / 'c3-selftest.out').write_text('\n'.join(lines) + '\n')
-            (after / 'c3-selftest.json').write_text(json.dumps(receipts, indent=2) + '\n')
+            # Round 80 routed-defect repair: the selftest writes under TMPDIR, never into a
+            # committed wave dir (a pre-report gate run must not dirty the tree after its own
+            # cleanliness arm has passed). Pass --receipt to keep the files somewhere.
+            out_dir = Path(tempfile.mkdtemp(prefix='live-reconcile-selftest-',
+                                            dir=os.environ.get('TMPDIR') or None))
+            try:
+                (out_dir / 'c3-selftest.out').write_text('\n'.join(lines) + '\n')
+                (out_dir / 'c3-selftest.json').write_text(json.dumps(receipts, indent=2) + '\n')
+            finally:
+                shutil.rmtree(out_dir, ignore_errors=True)
             print('\n'.join(lines))
             return 0 if passed == len(ARMS) else 1
         receipt, code = trial(repo, scratch, args.arm)

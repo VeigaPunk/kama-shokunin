@@ -3260,3 +3260,60 @@ regardless of cwd/scratch, so every scored gate run (arm 10) dirties two tracked
 the gate's own cleanliness arm has passed. The bytes were restored to their committed blobs after
 the gate run and the fix is round 80's (the selftest must write under TMPDIR/--scratch), because
 changing an instrument after the measured gate would move the gate receipt's binding.
+
+## Round 80 — correction to the round-79 entry (2026-11-04, appended; the round-79 bytes stand)
+
+`LOG-CORRECTION round=79 claim=C2 verdict=not-verified`
+
+The round-79 entry above says "Three claims, three distinct axes, all verified on their receipts".
+C2 was an honest stop: the receipt it cites, `.ufo/waves/round-79/measured/after/c2-gate.out` at
+`b756571e`, prints `PRE_REPORT round=79 arms=10 failed=1 uncommitted=0` with `EXIT=1` (arm 8
+`round75-instruments` red on the round's own in-place edits). The corrected verdict is
+`not verified (honest stop)`; the round-79 SCORECARD banner and claim table carried the same
+overstatement and are corrected by the appended subsection in SCORECARD §Round 80. Graded
+mechanically as F4/F5/F6 by `tools/round80-selfrecord-round79.py`.
+
+## Round 80 — the round-79 record is graded, every engine pin is related, the class gets a second engine (2026-11-04)
+
+Frozen plan `plans/round-80-claims.md` (freeze `fe7b978013bd1aa6d67a7e0fbf6369b8d7a9b023`; base
+`c45fc7d1a8427e9c98a9dd7befa542c7b5caed38`; sealed revision C1 grades
+`a9b4543f14625d0f37daa42ef664ee6f6ea975ea`). Three claims, three distinct axes, each measured on
+its own receipt:
+
+- **C1 calibration (lowest assigned axis, 7)** — `tools/round80-selfrecord-round79.py` re-derives
+  six declared facts of the round-79 self-record at the sealed revision and grades one dated,
+  value-bound correction per stale fact against the tip. Before: `SELFRECORD_R79_ENUM claims=6
+  stale=3 corrected=0` exit 1 (F4 the record's C2 "verified" against its own `failed=1` receipt,
+  F5 the `pass=26` before tally against `pass=22`, F6 the LOG "all verified" sentence). After:
+  `SELFRECORD_R79 claims=6 mismatches=0 corrected=3 unbacked=0` exit 0; selftest `pass=9 fail=0`;
+  the no-corrections control prints `mismatches=3` exit 1.
+- **C2 freshness** — `registry/engine-pin-relations.tsv` carries five dated rows over three
+  engines (llama.cpp b11755 / the S553 commit anchor / kengaku's S178 b7200, sglang v0.5.22, vllm
+  v0.32.0), and `tools/round80-engine-pin-relations.py` re-derives every `newest`/`newer`/
+  `relation` cell from the committed `git ls-remote --tags` lists under
+  `.ufo/waves/round-80/measured/after/c2-tags/`: `PIN_RELATIONS engines=3 refs=5 unexplained=0`
+  exit 0; selftest `pass=12 fail=0`; an empty register and a stale relation are both red. The
+  reconnaissance found the S553 anchor `39febd2a` is tag `b11963`'s peeled commit, so its row is
+  labelled `tag:b11963` (freeze divergence 2).
+- **C3 operability** — `tools/round80-ollama-census.py` starts the pinned Ollama v0.40.11 child on
+  a free unregistered loopback port under a scratch HOME/model store, creates one model from the
+  lane fixture GGUF, and grades the `registered` class both ways: `OLLAMA_CENSUS port=<p>
+  engine=ollama unregistered=1 governed=1 class_missing=0` exit 0, and `--audit` →
+  `CLASS_ENGINES engines=2 verified=2 stale=0` exit 0 over
+  `registry/unregistered-class-engines.tsv` (llama.cpp's round-80 recheck receipt and the Ollama
+  receipt). Selftest `pass=6 fail=0`; the pre-class probe scores `class_missing=1` exit 1 and a
+  one-engine register `engines=1` exit 1.
+
+Frontier: registry 293 → 296 rows (S554 Ollama `GET /api/tags` at v0.40.11, S555 a supersession of
+S553's anchor, S556 the `docs/preset.md` rejection with its flip; census exit 0); one knowledge
+entry (`unregistered-class-second-engine`) and one coverage-map row; `corpus/QUALITY.md` KQ132
+from the mined `self-record-states-intent` mistake. The round-79 routed defects R79V1–R79V7 and
+its report-gate instrument defect are disposed in SCORECARD §Round 80.
+
+Wave: one v1 wave, 13 seats (4 executor, 2 scribe, 2 scout, 1 connector, 1 reviewer, 2 critic,
+1 mutation-tester; attack 4/13 = 31 %). Seat results and dead seats:
+`.ufo/waves/round-80/w1-results.json`; the L1 re-derived every finding it used.
+
+Owed by round 81: decide the append-only register debt the gate's arm 8 carries, re-run
+`pin-watch` on the next release cadence, and keep K05 blocked until an authorized serving runtime
+exists.
