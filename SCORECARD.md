@@ -3837,7 +3837,7 @@ described a receipt as running "at the report tip" while its header named `4b284
 and the invariance argument that rescued it was hand-written prose
 (`.ufo/waves/round-72/measured/before/receipt-tip-control-old.out` → `BINDING_CONTROL cited=3 accepted=3
 rejected=0`, exit 1). The scout's census of the lane's own record makes the class concrete: 55 of 77 cited
-receipts carry no revision header (`w1/SCT01ReceiptRecon/recon.md`).
+receipts carry no revision header (`.ufo/waves/round-72/w1/SCT01ReceiptRecon/recon.json`).
 
 Frozen claims and controls: `plans/round-72-claims.md`; base `d30a8696`; freeze `090a0b25`; pre-score
 amendment `a3cc39f0`; controls `.ufo/waves/round-72/controls/{round-scope-control.py,receipt-tip-control.py}`;
