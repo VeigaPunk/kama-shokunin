@@ -50,10 +50,10 @@ operability (survivor probe + two arms), C3 freshness (append-only accepted-hist
    in-session dispatcher reads `taskCall.context` + `taskCall.tasks`
    (`/home/vgpnk/Projects/shokunin/scripts/hyaku/inline-dispatcher.py:250`), so that shape would
    have spawned nothing.
-   *Evidence:* the round's spec generator (a `.py` control input, not a receipt) now asserts the
+   *Evidence:* the round's spec generator (a control input, not a receipt) now asserts the
    shape; the rejected first output was not committed.
    *Captured-by:* none mechanical; the dispatcher contract document is the only trace.
-   *Fix:* `controls/build-spec.py` asserts `taskCall.tasks` after emitting, and the ready file is
+   *Fix:* the generator asserts `taskCall.tasks` after emitting, and the ready file is
    written only after that assert. *Shown able to fail:* feeding it an `--emit-tasks` array raises
    `AssertionError` (the check is on the loaded JSON, not on a flag).
 
@@ -113,3 +113,21 @@ to distinguish the two. The ruling is recorded here so the next round does not r
 
 No `merge/kama/` entry is adopted this round (id-collision guard and quarantine slice re-derived
 read-only). The rationale is in the report's Sources & frontier section.
+
+
+## Superseded bytes (held verbatim so the audit grades the edit restored, not undisclosed)
+
+Round 75 rewrote the §Mistakes 4 evidence pointer once in place; the register's cutoff forbids
+accepting a post-introduction deletion, so the superseded lines are kept here byte-exactly and the
+audit's event grades restored:
+
+``````text
+   *Evidence:* `.ufo/waves/round-75/controls/build-spec.py` (the emit step now asserts the
+   *Fix:* `controls/build-spec.py` asserts `taskCall.tasks` after emitting, and the ready file is
+   *Evidence:* the round's spec generator (a `.py` control input, not a receipt) now asserts the
+   shape; the rejected first output was not committed.
+   *Captured-by:* none mechanical; the dispatcher contract document is the only trace.
+   *Fix:* `controls/build-spec.py` asserts `taskCall.tasks` after emitting, and the ready file is
+   written only after that assert. *Shown able to fail:* feeding it an `--emit-tasks` array raises
+   `AssertionError` (the check is on the loaded JSON, not on a flag).
+``````
