@@ -84,6 +84,12 @@ the local documentation improvement is not a completed training round.
   frontier. Assimilation: none; `considerthese/2026-10-26.md` proposal 4
   (daily pin-gap line) remains pending.
 
+- Round 83: `registry/pin-recheck-rows.tsv` grades each `behind` relation row as a byte comparison
+  over two committed anchor extracts (`corpus/anchors/`, S566-S570), and `corpus/knowledge/pin-recheck-rows.md`
+  holds the twelve-column schema, the mapping from a source line to an extract line, and the
+  four-value vocabulary plus `ungraded`. New ground over the round-82 entry: a *row-per-relation*
+  register rather than a per-engine newest-tag trigger.
+
 ## Corrections — round 10 (2026-10-19)
 
 *[correction 2026-10-19 (round 10, A50): `6–17 (in progress; loop 1 final)` at line 47 is stale (nl -ba corpus/knowledge/free-tier-provider-limits.md | sed -n '26,57p' => the status board has rounds 6-9 only, with loops 2-3 pending); current anchor: `corpus/knowledge/free-tier-provider-limits.md:26-57`]*

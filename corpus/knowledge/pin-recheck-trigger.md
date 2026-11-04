@@ -38,3 +38,13 @@ new line number recorded.
   the cited source under `CORPUS.md` rule 1, which is what a recheck row's evidence is.
 - The register's `newest` value is a dated observation: upstream can move between two reads, so a
   recheck's receipt must name the tag list it saw.
+
+## Correction — round 83
+
+This page's `recheck:` cell was unrunnable as introduced (`962bd251`): it read
+`python3 tools/pin-watch.py check --repo .`, and `tools/pin-watch.py` has never accepted `--repo` — the
+command exits 2 with `the following arguments are required: --pins`. The cell was repaired in place at
+`8a3e8af2` (round 82) and now reads `python3 tools/pin-watch.py check --pins registry/engine-pins.tsv`;
+run on 2026-11-04 it exits 1 with three `status=behind` lines (a `behind` count is a recheck trigger, not
+a failure). This block records the superseded text; round-83 verifies the live command rather than
+re-fixing it (`.ufo/waves/round-82/w1/SK01PinRecon/SK01.md:37`, round-82 `SK01` D1).
