@@ -4519,6 +4519,14 @@ section's table is the newest canonical list).
    (seat rule). The gate keeps nine arms this round, so the SKILL row and the module agree at
    `arms=9` and the round's instruments are certified by their own selftests; wiring them into the
    gate as an arm is round 79's planned move.
+4. **Post-data implementation correction (F2).** The C1 counter's F2 derivation read the worktree
+   `SCORECARD.md`; this round's own record commit adds three capability rows, so at the tip F2
+   printed `capabilities=37/max-round=78` and the counter reported `mismatches=1` — a fact the round
+   had refuted by landing. F2's subject is the round-77 record's canonical table (how F1 and F3–F6
+   are already read), so the derivation was corrected to read `git show <sealed>:SCORECARD.md`.
+   `PREDICATE`, the frozen target and the eight arms are unchanged and green; the pre-correction tip
+   run and the corrected tip run are both in the lesson, and `.ufo/waves/round-78/measured/after/c1-facts-tip.out`
+   (`rev=381b53dc`) prints the frozen line. A closure must weigh C1 on this disclosure.
 
 ### Gate and tip state
 

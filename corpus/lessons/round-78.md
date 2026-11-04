@@ -180,3 +180,26 @@ the frozen plan specifies; `at` names the sealed revision and each `old` re-deri
 
 The L1 integrates the wave's attack findings into this section after the wave settles;
 this seat files no attack of its own and pre-judges nothing.
+
+**L1 integration (2026-11-04).** Nine of the twelve seats returned empty; their landed files are
+used only where they re-derive. No attack seat certified: the reviewer's receipts (independent
+sealed/base derivations, the three exempt-head events' sections) agree with the counters, the
+mutation seat wrote nothing, and the critic seats wrote nothing. The L1 therefore ran the three
+frozen commands, the do-nothing controls against the base receipts, the eight C1 arms, the seven
+C2 arms and the four C3 arms, and the pre-report gate; those receipts are the round's evidence.
+A certification of the kind MT01 owes is **not claimed** — the closure's non-author pass remains
+the authority.
+
+## Post-data correction — F2's derivation subject (2026-11-04, L1 integration)
+
+The C1 counter's F2 derivation read the **worktree** `SCORECARD.md` while every other fact is read
+at the revision it names. This round's own record commit adds three capability rows, so at the tip
+F2 printed `capabilities=37/max-round=78` and the counter reported `mismatches=1` — a fact the round
+itself had refuted. F2's subject is the round-77 record's canonical table (what §C1 names, and how
+F1/F3–F6 are already read); the derivation was corrected to read `git show <sealed>:SCORECARD.md`
+and the reason is in the code comment. `PREDICATE`, the frozen target, the four correction blocks
+and the eight selftest arms are unchanged and the arms stay green (`pass=8 fail=0`). Disclosed
+because it changes a graded derivation after data: C1's tip re-derivation depends on this
+correction, and the fact-to-revision map is now uniform. Receipts: the pre-correction tip run
+exited 1 (`mismatches=1 F2`); `measured/after/c1-facts-tip.out` at `rev=381b53dc` prints the frozen
+line, exit 0.
