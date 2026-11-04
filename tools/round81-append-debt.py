@@ -41,6 +41,13 @@ introduction for a row whose blame line cannot be resolved. Every other rule sen
 three selftest arms (`row-intro-later`, `row-intro-earlier`, `row-intro-unbound`) prove the row-level
 reading and the first one fails under the old register-level resolution.
 
+ROUND-83 PATH-BINDING: a caller-supplied --late path is resolved inside the repository working
+tree and must be committed at the audited revision. Its file and row introductions are resolved
+there before the unchanged grade rule runs. Relative paths are relative to --repo; outside,
+untracked, or unresolvable row identities refuse evaluation (exit 2), not per-row verdicts.
+The arms late-path-outside-repo, late-path-untracked, and late-path-bound cover these bindings
+and equality with default-path grading.
+
 Usage: round81-append-debt.py --repo DIR [--round N] [--base REV] [--to REV]
        [--register FILE] [--late FILE] [--audit-json FILE] [--json] | --selftest
 
@@ -55,6 +62,7 @@ import json
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 HEADER = "commit\tfile\tline_sha256\tcount\tclass\tnote"
@@ -354,6 +362,97 @@ def blame_rows(repo: Path, rev: str, path: str) -> dict[int, str]:
     return rows
 
 
+def load_late(repo: Path, rev: str, requested: str | None):
+    """Read the late register and bind its committed file and row identities."""
+    path = LATE
+    if requested is not None:
+        root = Path(git(repo, "rev-parse", "--show-toplevel").strip()).resolve()
+        supplied = Path(requested)
+        resolved = (supplied if supplied.is_absolute() else repo / supplied).resolve()
+        try:
+            path = resolved.relative_to(root).as_posix()
+        except ValueError as exc:
+            raise CouldNotEvaluate("--late path is outside the repository") from exc
+        git(repo, "cat-file", "-e", f"{rev}:{path}")
+        text = resolved.read_text(encoding="utf-8")
+    else:
+        text = show(repo, rev, path)
+    if text is None:
+        return HEADER + "\n", None, None
+    intro = introduction(repo, rev, path)
+    if intro is None:
+        raise CouldNotEvaluate(f"cannot resolve {path}'s introduction commit")
+    marks = blame_rows(repo, rev, path)
+    if requested is not None:
+        for row in parse_register(text, "late register"):
+            if row[-1] not in marks:
+                raise CouldNotEvaluate(f"cannot resolve {path} line {row[-1]}'s introduction")
+    return text, intro, marks
+
+
+def late_path_selftests():
+    """Exercise the production path binder in a disposable, two-commit repository."""
+    cases = []
+
+    def record(name, ok):
+        cases.append((name, {"summary": {"unaccepted": 0 if ok else 1, "bad_rows": 0,
+                                         "bad_declarations": 0, "out_of_population": 0}},
+                      0, None))
+
+    with tempfile.TemporaryDirectory(prefix="append-debt-path-") as directory:
+        scratch = Path(directory).resolve()
+        repo = scratch / "repo"
+        repo.mkdir()
+        git(repo, "init", "-q")
+        if Path(git(repo, "rev-parse", "--show-toplevel").strip()).resolve() != repo:
+            raise CouldNotEvaluate("selftest repository root mismatch")
+        register = repo / LATE
+        register.parent.mkdir()
+        register.write_text(HEADER + "\n", encoding="utf-8")
+        git(repo, "add", "--", LATE)
+        git(repo, "-c", "user.name=probe", "-c", "user.email=p@p",
+            "commit", "-qm", "round-80 event")
+        event_commit = git(repo, "rev-parse", "HEAD").strip()
+        digest = "1" * 64
+        register.write_text(HEADER + "\n" + "\t".join(
+            (event_commit, "SCORECARD.md", digest, "1", "in-place-edit",
+             "round-81 accepts round-80 subject; accepted history")) + "\n", encoding="utf-8")
+        git(repo, "add", "--", LATE)
+        git(repo, "-c", "user.name=probe", "-c", "user.email=p@p",
+            "commit", "-qm", "round-81 acceptance")
+        rev = git(repo, "rev-parse", "HEAD").strip()
+        outside = scratch / "outside.tsv"
+        outside.write_text(register.read_text(encoding="utf-8"), encoding="utf-8")
+        untracked = repo / "untracked.tsv"
+        untracked.write_text(register.read_text(encoding="utf-8"), encoding="utf-8")
+        for name, path in (("late-path-outside-repo", str(outside)),
+                           ("late-path-untracked", str(untracked))):
+            refused = False
+            try:
+                load_late(repo, rev, path)
+            except CouldNotEvaluate:
+                refused = True
+            record(name, refused)
+        default = load_late(repo, rev, None)
+        bound = load_late(repo, rev, LATE)
+        event = _event(event_commit, "SCORECARD.md", digest, 1, "in-place-edit")
+        events = {(event_commit, "SCORECARD.md"): event}
+
+        def evaluate(loaded):
+            text, intro, marks = loaded
+            return grade(events, [], parse_register(text, "late register"),
+                         graded_keys=set(events), frozen_precedes=lambda c: False,
+                         late_intro=intro,
+                         row_intro=marks.get if marks is not None else None,
+                         is_strict_descendant=lambda e, r: e != r and is_ancestor(repo, e, r))
+
+        result = evaluate(bound)
+        record("late-path-bound", bound == default and bound[1] == event_commit
+               and bound[2].get(2) == rev and result == evaluate(default)
+               and verdict(result) == 0 and result["summary"]["late"] == 1)
+    return cases
+
+
 # ---------------------------------------------------------------- selftest
 
 def _event(commit, file, digest, count, klass, status="unrestored"):
@@ -492,6 +591,7 @@ def selftest() -> int:
             desc=lambda e, r_: r_ == later,
             row_marks=lambda n: None)
     cases.append(("row-intro-unbound", r, 1, "unbound-register"))
+    cases.extend(late_path_selftests())
 
     fail = 0
     for name, result, want_exit, want_class in cases:
@@ -559,17 +659,7 @@ def main(argv=None):
         frozen_intro = None if args.register else introduction(repo, to, REGISTER)
         if not args.register and frozen_intro is None:
             raise CouldNotEvaluate(f"cannot resolve {REGISTER}'s introduction commit")
-        late_text = (Path(args.late).read_text(encoding="utf-8") if args.late
-                     else show(repo, to, LATE))
-        late_intro = None
-        row_marks = None
-        if late_text is None:
-            late_text = HEADER + "\n"
-        elif not args.late:
-            late_intro = introduction(repo, to, LATE)
-            if late_intro is None:
-                raise CouldNotEvaluate(f"cannot resolve {LATE}'s introduction commit")
-            row_marks = blame_rows(repo, to, LATE)
+        late_text, late_intro, row_marks = load_late(repo, to, args.late)
 
         frozen_rows = parse_register(register_text, "frozen register")
         late_rows = parse_register(late_text, "late register")
