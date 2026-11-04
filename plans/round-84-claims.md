@@ -49,9 +49,13 @@ prints exactly one `APPEND_DEBT_FINDING note-wrong-deletion-round` line and exit
   `round83-selfrecord-round82.py`, `round83-pin-rechecks.py` (kind, entry command, exit map, selftest,
   pinned values, write scope, owner kama) and for the round-84 instruments this round lands.
 - **Red-before (able to fail):** at the freeze tree, counter B against the committed fixture under the
-  pre-fix tool prints `bad_rows=0` and **exit 0** — the mis-noted row is accepted; receipt
+  pre-fix tool prints `bad_rows=0` — the mis-noted row (`round-81 accepts round-78` over a round-79
+  event) produces **no finding at all** and is accepted; the run's only finding is the unrelated
+  `count-short` for the not-yet-accepted round-83 event (`unaccepted=1`, exit 1); receipt
   `.ufo/waves/round-84/measured/before/red-debt-fixture.out` (pre-fix). After the fix the same command
-  exits 1 naming `note-wrong-deletion-round` (receipt `measured/after/…`).
+  prints exactly one `note-wrong-deletion-round` finding (receipt `measured/after/…`). [Freeze
+  amendment 1, before any seat scored: the bullet first predicted `exit 0`; the actual pre-fix exit is
+  1 via that unrelated `unaccepted=1`. The binding predicate sentence above is unchanged.]
 - **Do-nothing control (committed before data):** `.ufo/waves/round-84/measured/before/ctl-gate.out` —
   the gate at the freeze tree prints `arms=12` (arm 13 absent), `failed>=2` (debt `bad_rows=10`; the
   closure-pointer arm), exit 1: no-work cannot reach `arms=13 failed=0`.
