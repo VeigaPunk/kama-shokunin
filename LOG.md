@@ -3594,8 +3594,9 @@ accept the four round-84/85 SCORECARD in-place events (`3e93febb`, `65665250` tw
 `c0d7fbd8`, `948dec78`), each row naming its commit subject and the deletion round it accepts;
 `APPEND_DEBT round=86` then reports unaccepted0/bad_rows0.
 
-Round-86 terminal measurement at `bafae7afb41843564ac2468d28beb8e0bb98e8e6` (clean tree, this Linux
-host): C1 `RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1` exit0, selftest 17/0,
+Round-86 terminal measurement at `239a8f39e33e252a44bb16c7202de6cd674f4614` (clean tree, this Linux
+host): C1 `RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1 newest_gate=86
+newest_closure=85` exit0, selftest 17/0,
 `RENDERED_CELLS_MUTANTS mutants=10 killed=10 escaped=0`; C2 `DEBT_MUTANT_OWNERS mutants=5 killed=5
 escaped=0 invalid=0 arms=34 cardinality=ok owners=5/5` exit0 with pristine `APPEND_DEBT_SELFTEST
 pass=34 fail=0`, selftest 13/0; C3 `PIN_ORIGIN rows=5 verified=5 mismatch=0 unreachable=0 bad=0`
