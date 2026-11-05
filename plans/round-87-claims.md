@@ -127,3 +127,15 @@ Writes only under `/home/vgpnk/Projects/shokunin/kama-shokunin`, plus the fleet-
 appends. No edits to MANIFEST.json, templates/, scripts/, .ufo/state/, the watchdog log, sibling repos or
 `/home/vgpnk/Projects/shokuknow`. `considerthese/` is read-only. Seats never commit, never push, and never run a
 mutating git or jj command.
+
+## Amendment A1 — pre-data, before any L1 measurement of a successor or the gate arm (2026-11-05)
+
+Added after wave-1 reviewer and battery evidence (`.ufo/waves/round-87/w1/RV01PlanFreezeReview.md`, `.ufo/waves/round-87/w1/out/MT01SelectorBattery/`) and before the L1 scores any candidate. Nothing below changes a predicate that a candidate has been scored against.
+
+- **R5 (all-revisions rule, closes probe P-C).** Every 40-hex revision token in the gate authority paragraph must be the revision that the cited receipt names; a second revision token, with or without a receipt, is a mismatch. R5 is required by predicate 2 (`escapes=0`), which P-C defeats under R1–R4 alone (MT01 M7 escapes).
+- **CommonMark citations stand.** The reviewer's claim that the closer shape is §4.6 is refuted by the fetched text: `.ufo/waves/round-87/w1/out/SC01SourceOpen/fetched-4.5.txt:4` carries "The closing code fence may be preceded by up to three spaces of indentation, and may be followed only by spaces or tabs" inside the `#fenced-code-blocks` section (§4.5). Rule R1 cites §4.5 for the closer and §5.2 for list-item content.
+- **C2 harm-rule step (counting command, closes RV01 R1).** The harm rule is measured as a set difference of the `PRE_REPORT_ARM … ok` names at the base revision `362b0d4a` (the cell-state of `controls/c2-gate-before.out`, re-run at the base with the same tree) and at `R`: `comm -23 <(grep -oE 'PRE_REPORT_ARM [^ ]+ exit=0 ok' base.out | sort) <(grep -oE 'PRE_REPORT_ARM [^ ]+ exit=0 ok' R.out | sort)` must print nothing. The arm count is `grep -oE 'arms=[0-9]+' R.out` = `arms=14`.
+- **R4 population diff (closes RV01 R2).** The successor's population docstring block must match the round-86 block byte-for-byte: `diff <(sed -n '/^Population/,/^Output:/p' tools/round86-rendered-cells.py) <(sed -n '/^Population/,/^Output:/p' tools/round87-rendered-cells.py)` prints nothing. Any difference is a population change, which this claim does not allow.
+- **Residual, disclosed (not closed here).** CR01 found that a selector hard-coding the three fixture texts satisfies predicates 1 and 2 as written. Predicates are not widened after data; the residual is reported and routed to round 88 as a frozen amendment with an unseen probe family.
+
+Predicate 2 remains `C1_PROBES probes=3 escapes=0 control=red`; the counting commands in the claim sections are otherwise unchanged.
