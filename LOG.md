@@ -3624,3 +3624,18 @@ now stated here: they are the round's own post-base in-place edits at `67eddac8`
 acceptance window rather than accepted. The 15 late rows bind `3e93febb` (1), `65665250` (12),
 `c0d7fbd8` (1) and `948dec78` (1); all 129 late-register rows re-derive their `line_sha256` from the
 event commits' parent/child diffs (129/129, no borrowed row).
+
+Round-86 outcome: **honest stop, not admitted.** C2 and C3 verify on their frozen predicates; C3 carries
+a disclosed origin limit (the fetched URL is the anchor header's own `url=`, the row's `ref`/`engine`
+columns are not read — w3 `SB01SectionDraft` F7, code-confirmed). C1's numeric target is met
+(`RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1 newest_gate=86`) but the instrument
+is falsified against its own predicate by two reproduced false greens: a `- ```` `` line was accepted as a
+closing fence so a stale rendered cell is read as live (CommonMark 0.31.2 §4.5, checked with
+`cmark -t xml`; fixture `w3/out/SB01SectionDraft/probes/P-A-list-marker-fence.md`), and the disposition
+oracle took the first fixed-order word anywhere in the closure body. Frozen counter and instrument bytes
+are not patched after scoring; both repairs are routed to round 87 plan item 7, the unarmed rules to
+item 4, the unparseable-ARMS and forged-subject classes to item 5 and `corpus/QUALITY.md` KQ140. The
+terminal measurement receipts and the three-claim numbers stand as measured; what fails is the
+predicate implementation, and the round reports that rather than filing a numeric-green admission.
+No axis is harmed: the gate is green (13/13), the two live cells are repaired, and the repertoire gained
+three capabilities with their limits stated.

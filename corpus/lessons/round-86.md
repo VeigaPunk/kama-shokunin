@@ -162,3 +162,25 @@ makes the committed CLI print the exact frozen target line, exit 0. Consistency 
 *sufficient*, not necessary, for escape. Captured-by: KQ140. Fix: routed to round 87 item 5 — unparseable
 ARMS is a declared-population violation, and the target line carries a source-identity witness. Not
 repaired this round: the counter is frozen and the claim is scored on it.
+
+**M9 — a closing fence was recognised wherever an opening fence would be.** Class: grammar
+conformance. Evidence: `.ufo/waves/round-86/w3/out/SB01SectionDraft/` — fixture
+`probes/P-A-list-marker-fence.md` (top-level ```` ```markdown ```` fence whose content includes a
+`- ```` `` line), `cmark -t xml` shows lines 4–8 as one `code_block` and the *rendered* cells stale,
+while `tools/round86-rendered-cells.py:66-68,180-184` lets `CONTAINER` match on the closer and ends the
+fence early, so the in-fence cells are read as live. L1 reproduction: `RENDERED_CELLS … gate declared
+round=85 …` on the fixture commit (scratch, not citable; fixture and script committed). Captured-by:
+the predicate's own word "rendered (fence- and comment-free)" plus KQ139's arm-per-rule rule — the
+`h-container-off` mutant only disables the *opener* path and no arm holds a list-marked closer.
+Consequence: **C1 is not verified for round 86**; score unchanged, honest stop. Fix: routed to round 87
+plan item 7 (CommonMark §4.5 closer rule, with an arm whose subject is the closer).
+
+**M10 — the disposition oracle read the first fixed-order word in the closure body.** Class:
+oracle scope. Evidence: `tools/round86-rendered-cells.py:83,265-269,331-338` — `DISPOSITIONS` order
+puts `rejected-harmed` first, so a body that mentions another round's rejection makes the tool expect
+`rejected-harmed`; a row naming `round85 rejected-harmed` then grades `disposition=1`. Reproduced by the
+L1 on a fixture whose round-85 closure gains one sentence and whose calibration row renames the word
+(scratch `/fast/scratch/hyaku/kama-r86/l1/f2`, deleted; the mechanism is one code read). The live
+closure carries no `rejected-harmed` (count 0), so the committed number is unaffected — the class is.
+Captured-by: KQ133 ("the token is the receipt's own token") applied to the closure's verdict line.
+Fix: routed to round 87 plan item 7 (read the verdict line, not the body at large).
