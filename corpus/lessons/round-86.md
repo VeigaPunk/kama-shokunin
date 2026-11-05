@@ -137,3 +137,28 @@ lane already held, they do not open new province ground.
 - C3 proves documentary origin at fetch time; it does not prove that the row's *verdict* word
   (`holds`/`moved`/`drifted`) is the right one for a semantic change — that stays the declarer's
   judgment, and the counter only re-derives byte equality.
+
+## Mistakes mined by the w3 terminal wave (2026-11-05)
+
+**M7 — an arm guards only the rule that is its declared subject.** Class: control attribution. Evidence:
+`.ufo/waves/round-86/w3/out/MT01SelectorMutants/findings.md` §3–6 — mutant `MD` (the authority token
+moved to a *separate* rendered paragraph) and mutant `ME` (a later duplicate calibration row accepted)
+each print the exact target line, because no arm places its subject at the paragraph-coupling or
+row-first-wins rule; `MC` (authority first-wins) is killed only because the arm `backtick-info-not-a-fence`
+happens to render a correct banner before a stale one, and removing that one arm (same finding §5, `MC2`)
+lets it escape; probe `P1` shows the frozen clause "inside the first `## Axes` section" is not enforced
+at all. Captured-by: KQ139 ("the subject must enter the population the arm tests"), which the delivered
+battery satisfies for the constructs it names and not for these four rules. Fix: routed to
+`SCORECARD.md` §Planned (round 87) item 4 — one arm per rule, each shown red for its own mutant. Shown
+able to fail: the pristine tool is red on each probe (`P2`, `P1` inputs) while the mutant is green, so
+the arms are constructible and their absence is measurable.
+
+**M8 — a guard line the consumer cannot parse is an absent guard.** Class: grammar coverage. Evidence:
+`.ufo/waves/round-86/w3/out/MT02ForgeryArms/findings.md` §1(b)–(c) — probes `b3`, `b6`, `b9` and `c2`
+escape by printing `APPEND_DEBT_SELFTEST_ARMS` in a shape outside the frozen regex, so every
+reconciliation clause silently stops applying while the run looks green; and `F_forged_green.py` (a
+subject with 30 distinct arms, four deleted, owning FAIL lines string-matched from its own source)
+makes the committed CLI print the exact frozen target line, exit 0. Consistency is therefore
+*sufficient*, not necessary, for escape. Captured-by: KQ140. Fix: routed to round 87 item 5 — unparseable
+ARMS is a declared-population violation, and the target line carries a source-identity witness. Not
+repaired this round: the counter is frozen and the claim is scored on it.

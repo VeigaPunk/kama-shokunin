@@ -3615,3 +3615,12 @@ rows / A304 / B11 / C4 / mined286 / rejected25, final line `kama ok
 mutation-tester, 2 executor, 1 critic, 1 scribe, 1 scout, 1 sentinel, 1 connector; attack share 6/12)
 was dispatched at `bafae7afb41843564ac2468d28beb8e0bb98e8e6` through the inline handoff to attack the
 terminal record; settlement is recorded below once it lands.
+
+Append-only debt disclosure for the round-86 record (w3 `EX02GateCensus` item 2, `SB01SectionDraft`
+B): `APPEND_DEBT round=86 base=3ff23da3f291 events=80 accepted=53 late=27 pending=3 unaccepted=0
+bad_rows=0 bad_declarations=0 out_of_population=0`, exit0. The `pending=3` counter is printed and is
+now stated here: they are the round's own post-base in-place edits at `67eddac8`, `c5a32443` and
+`bafae7af` (banner, calibration-planned block, banner cell rewrite), correctly outside the frozen
+acceptance window rather than accepted. The 15 late rows bind `3e93febb` (1), `65665250` (12),
+`c0d7fbd8` (1) and `948dec78` (1); all 129 late-register rows re-derive their `line_sha256` from the
+event commits' parent/child diffs (129/129, no borrowed row).
