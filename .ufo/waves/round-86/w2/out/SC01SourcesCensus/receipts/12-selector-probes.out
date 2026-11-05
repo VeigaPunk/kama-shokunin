@@ -1,0 +1,24 @@
+# Selector behaviour probes against the committed instrument (read-only, in-memory fixtures)
+# tool: tools/round86-rendered-cells.py at 67eddac89f44e768b670301ea0feff06e766f32d
+# these probes measure the instrument's own selector; they do not modify any file
+A) live authority cell indented 0..4 spaces (S579 teaches: column-0 selection):
+   indent=0 -> RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1 newest_gate=85 newest_closure=85
+   indent=1 -> could-not-evaluate: no rendered top-level Current authority cell
+   indent=2 -> could-not-evaluate: no rendered top-level Current authority cell
+   indent=3 -> could-not-evaluate: no rendered top-level Current authority cell
+   indent=4 -> could-not-evaluate: no rendered top-level Current authority cell
+
+B1) live cell CONTAINING an inline <!-- ... --> on the same line:
+   -> RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1 newest_gate=85 newest_closure=85
+B2) live cell wrapped in a <!-- --> block whose line begins with <!-- (CommonMark 4.6 shape):
+   -> could-not-evaluate: no rendered top-level Current authority cell
+
+C) 4-space copy of the live cell right AFTER a paragraph line (4.4: indented code cannot interrupt a paragraph):
+   -> could-not-evaluate: no rendered top-level Current authority cell
+D) 4-space copy after a BLANK line (a real indented code block):
+   -> could-not-evaluate: no rendered top-level Current authority cell
+E) fence opened at column 0 containing the live cell (CommonMark 4.5 shape):
+   -> could-not-evaluate: no rendered top-level Current authority cell
+
+F) CommonMark 4.4 exception, quoted from the live spec:
+    spaces of indentation. An indented code block has no info string . An indented code block cannot interrupt a paragraph, so there must be a blank line between a paragraph and a following indented code block. (A blank line is not needed, however, between a code 

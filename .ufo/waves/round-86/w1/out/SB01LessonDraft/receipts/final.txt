@@ -1,0 +1,103 @@
+# SB01LessonDraft — consolidated receipt set (final)
+# lane /home/vgpnk/Projects/shokunin/kama-shokunin ; seat scratch /fast/scratch/hyaku/kama-r86/SB01LessonDraft
+# PINNED measured revision (master) = c5a324430fb0ef04dc9d886f997d7cdacc083f7b   [the L1 was still committing; this is the exact revision measured]
+# date 2026-11-04 ; every command read-only against the lane ; no production file written
+# python3 3.14.8 ; git 2.56.0 ; curl 8.23.0 ; no tool installed or updated
+
+=== 1. frozen counter (.ufo/waves/round-86/count.py, byte-identical to the freeze commit) at the pinned tip ===
+
+$ python3 .ufo/waves/round-86/count.py c1 --repo . --rev c5a324430fb0ef04dc9d886f997d7cdacc083f7b --work <scratch>/c1
+exit=0
+--- stdout ---
+RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1 newest_gate=85 newest_closure=85
+--- stderr (empty) ---
+
+$ python3 .ufo/waves/round-86/count.py c2 --repo . --rev c5a324430fb0ef04dc9d886f997d7cdacc083f7b --work <scratch>/c2
+exit=0
+--- stdout ---
+DEBT_MUTANT_OWNERS mutants=5 killed=5 escaped=0 invalid=0 arms=34 cardinality=ok owners=5/5
+DEBT_MUTANT_OWNER M2 owner=note-deletion-equals-subject verdict=killed owning failure line present (1 FAIL lines)
+DEBT_MUTANT_OWNER M3 owner=note-deletion-above-subject verdict=killed owning failure line present (1 FAIL lines)
+DEBT_MUTANT_OWNER M4 owner=note-subject-exact-summary verdict=killed owning failure line present (2 FAIL lines)
+DEBT_MUTANT_OWNER M5 owner=arm-count verdict=killed arms=33 != expected=34
+DEBT_MUTANT_OWNER M6 owner=summary-cardinality verdict=killed summary pass+fail=0 != arms=34
+DEBT_MUTANT_OWNER_PRISTINE APPEND_DEBT_SELFTEST pass=34 fail=0
+--- stderr (empty) ---
+
+$ python3 .ufo/waves/round-86/count.py c3 --repo . --rev c5a324430fb0ef04dc9d886f997d7cdacc083f7b --work <scratch>/c3
+exit=0
+--- stdout ---
+PIN_ORIGIN rows=5 verified=5 mismatch=0 unreachable=0 bad=0
+PIN_ORIGIN_ROW llama.cpp/b11755 verdict=verified anchors=2/2 corpus/anchors/llamacpp-b11755-health.txt: upstream 478-490 byte-identical; corpus/anchors/llamacpp-b12111-health.txt: upstream 479-491 byte-identical
+PIN_ORIGIN_ROW llama.cpp/39febd2adb947b70da35e95f9351b3bf58ad170a verdict=verified anchors=2/2 corpus/anchors/llamacpp-39febd2a-router.txt: upstream 2197-2204 byte-identical; corpus/anchors/llamacpp-b12111-router.txt: upstream 2199-2206 byte-identical
+PIN_ORIGIN_ROW llama.cpp/b7200 verdict=verified anchors=2/2 corpus/anchors/llamacpp-b7200-health.txt: upstream 403-415 byte-identical; corpus/anchors/llamacpp-b12111-health.txt: upstream 479-491 byte-identical
+PIN_ORIGIN_ROW sglang/v0.5.22 verdict=verified anchors=2/2 corpus/anchors/sglang-v0.5.22-health.txt: upstream 108-111 byte-identical; corpus/anchors/sglang-v0.5.23-health.txt: upstream 108-113 byte-identical
+PIN_ORIGIN_ROW vllm/v0.32.0 verdict=verified anchors=2/2 corpus/anchors/vllm-v0.32.0-prefix-caching.txt: upstream 1-6 byte-identical; corpus/anchors/vllm-v0.33.0-prefix-caching.txt: upstream 1-6 byte-identical
+--- stderr (empty) ---
+
+=== 2. FROZEN instrument bytes (c07e1f90 = the freeze commit) run against the pinned tip ===
+-- 2a. frozen C2 instrument at the pinned tip (this is the round-85 survivor class re-tested) --
+exit=1
+DEBT_MUTANT_OWNERS mutants=5 killed=4 escaped=1 invalid=0 arms=34 cardinality=ok owners=4/5
+DEBT_MUTANT_OWNER M2 owner=note-deletion-equals-subject verdict=killed owning failure line present (1 FAIL lines)
+DEBT_MUTANT_OWNER M3 owner=note-deletion-above-subject verdict=killed owning failure line present (1 FAIL lines)
+DEBT_MUTANT_OWNER M4 owner=note-subject-exact-summary verdict=killed owning failure line present (2 FAIL lines)
+DEBT_MUTANT_OWNER M5 owner=arm-count verdict=killed arms=33 != expected=34
+DEBT_MUTANT_OWNER M6 owner=summary-cardinality verdict=escaped green summary
+DEBT_MUTANT_OWNER_PRISTINE APPEND_DEBT_SELFTEST pass=34 fail=0
+-- 2b. frozen C1 instrument at the pinned tip --
+exit=0
+RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1 newest_gate=85 newest_closure=85
+-- 2c. frozen C1 selftest at the pinned tip: the round-85 shadow arms stay red --
+exit=0
+RENDERED_CELLS_SELFTEST_PASS fenced-shadow RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0 newest_gate=85 newest_closure=85
+RENDERED_CELLS_SELFTEST_PASS comment-shadow RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0 newest_gate=85 newest_closure=85
+RENDERED_CELLS_SELFTEST_PASS tilde-fence-shadow RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0 newest_gate=85 newest_closure=85
+RENDERED_CELLS_SELFTEST_PASS indent-shadow RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0 newest_gate=85 newest_closure=85
+RENDERED_CELLS_SELFTEST_PASS unclosed-fence-fails-closed could-not-evaluate: no rendered top-level calibration row inside ## Axes
+RENDERED_CELLS_SELFTEST pass=11 fail=0
+-- 2d. frozen C3 instrument at the pinned tip --
+exit=0
+PIN_ORIGIN rows=5 verified=5 mismatch=0 unreachable=0 bad=0
+
+=== 3. committed after-receipts: do they byte-reproduce at the pinned tip? ===
+  after/c1.out  REPRODUCES byte-for-byte
+  after/c2.out  *** DOES NOT REPRODUCE ***
+      7c7
+      < DEBT_MUTANT_OWNER_PRISTINE APPEND_DEBT_SELFTEST pass=34 fail=0
+      ---
+      > DEBT_MUTANT_OWNER_PRISTINE APPEND_DEBT_SELFTEST pass=34 fail=0 arms=34
+  after/c3.out  REPRODUCES byte-for-byte
+
+=== 4. the committed after/c2.out reproduces ONLY at rev 67eddac8, with the instrument as it then stood ===
+  instrument@c5d71b7a rev=67eddac8 -> REPRODUCES  [DEBT_MUTANT_OWNERS mutants=5 killed=5 escaped=0 invalid=0 arms=34 cardinal]
+  instrument@c5d71b7a rev=c5d71b7a -> differs  [DEBT_MUTANT_OWNERS mutants=5 killed=4 escaped=1 invalid=0 arms=34 cardinal]
+  instrument@c5d71b7a rev=1bfcd49f -> differs  [DEBT_MUTANT_OWNERS mutants=5 killed=4 escaped=1 invalid=0 arms=34 cardinal]
+  instrument@c5d71b7a rev=c5a324430fb0ef04dc9d886f997d7cdacc083f7b -> differs  [DEBT_MUTANT_OWNERS mutants=5 killed=4 escaped=1 invalid=0 arms=34 cardinal]
+
+=== 5. revision headers on the round-86 after-receipts (round-85 comparison) ===
+  round-86 after/c1.out  rev_header_lines=0
+  round-86 after/c2.out  rev_header_lines=0
+  round-86 after/c3.out  rev_header_lines=0
+  round-86 after/c1-selftest.out  rev_header_lines=0
+  round-86 after/c2-selftest.out  rev_header_lines=0
+  round-86 after/c3-selftest.out  rev_header_lines=0
+  round-85  after/c1.out  rev_header_lines=1
+
+=== 6. live document reads (read-only GET on the public URLs the rows name) ===
+  curl -sS --max-time 30 https://spec.commonmark.org/0.31.2/  -> http=200 bytes=514698 exit=0
+  sha256(commonmark-0312.html) = c85f56cc2101f761cc94215c677cd2c7c1ecca9c47be016479fdfe718af60f0d
+  located in the fetched page: id="atx-headings" (S576), id="fenced-code-blocks" (S578), id="indented-code-blocks" (S579)
+
+=== 7. upstream anchor re-read (9 committed extracts, 8 distinct upstream documents, all HTTP 200) ===
+  (full table in anchor-upstream-recheck.txt; all_9_anchors_digest_and_byte_match=True)
+
+=== 8. round-69 newest-closure counter (the round-number-resolution reason) ===
+exit=2
+COULD_NOT_EVALUATE closure round-10-verifier-spotcheck.md carries no parsable ISO date (no date: field, none in a heading, none in the body)
+
+=== 9. sources census validate ===
+  bash scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama -> exit 0
+  final line: kama ok /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md (W01/W04 warnings unchanged)
+
+  (anchor recheck table: receipts/anchor-upstream-recheck.txt; all_9_anchors_digest_and_byte_match=True)
