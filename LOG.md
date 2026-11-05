@@ -3552,7 +3552,8 @@ paragraph and the calibration row only from rendered text (HTML comments, backti
 banner names the newest terminal gate receipt with its revision, command and receipt bytes; the row
 names the newest committed verifier spotcheck by highest round number; the row names that closure's
 disposition. Before `mismatches=3` (`.ufo/waves/round-86/measured/before/c1.out`, exit1); after
-`mismatches=0` exit0. Selftest 11/0 with the round-85 false green as a red arm.
+`mismatches=0` exit0. Selftest 17/0 at the terminal tree (11/0 at the freeze; the w2 falsification
+added six arms) with the round-85 false green as a red arm.
 
 C2 operability — owning arms and summary cardinality. `tools/round86-mutant-owners.py` maps five
 mutants to declared owning arms and reconciles each completed summary with its arm population and
@@ -3579,7 +3580,8 @@ could name an ancestor that never carried it (fixtures f1/f4); the instrument no
 `git show R:path` and the arm `revision-carries-no-receipt` holds it. w2 `MT01SelectorMutants` proved
 the four `*-shadow` arms were vacuous — the stale live cell was emitted first, so a selector with
 fence, comment, correction or column-0 exclusion disabled still passed, and five source mutants
-survived; the fixture now emits the shadow first and 7/7 source mutants are killed by named arms
+survived; the fixture now emits the shadow first, the selector gained container-fence and
+backtick-info rules, and 10/10 source mutants are killed by named arms
 (`.ufo/waves/round-86/measured/after/c1-mutants.out`). w2 `EX02GateArms` proved the C2 commit had
 turned frozen gate arm 11 red by extending the debt selftest's summary line; the summary keeps its
 round-81 shape and the arm population rides the `APPEND_DEBT_SELFTEST_ARMS` line. w2

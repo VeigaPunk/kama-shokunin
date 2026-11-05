@@ -5268,8 +5268,8 @@ assigned axis. No axis score is claimed to move; three capabilities enter the re
 
 | Claim / axis | Before → after | Counting command | Evidence |
 |---|---|---|---|
-| C1 calibration — rendered-cell identity of the live self-assessment cells | `RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0` exit1 → `RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1` exit0; selftest 14/0 (11 before the w2 repair), 7 source mutants each killed by a named arm | `python3 .ufo/waves/round-86/count.py c1 --repo . --rev <measured> --work <scratch>` | `.ufo/waves/round-86/measured/before/c1.out`, `.ufo/waves/round-86/measured/after/c1.out`, `.ufo/waves/round-86/measured/after/c1-selftest.out`, `.ufo/waves/round-86/measured/after/c1-mutants.out` |
-| C2 operability — every declared mutant maps to an owning arm; summary reconciles | `DEBT_MUTANT_OWNERS mutants=5 killed=3 escaped=2 invalid=0 arms=unknown cardinality=ok owners=3/5` exit1 → `mutants=5 killed=5 escaped=0 invalid=0 arms=34 cardinality=ok owners=5/5` exit0; selftest 10/0 | `python3 .ufo/waves/round-86/count.py c2 --repo . --rev <measured> --work <scratch>` | `.ufo/waves/round-86/measured/before/c2.out`, `.ufo/waves/round-86/measured/after/c2.out`, `.ufo/waves/round-86/measured/after/c2-selftest.out` |
+| C1 calibration — rendered-cell identity of the live self-assessment cells | `RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0` exit1 → `RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1` exit0; selftest 17/0 at the terminal tree (11/0 at the freeze), 10 source mutants each killed by a named arm | `python3 .ufo/waves/round-86/count.py c1 --repo . --rev <measured> --work <scratch>` | `.ufo/waves/round-86/measured/before/c1.out`, `.ufo/waves/round-86/measured/after/c1.out`, `.ufo/waves/round-86/measured/after/c1-selftest.out`, `.ufo/waves/round-86/measured/after/c1-mutants.out` |
+| C2 operability — every declared mutant maps to an owning arm; summary reconciles | `DEBT_MUTANT_OWNERS mutants=5 killed=3 escaped=2 invalid=0 arms=unknown cardinality=ok owners=3/5` exit1 → `mutants=5 killed=5 escaped=0 invalid=0 arms=34 cardinality=ok owners=5/5` exit0; selftest 13/0 | `python3 .ufo/waves/round-86/count.py c2 --repo . --rev <measured> --work <scratch>` | `.ufo/waves/round-86/measured/before/c2.out`, `.ufo/waves/round-86/measured/after/c2.out`, `.ufo/waves/round-86/measured/after/c2-selftest.out` |
 | C3 freshness — pin-recheck rows corroborated against live upstream bytes | `could-not-evaluate: no tools/round86-pin-origin.py at 3ff23da3…` exit2 → `PIN_ORIGIN rows=5 verified=5 mismatch=0 unreachable=0 bad=0` exit0; selftest 7/0 with a fabricated hash-consistent extract refused as `mismatch` | `python3 .ufo/waves/round-86/count.py c3 --repo . --rev <measured> --work <scratch>` | `.ufo/waves/round-86/measured/before/c3.out`, `.ufo/waves/round-86/measured/after/c3.out`, `.ufo/waves/round-86/measured/after/c3-selftest.out` |
 
 The wave falsified the instruments, not the predicates. Round-86 w1 reviewer fixtures f1/f4 showed the
@@ -5278,8 +5278,8 @@ instrument now reads `git show R:path` (arm `revision-carries-no-receipt`). Roun
 `MT01SelectorMutants` showed the four `*-shadow` arms were vacuous — the stale live cell came first, so
 a selector with fence, comment, correction or column-0 exclusion disabled still passed; the fixture now
 emits the shadow **first**, and `comment-shadow`, `correction-shadow`, `indent-shadow`,
-`indent-row-shadow` and `tilde-fence-shadow` each kill their own source mutant (receipt
-`.ufo/waves/round-86/measured/after/c1-mutants.out`). Round-86 w2 `EX02GateArms` found the C2 commit
+`indent-row-shadow` and `tilde-fence-shadow` each kill their own source mutant, and container-fence plus backtick-info rules close the two
+`RV01RenderedAttack` cases (receipt `.ufo/waves/round-86/measured/after/c1-mutants.out`, 10/10). Round-86 w2 `EX02GateArms` found the C2 commit
 had turned frozen gate arm 11 red by extending the debt selftest's summary line; the summary keeps its
 round-81 shape and the arm population rides the `APPEND_DEBT_SELFTEST_ARMS` line. The round also
 accepted the four round-84/85 append-only events in `registry/append-only-late.tsv` (15 rows), which
