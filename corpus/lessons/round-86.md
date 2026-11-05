@@ -99,6 +99,22 @@ The round-84 frozen plan (`plans/round-84-claims.md`) cites a red control at
 `3e93febb0f40955b08dc80367e8ef658eaccdfd6`). The frozen plan's bytes are not rewritten; this erratum
 is the correction of record. The round-84 C2 numeric predicate stays verified as filed.
 
+## Frontier and considerthese
+
+`considerthese/2026-10-26.md` proposal 3 ("keep a running count of counters that a shortcut can
+satisfy") is mined into `corpus/QUALITY.md` criterion **KQ139**: a control arm is admitted only when
+its subject sits inside the population the arm tests, and a summary-format change must be checked
+against every frozen consumer of that line. The proposal's reflection is a pointer, not evidence —
+the evidence is this round's own two findings (M3's vacuous `*-shadow` arms and M4's gate-arm/consumer
+coupling), both measured before the criterion was written. Proposals 1, 2 and 4 stay unimplemented
+and are not claimed this round.
+
+`Assimilation: none` — the `corpus-expansion-1` package at
+`/home/vgpnk/Projects/shokuknow/merge/kama/` was read read-only; no staged serving/cache/router theme
+fits three instrument repairs, so no entry, id or row is adopted. `corpus/README.md` §Frontier is
+unchanged by this round: the three instruments extend the self-assessment and origin surfaces the
+lane already held, they do not open new province ground.
+
 ## Open, not repaired
 
 - R84V1 (a frozen auxiliary disclosure instruction missed) stays an honest miss: no event-loss
