@@ -3593,3 +3593,24 @@ Append-only debt accepted (the inherited red gate arm): 15 rows in `registry/app
 accept the four round-84/85 SCORECARD in-place events (`3e93febb`, `65665250` twelve rows,
 `c0d7fbd8`, `948dec78`), each row naming its commit subject and the deletion round it accepts;
 `APPEND_DEBT round=86` then reports unaccepted0/bad_rows0.
+
+Round-86 terminal measurement at `bafae7afb41843564ac2468d28beb8e0bb98e8e6` (clean tree, this Linux
+host): C1 `RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1` exit0, selftest 17/0,
+`RENDERED_CELLS_MUTANTS mutants=10 killed=10 escaped=0`; C2 `DEBT_MUTANT_OWNERS mutants=5 killed=5
+escaped=0 invalid=0 arms=34 cardinality=ok owners=5/5` exit0 with pristine `APPEND_DEBT_SELFTEST
+pass=34 fail=0`, selftest 13/0; C3 `PIN_ORIGIN rows=5 verified=5 mismatch=0 unreachable=0 bad=0`
+exit0, selftest 7/0. Receipts `.ufo/waves/round-86/measured/terminal/` with argv/revision/exit record
+`commands.json`. Terminal gate measured at `0f8a09802fef5a311881db7ee26461a5d68158e7` (clean tree):
+`python3 tools/pre-report-gate.py --repo . --round 86 --tip master` printed `PRE_REPORT round=86
+arms=13 failed=0 uncommitted=0`, exit0, receipt `.ufo/waves/round-86/measured/terminal/gate.out`;
+the two transient reds seen while the receipt files themselves were untracked
+(`PRE_REPORT round=86 arms=13 failed=2 uncommitted=2` and `... failed=2 uncommitted=1`, both naming
+`round-scope` stray / `round-clean` on the untracked receipt paths) are recorded here and are not a
+gate result. The head authority banner now names this
+receipt; before, it named the round-85 receipt while a round-86 terminal receipt existed. Source
+census at round start (this attempt) `validate --root /home/vgpnk/Projects/shokunin kama` exit0, 319
+rows / A304 / B11 / C4 / mined286 / rejected25, final line `kama ok
+/home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md`. Wave w3 (12 seats: 3 reviewer, 2
+mutation-tester, 2 executor, 1 critic, 1 scribe, 1 scout, 1 sentinel, 1 connector; attack share 6/12)
+was dispatched at `bafae7afb41843564ac2468d28beb8e0bb98e8e6` through the inline handoff to attack the
+terminal record; settlement is recorded below once it lands.
