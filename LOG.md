@@ -3639,3 +3639,20 @@ terminal measurement receipts and the three-claim numbers stand as measured; wha
 predicate implementation, and the round reports that rather than filing a numeric-green admission.
 No axis is harmed: the gate is green (13/13), the two live cells are repaired, and the repertoire gained
 three capabilities with their limits stated.
+
+## Round 87 — gate composes the round-86 trio (C2 verified); successor selector honest stop (C1) (2026-11-05)
+
+Fresh-start round after the run-15 authorization (amendment 27). Freeze `94e8fe7b`
+(`plans/round-87-claims.md`, amendment A1 pre-data). Wave 1 (12 seats: 3 executor, 3 scout,
+2 mutation-tester, 1 reviewer, 1 critic, 1 scribe, 1 connector) under policy v1, one wave, no residual.
+
+- **C2 operability — verified.** `tools/pre-report-gate.py` arm 14 `round86-instruments` runs the three
+  round-86 selftests (`PRE_REPORT_ARM round86-instruments exit=0 ok`, `arms=14`); `tools/round87-gate-arm-faults.py`
+  prints `ARM14_FAULTS faults=3 killed=3 escaped=0` (exit 0), arm-absent control red. Receipts:
+  `.ufo/waves/round-87/c2-faults.out`, `.ufo/waves/round-87/c2-gate-after-pre-scorecard.out`.
+- **C1 calibration — honest stop.** Successor candidate (`.ufo/waves/round-87/w1/out/EX01SelectorRepair/`)
+  passes the frozen probe battery `escapes=0 control=red`; population diff vs round 86 non-empty, so not
+  admitted. Live round-86 counter: `mismatches=2` at base (`controls/c1-live-before.out`).
+- Calibration row corrected to the round-86 closure's observed disposition (SCORECARD §Axes, numeric score unchanged).
+- Freeze R86V1 strays committed; SOURCES row S580 added (`corpus/SOURCES.md`); lesson `corpus/lessons/round-87.md`.
+- Considerthese 2026-10-26 proposal 2 mined into KQ141 (lesson item, not implemented).

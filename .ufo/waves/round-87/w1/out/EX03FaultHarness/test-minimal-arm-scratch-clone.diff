@@ -1,0 +1,73 @@
+diff --git i/tools/pre-report-gate.py w/tools/pre-report-gate.py
+index 1d1171c2..5a12ffdf 100755
+--- i/tools/pre-report-gate.py
++++ w/tools/pre-report-gate.py
+@@ -258,7 +258,8 @@ ARM_SPECS = [
+ ]
+ ARM_ORDER = [name for name, _ in ARM_SPECS] + ["round-clean", "round74-v2",
+               "round75-instruments", "round77-instruments", "round78-instruments",
+-              "round81-instruments", "round82-instruments", "round83-instruments"]
++              "round81-instruments", "round82-instruments", "round83-instruments",
++              "round86-instruments"]
+ VERDICT_RE = {
+     "selfdesc": r"mismatches=\d+ met=(?:True|False)",
+     "newest-closure": r"(?:NEWEST_CLOSURE|STALE_CALIBRATION) ",
+@@ -345,6 +346,13 @@ ROUND83_MODULES = (
+     ("round83-pin-rechecks.py", "PIN_RECHECK_SELFTEST"),
+ )
+ 
++# Arm 14 `round86-instruments` (minimal, scratch clone only; round83 pattern).
++ROUND86_MODULES = (
++    ("round86-rendered-cells.py", "RENDERED_CELLS_SELFTEST"),
++    ("round86-mutant-owners.py", "DEBT_MUTANT_OWNERS_SELFTEST"),
++    ("round86-pin-origin.py", "PIN_ORIGIN_SELFTEST"),
++)
++
+ # Arm 10 `round78-instruments` (round 79): the three round-78 counters' own selftests, each
+ # required to end with its OWN summary prefix — a foreign instrument's summary must not
+ # certify this one, and a `fail=1` or truncated summary fails the arm closed.
+@@ -590,6 +598,36 @@ def _round83_instruments(tools_path: str, repo_path: str, depth: int = 0) -> dic
+     }
+ 
+ 
++def _round86_instruments(tools_path: str, repo_path: str, depth: int = 0) -> dict:
++    details: list[str] = []
++    commands: list[list[str]] = []
++    failed = False
++    for script_name, prefix in ROUND86_MODULES:
++        script = os.path.join(tools_path, script_name)
++        argv = [sys.executable, script, "--selftest"]
++        commands.append(argv)
++        if not os.path.isfile(script):
++            failed = True
++            details.append(f"missing {script_name}")
++            continue
++        code, text, error = _run(argv, repo_path, depth)
++        summary = _last_line(text)
++        ok = code == 0 and error is None and re.fullmatch(
++            rf"{prefix} pass=[0-9]+ fail=0", summary) is not None
++        failed = failed or not ok
++        reason = error or summary or "(no output)"
++        if code == 0 and not ok and error is None:
++            reason = f"missing valid final selftest summary: {reason}"
++        details.append(f"{script_name} exit={code} {'ok' if ok else 'FAIL'} {_one_line(reason)}")
++    return {
++        "name": "round86-instruments",
++        "argv": commands,
++        "exit": 1 if failed else 0,
++        "ok": not failed,
++        "detail": " | ".join(details),
++    }
++
++
+ def evaluate(repo: str, round_no: int, tip: str = "master", tools_dir: str | None = None,
+              depth: int = 0) -> dict:
+     """Run the seven arms and derive the pinned verdict; the only scoring entry point."""
+@@ -700,6 +738,7 @@ def evaluate(repo: str, round_no: int, tip: str = "master", tools_dir: str | Non
+     arms.append(_round81_instruments(tools_path, repo_path, depth))
+     arms.append(_round82_instruments(tools_path, repo_path, depth))
+     arms.append(_round83_instruments(tools_path, repo_path, depth))
++    arms.append(_round86_instruments(tools_path, repo_path, depth))
+ 
+     failed = sum(1 for arm in arms if not arm["ok"])
+     verdict = f"PRE_REPORT round={round_no} arms={len(arms)} failed={failed} uncommitted={uncommitted}"

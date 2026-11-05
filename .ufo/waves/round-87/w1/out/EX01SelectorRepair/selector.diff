@@ -1,0 +1,197 @@
+--- a/tools/round86-rendered-cells.py
++++ b/tools/round87-rendered-cells.py
+@@ -1,13 +1,16 @@
+ #!/usr/bin/env python3
+-"""round86-rendered-cells.py - round-86 C1 (calibration): grade live SCORECARD
++"""round87-rendered-cells.py - round-87 C1 (calibration): grade live SCORECARD
+ self-assessment cells by RENDERED identity, never by raw-line shadow text.
+ 
+ Rendered-cell selection (the selector the round-85 counter lacked):
+   * HTML comment blocks ``<!-- ... -->`` (single or multi line) are removed;
+   * fenced code blocks are removed: an opener is ``{0,3}`` spaces then three or
+-    more backticks or tildes plus an info string; the block closes on the same
+-    character, at least as long, alone on the line (``{0,3}`` spaces allowed),
+-    and an unclosed fence runs to EOF (CommonMark 0.31.2 sections 4.4/4.5);
++    more backticks or tildes plus an info string, possibly inside a list-item or
++    blockquote container; the block closes on the same character, at least as
++    long, alone on the line - at most three leading spaces, then only spaces or
++    tabs; a list-marker or blockquote-marked line is content, never a closer
++    (round-87 claims R1; CommonMark 0.31.2 sections 4.5/5.2/5.1) - and an
++    unclosed fence runs to EOF;
+   * a ``round-<N> correction`` section is removed up to the next heading of the
+     same or a shallower depth (the round-85 convention, unchanged);
+   * a selected cell must start at column 0 - an indented line is code, a list
+@@ -16,8 +19,12 @@
+ Population (three facts, no whole-record census):
+   gate         the first top-level ``**Current authority (round N):**`` line
+                names the NEWEST terminal gate receipt present in the tree, and
+-               that claim is one coupled assertion: a 40-hex revision R in the
+-               same paragraph, the backticked receipt path, and the exact
++               that claim is one coupled assertion: each 40-hex revision R the
++               cell attaches to the claim with ``measured at `R` `` (other
++               40-hex mentions - superseded history, delivered tips - are not
++               the gate claim, and a citation inside a sentence carrying
++               another round's own token belongs to that claim), the backticked
++               receipt path, and the exact
+                ``PRE_REPORT round=... arms=... failed=... uncommitted=...``
+                token. The receipt must exist at R, its bytes at R must contain
+                that exact token, R must be an ancestor of the graded revision,
+@@ -27,7 +34,10 @@
+                ``## Axes`` section names the newest committed
+                ``corpus/lessons/round-<N>-verifier-spotcheck.md`` (highest N).
+   disposition  that row names ``round<N> <disposition>`` for the newest
+-               closure and the word occurs in the closure body.
++               closure and that disposition is the single token written after
++               ``verdict `` on the closure's own verdict line; a word elsewhere
++               in the body is not the disposition, and a missing or conflicting
++               verdict line is a mismatch (round-87 claims R2).
+ 
+ Output: one ``RENDERED_CELLS facts=3 mismatches=<m> gate=<0|1> closure=<0|1>
+ disposition=<0|1> newest_gate=<N> newest_closure=<N>`` line, then one
+@@ -51,7 +61,7 @@
+ import tempfile
+ 
+ PREDICATE = (
+-    "`python3 tools/round86-rendered-cells.py --repo <lane> --rev <rev>` prints one "
++    "`python3 tools/round87-rendered-cells.py --repo <lane> --rev <rev>` prints one "
+     "`RENDERED_CELLS facts=3 mismatches=<m> gate=<0|1> closure=<0|1> disposition=<0|1> "
+     "newest_gate=<N> newest_closure=<N>` line and exits 0 only when the rendered (fence- and "
+     "comment-free, column-0) head authority cell names the newest terminal gate receipt with "
+@@ -60,12 +70,16 @@
+     "every mismatch as `RENDERED_CELLS_FINDING <fact> <detail>`."
+ )
+ 
+-# A fence may sit inside a list item or blockquote container (CommonMark 0.31.2 sections 5.2 and
+-# 5.1): round-86 w2 `RV01RenderedAttack` case `a2-list-fence` opened one as `- ```markdown` and the
+-# selector, not recognising the opener, read the CLOSING fence as an opener and swallowed `## Axes`.
++# A fence OPENER may sit inside a list item or blockquote container (CommonMark 0.31.2 sections
++# 5.2 and 5.1): round-86 w2 `RV01RenderedAttack` case `a2-list-fence` opened one as `- ```markdown`
++# and the selector, not recognising the opener, read the CLOSING fence as an opener and swallowed
++# `## Axes`. A CLOSER may not (round-87 claims R1, CommonMark 0.31.2 section 4.5): it carries no
++# list or blockquote marker - at most three leading spaces, then the opener's fence character at
++# least as long, then only spaces or tabs. The round-86 closer regex kept CONTAINER, so probe
++# P-A's `- ``` ` line closed the fence while cmark renders the rest as code (false green).
+ CONTAINER = r"(?: {0,3}(?:[-*+]|[0-9]{1,9}[.)])[ \t]+| {0,3}>[ \t]?)*"
+ FENCE = re.compile(r"^" + CONTAINER + r" {0,3}(`{3,}|~{3,})(.*)$")
+-FENCE_CLOSE = re.compile(r"^" + CONTAINER + r" {0,3}(`{3,}|~{3,})[ \t]*$")
++FENCE_CLOSE = re.compile(r"^ {0,3}(`{3,}|~{3,})[ \t]*$")
+ CORRECTION = re.compile(r"^ {0,3}(#{1,6})\s+round-[0-9]+ correction(?:\s|$)")
+ HEADING = re.compile(r"^ {0,3}(#{1,6})\s+(.*)$")
+ AUTHORITY = re.compile(r"^\*\*Current authority \(round ([0-9]+)\):")
+@@ -77,10 +91,16 @@
+ RECEIPT = re.compile(r"`([^`]*\.out)`")
+ COMMAND = re.compile(r"`python3 tools/pre-report-gate\.py[^`]*`")
+ REVISION = re.compile(r"`([0-9a-f]{40})`")
++MEASURED_AT = re.compile(r"measured at `([0-9a-f]{40})`")
+ CLOSURE_PATH = re.compile(r"^corpus/lessons/round-([0-9]+)-verifier-spotcheck\.md$")
+ ROW_CLOSURE = re.compile(
+     r"latest outside closure `corpus/lessons/(round-([0-9]+)-verifier-spotcheck\.md)`")
+ DISPOSITIONS = ("rejected-harmed", "rejected-honest-stop", "admitted")
++# The closure's own verdict line (R2): `verdict ` then one token (backticked like the committed
++# closures' ``verdict `rejected-honest-stop` `` or colon-separated like the fixture bodies'
++# ``Verdict: rejected-honest-stop.``). A line whose post-``verdict `` token names no disposition
++# (a C2/C3 section verdict such as ``verified``) is not the closure's own verdict line.
++VERDICT = re.compile(r"(?i)\bverdict\b[ \t]*(?::[ \t]*)?`?([A-Za-z0-9][A-Za-z0-9-]*)`?")
+ 
+ 
+ class CouldNotEvaluate(Exception):
+@@ -263,10 +283,16 @@
+ 
+ 
+ def disposition_of(body: str) -> str:
+-    for word in DISPOSITIONS:
+-        if re.search(rf"\b{word}\b", body):
+-            return word
+-    return "unknown"
++    """The single token after ``verdict `` on the closure's own verdict line (R2).
++
++    A word elsewhere in the body is not the disposition. Verdict lines whose tokens
++    conflict make the disposition unknown (a mismatch); agreeing repeats are one verdict.
++    """
++    tokens = [m.group(1) for m in VERDICT.finditer(body or "")
++              if m.group(1) in DISPOSITIONS]
++    if not tokens or len(set(tokens)) > 1:
++        return "unknown"
++    return tokens[0]
+ 
+ 
+ def gate_fact(tree, authority, newest):
+@@ -305,15 +331,36 @@
+         findings.append(("gate", f"cell names {receipts} but the newest terminal receipt is "
+                                  f"{receipt_path}"))
+         return findings
+-    coupled = []
+-    for revision in revisions:
+-        if not tree.ancestor(revision):
++    # Coupling per measurement claim (docstring: the receipt must exist at R and R must be an
++    # ancestor of the graded revision). The cell asserts the newest receipt was measured at
++    # every revision it attaches to the claim with `measured at `R``; each such revision must
++    # carry the receipt at R with the exact token. The round-86 loop accepted any ONE coupled
++    # revision, so a second measurement citation of a revision holding no receipt escaped
++    # probe P-C `extra-revision-without-receipt` (frozen false green). A citation inside a
++    # sentence carrying another round's own token (a superseded, self-coupled terminal-gate
++    # claim) belongs to that claim, not to the newest receipt. The live round-86 authority
++    # paragraph also cites round-85 history ("terminal evidence at", "delivered") - those are
++    # not measurement citations and stay outside the coupling.
++    token_text = token.group(0).strip("`")
++    sentences = re.split(r"\. (?=[A-Z`*~>|0-9])", authority or "")
++    cited = []
++    for sentence in sentences:
++        if any(m.group(0).strip("`") != token_text for m in GATE_TOKEN.finditer(sentence)):
+             continue
+-        text = tree.blob_at(revision, receipt_path)
+-        if text is not None and token.group(0).strip("`") in text:
+-            coupled.append((revision, receipt_path))
+-    if not coupled:
+-        findings.append(("gate", f"no revision among {len(revisions)} is an ancestor carrying "
++        cited += MEASURED_AT.findall(sentence)
++    seen = set()
++    queued = []
++    for revision in (cited or revisions):
++        if revision not in seen:
++            seen.add(revision)
++            queued.append(revision)
++    uncoupled = []
++    for revision in queued:
++        text = tree.blob_at(revision, receipt_path) if tree.ancestor(revision) else None
++        if text is None or token_text not in text:
++            uncoupled.append(revision)
++    if uncoupled:
++        findings.append(("gate", f"measured-at revision(s) {uncoupled} do not carry "
+                                  f"{receipt_path} with the exact token"))
+     return findings
+ 
+@@ -332,7 +379,7 @@
+     body = tree.blob(newest[1]) or ""
+     word = disposition_of(body)
+     if word == "unknown":
+-        return [("disposition", f"closure {newest[1]} carries no disposition word")]
++        return [("disposition", f"closure {newest[1]} carries no single verdict line")]
+     if not re.search(rf"round{newest[0]} {re.escape(word)}\b", row or ""):
+         return [("disposition", f"row does not name `round{newest[0]} {word}`")]
+     return []
+@@ -461,6 +508,24 @@
+     # fence must never be read as an opener (that swallowed `## Axes` and exited 2).
+     list_fence = "- ```markdown\n  " + correct + "\n  ```\n"
+     arm("list-fence-shadow", fixture(stale_live=True, shadow=list_fence), 1, {"gate": False}, 3)
++    # Round-87 R1 (probe P-A shadow): a list-marker line inside the fence is CONTENT, never a
++    # closer (CommonMark 0.31.2 4.5); a selector that closes on `- ``` ` reads the shadow's
++    # green cells as live, and this arm must stay red.
++    pa_shadow = "```markdown\n- ```\n" + correct + "\n## Axes\n\n" + GOOD_ROW + "\n```\n"
++    arm("pa-list-marker-closer-content", fixture(stale_live=True, shadow=pa_shadow), 1,
++        {"gate": False}, 3)
++    # Round-87 R2 (probe P-B shadow): the disposition is the token after `verdict ` on the
++    # closure's own verdict line; `rejected-harmed` elsewhere in the body is not the
++    # disposition, so a row naming `round85 rejected-harmed` must stay a mismatch.
++    pb_body = ("# kama round 85\n\nVerdict: rejected-honest-stop. "
++               "Earlier round 83 was rejected-harmed.\n")
++    pb_row = ("| calibration | **7** | terminal `SELFRECORD_R85` at `" + A + "`; latest outside "
++              "closure `corpus/lessons/round-85-verifier-spotcheck.md` (round85 rejected-harmed; "
++              "round84 rejected-honest-stop) | score round1 |")
++    arm("pb-verdict-line-disposition",
++        fixture(stale_live=False, row=pb_row,
++                extra_files={"corpus/lessons/round-85-verifier-spotcheck.md": pb_body}), 1,
++        {"gate": True, "closure": True, "disposition": False}, 1)
+     # w2 RV01RenderedAttack p1a: a backtick fence whose info string contains a backtick is not a
+     # fence (CommonMark 4.5), so the following cell is rendered.
+     arm("backtick-info-not-a-fence", fixture(stale_live=True, shadow="``` x`y\n" + correct + "\n"),

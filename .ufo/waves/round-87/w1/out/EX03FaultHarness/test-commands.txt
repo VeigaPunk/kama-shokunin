@@ -1,0 +1,9 @@
+# harness self-check (run from any cwd; H = out-dir copy of the harness)
+export TMPDIR=/fast/scratch/hyaku/kama-r87/EX03FaultHarness
+python3 -m py_compile "$H"                                    # exit 0
+python3 "$H" --repo "$S" --work "$TMPDIR/work-present"         # S = clone at 94e8fe7b + minimal arm   -> exit 0
+python3 "$H" --repo "$A" --work "$TMPDIR/work-absent"          # A = clone tools w/ frozen gate, no arm -> exit 1
+# base instrument selftests (exit 0 each)
+python3 tools/round86-rendered-cells.py --selftest; python3 tools/round86-mutant-owners.py --selftest; python3 tools/round86-pin-origin.py --selftest
+# clone setup (read-only against lane): git clone --shared <lane> $S/wt; git -C $S/wt checkout --detach 94e8fe7b...
+# absent-arm gate: git -C <lane> show 94e8fe7b911a5e6f8d1e1a07bff110d3ff6cb659:tools/pre-report-gate.py > $A/tools/pre-report-gate.py
