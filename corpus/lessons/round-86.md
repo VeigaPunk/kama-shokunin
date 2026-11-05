@@ -60,6 +60,12 @@ fail. Fix: the fixture emits the shadow first and gains `correction-shadow` and 
 escaped=0`, `.ufo/waves/round-86/measured/after/c1-mutants.out`). Shown able to fail: each mutant run
 exits 1 naming its own arm.
 
+*Correction (round-86 w3 `CR01DoNothingControl` record audit):* the delivered driver declares ten
+mutants and the cited `measured/after/c1-mutants.out` prints `RENDERED_CELLS_MUTANTS mutants=10
+killed=10 escaped=0`, not `7`. The `7/7` sentence above was the state when M3 was mined, before the
+container-fence and backtick-info mutants were added; the tally is corrected here rather than
+rewritten, and the receipt is the authority (KQ133).
+
 **M4 — a selftest summary-format extension turned a frozen gate arm red.** Class:
 consumer coupling. Evidence: `.ufo/waves/round-86/w2/out/EX02GateArms/EX02GateArms.md` finding 1 —
 `round81-instruments` was green at the base (`APPEND_DEBT_SELFTEST pass=34 fail=0`) and red at the
@@ -117,6 +123,14 @@ lane already held, they do not open new province ground.
 
 ## Open, not repaired
 
+- **Superseded intermediate receipt (round-86 w3 `MT02ForgeryArms` §3).**
+  `.ufo/waves/round-86/measured/after/c2.out` ends with `APPEND_DEBT_SELFTEST pass=34 fail=0 arms=34`,
+  which the terminal bytes cannot print: that summary line lost its `arms=` suffix in `c5a32443` so the
+  frozen gate arm 11 fullmatch keeps working. The receipt is an intermediate, superseded measurement;
+  the terminal receipts (`measured/terminal/c2.out`, `terminal/mutant-owners-selftest.out`) carry the
+  producible lines (`pass=34 fail=0`, `DEBT_MUTANT_OWNERS … arms=34 cardinality=ok owners=5/5`, and
+  `APPEND_DEBT_SELFTEST_ARMS arms=34 expected=34 fail_lines=0`), and the SCORECARD cells cite those.
+  The bytes are not rewritten.
 - R84V1 (a frozen auxiliary disclosure instruction missed) stays an honest miss: no event-loss
   disclosure is manufactured for a source event that was `ungraded`, not restored.
 - The round-69 date-ordering exit 2 on undated historical closures (M2) is routed, not fixed.
