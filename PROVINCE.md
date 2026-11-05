@@ -402,3 +402,18 @@ and `corpus/knowledge/register-row-introduction.md` states both the rule and its
 the last byte change, not a stable first introduction). A serving-runtime disposition, other engines'
 documents and the `/ready` + `/ping` classes on a live server stay frontier; service restoration
 remains operator-owned work under the write boundary above.
+
+**Round-86 note — rendered self-assessment, mutant owning arms and pin origin (2026-11-04).**
+Three lane-internal instruments extend the surface without sampling any endpoint.
+`tools/round86-rendered-cells.py` grades the lane's own self-assessment cells as a *renderer* shows
+them: HTML comments, backtick and tilde fences, `round-N correction` blocks and non-column-0 lines are
+not cells, and the head authority claim couples revision, command and receipt bytes (the receipt is
+read at the revision the banner names). `tools/round86-mutant-owners.py` maps each declared mutant of
+the delivered debt selftest to a declared owning arm and reconciles the completed summary with the arm
+population and the printed failure lines; the arm population is carried by
+`APPEND_DEBT_SELFTEST_ARMS` and the summary keeps the round-81 shape frozen gate arm 11 parses.
+`tools/round86-pin-origin.py` re-reads every `registry/pin-recheck-rows.tsv` anchor header, recomputes
+its digest and compares the stored body with the live upstream range byte for byte, so a
+hash-consistent extract whose bytes differ from the named URL is a `mismatch`, never `verified`. The
+three registered consumers keep their last recorded `DEAD` state and no serving runtime, engine
+document or host service is touched.
