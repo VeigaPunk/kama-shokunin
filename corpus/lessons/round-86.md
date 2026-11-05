@@ -76,6 +76,20 @@ containing that exact token") read literally. Fix: `GitTree.blob_at(R, path)` an
 `revision-carries-no-receipt`; a tampered worktree instrument is a separate, disclosed limit
 (w2 `CR01SizingControl`), routed to round 87.
 
+**M6 — the C2 classifier skipped every clause that needed the ARMS line and ignored stderr.**
+Class: clause coverage. Evidence: `.ufo/waves/round-86/w2/out/MT02CardinalityForgery/evidence/`
+(`probe-classify.out`, `cli-matrix.out`) — a summary `pass=0 fail=0` with no `arms` field, a run with
+no ARMS line, and a run with non-traceback stderr all classified `escaped`, while the frozen clause
+list requires `pass + fail == arms`, `ARMS arms == expected`, `ARMS fail_lines == summary fail ==
+printed FAIL lines`, empty stderr. Captured-by: implement every declared clause as a check and add a
+selftest arm per clause. Fix: `classify()` now requires exactly one ARMS line (a summary with no
+declared population cannot reconcile), binds the summary's `pass + fail` to that population, and
+rejects non-empty stderr; arms `summary-without-arms-field`, `no-arms-line` and `stderr-noise` hold it
+(selftest 13/0). **Disclosed limit:** a *consistent* forgery of every line (summary, ARMS line and
+exit code all agreeing on a population that the source does not have) is not distinguishable by a
+text-only classifier; that is MT02's `b2` class and it is routed to round 87 as a source-bound
+ground truth, not claimed here.
+
 
 ## Append-only provenance erratum (R84V5)
 

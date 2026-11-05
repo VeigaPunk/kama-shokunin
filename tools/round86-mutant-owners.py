@@ -93,28 +93,39 @@ class CouldNotEvaluate(Exception):
 
 
 def classify(stdout: str, stderr: str, rc: int, owner: str):
-    """Return (verdict, owning_label, detail) for one mutant run."""
+    """Return (verdict, owning_label, detail) for one mutant run.
+
+    Frozen clauses implemented literally (plans/round-86-claims.md C2): exactly one summary
+    line and exactly one ARMS line (a summary with no declared population cannot reconcile,
+    and two declarations are ambiguous); pass + fail == the declared arm population;
+    ARMS arms == expected; ARMS fail_lines == summary fail == the printed FAIL lines; empty
+    stderr; no traceback. Round-86 w2 `MT02CardinalityForgery` proved the earlier code skipped
+    every clause that needed the ARMS line and ignored non-traceback stderr.
+    """
     if "Traceback (most recent call last)" in stderr:
         return "invalid", owner, "traceback on stderr"
+    if stderr.strip():
+        return "invalid", owner, "non-empty stderr"
     summaries = SUMMARY_RE.findall(stdout)
     arms_lines = ARMS_RE.findall(stdout)
     fails = FAIL_RE.findall(stdout)
     if len(summaries) != 1:
         return "invalid", owner, f"{len(summaries)} summary lines"
-    if len(arms_lines) > 1:
-        return "invalid", owner, f"{len(arms_lines)} ARMS lines"
+    if len(arms_lines) != 1:
+        return "invalid", owner, f"{len(arms_lines)} ARMS lines (exactly one declares the population)"
     passed, failed, arms = (int(x) if x else None for x in summaries[0])
+    declared, expected, fail_lines = (int(x) for x in arms_lines[0])
     problems = []
-    if arms is not None and passed + failed != arms:
-        problems.append(f"summary pass+fail={passed + failed} != arms={arms}")
-    if arms_lines:
-        declared, expected, fail_lines = (int(x) for x in arms_lines[0])
-        if declared != expected:
-            problems.append(f"arms={declared} != expected={expected}")
-        if fail_lines != failed:
-            problems.append(f"ARMS fail_lines={fail_lines} != summary fail={failed}")
-        if fail_lines != len(fails):
-            problems.append(f"ARMS fail_lines={fail_lines} != {len(fails)} FAIL lines")
+    if arms is not None and arms != declared:
+        problems.append(f"summary arms={arms} != ARMS arms={declared}")
+    if passed + failed != declared:
+        problems.append(f"summary pass+fail={passed + failed} != arms={declared}")
+    if declared != expected:
+        problems.append(f"arms={declared} != expected={expected}")
+    if fail_lines != failed:
+        problems.append(f"ARMS fail_lines={fail_lines} != summary fail={failed}")
+    if fail_lines != len(fails):
+        problems.append(f"ARMS fail_lines={fail_lines} != {len(fails)} FAIL lines")
     if problems:
         label = "arm-count" if any("expected" in p for p in problems) else "summary-cardinality"
         return "killed", label, "; ".join(problems)
@@ -217,6 +228,13 @@ def selftest():
     arm("exit-two", "", "", 2, "note-deletion-equals-subject", "invalid")
     arm("green-with-fail", "APPEND_DEBT_SELFTEST pass=33 fail=1 arms=34\n", "", 0,
         "note-deletion-equals-subject", "invalid")
+    # w2 MT02CardinalityForgery escapes, now closed by the frozen clauses.
+    arm("stderr-noise", GOOD_STDOUT, "warning: something\n", 0, "pristine", "invalid")
+    arm("summary-without-arms-field",
+        "APPEND_DEBT_SELFTEST_ARMS arms=34 expected=34 fail_lines=0\n"
+        "APPEND_DEBT_SELFTEST pass=0 fail=0\n", "", 0, "summary-cardinality", "killed")
+    arm("no-arms-line", "APPEND_DEBT_SELFTEST pass=34 fail=0\n", "", 0,
+        "summary-cardinality", "invalid")
     fail = sum(1 for _, ok, _ in arms if not ok)
     for name, ok, detail in arms:
         print(f"DEBT_MUTANT_OWNERS_SELFTEST_{'PASS' if ok else 'FAIL'} {name} {detail}")
