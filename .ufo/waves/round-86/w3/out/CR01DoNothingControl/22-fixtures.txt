@@ -1,0 +1,26 @@
+fixture commits built in the scratch clone (objects only, no refs):
+c1-two-line: f8f19f18a6d0c86d8110d5fca620db2ab30c66ae
+c2-one-print: 50d4c20d5ed151613d3b44afdf8de5ccac93482e
+c3-stub-at-path: b3b2b9a2979746c363ba4360a5e3990aa53d81bb
+
+c1 fixture: git read-tree 3ff23da3; SCORECARD.md := base SCORECARD with only lines 6 and 18 replaced by bafae7af's lines; git write-tree; git commit-tree -p 3ff23da3
+c2 fixture: git read-tree 3ff23da3; tools/round81-append-debt.py := base bytes + one inserted line 'print(f"APPEND_DEBT_SELFTEST_ARMS arms={len(cases)} expected=34 fail_lines={fail}")' before the summary print; no EXPECTED_ARMS constant, no assertion change
+c3 fixture: git read-tree 3ff23da3; tools/round86-pin-origin.py := stub-c3.py
+
+# exact reproduction (from the scratch clone at bafae7af; all objects, no refs)
+export GIT_INDEX_FILE=$PWD/w/idx; rm -f "$GIT_INDEX_FILE"; git read-tree 3ff23da3
+python3 -c 'import subprocess;rec=subprocess.check_output(["git","show","bafae7af:SCORECARD.md"],text=True).split("\n");bl=subprocess.check_output(["git","show","3ff23da3:SCORECARD.md"],text=True).split("\n");bl[5]=rec[5];bl[17]=rec[17];open("w/score-fixture.md","w").write("\n".join(bl))'
+b=$(git hash-object -w w/score-fixture.md); git update-index --cacheinfo 100644,$b,SCORECARD.md
+t=$(git write-tree); git commit-tree $t -p 3ff23da3 -m "do-nothing fixture: base tree + two SCORECARD cell lines only"   # f8f19f18a6d0c86d8110d5fca620db2ab30c66ae
+unset GIT_INDEX_FILE
+
+export GIT_INDEX_FILE=$PWD/w/idx2; rm -f "$GIT_INDEX_FILE"; git read-tree 3ff23da3
+python3 -c 'import subprocess;s=subprocess.check_output(["git","show","3ff23da3:tools/round81-append-debt.py"],text=True);o="    print(f\"APPEND_DEBT_SELFTEST pass={len(cases) - fail} fail={fail}\")";assert s.count(o)==1;open("w/debt-base.py","w").write(s.replace(o,"    print(f\"APPEND_DEBT_SELFTEST_ARMS arms={len(cases)} expected=34 fail_lines={fail}\")\n"+o))'
+b=$(git hash-object -w w/debt-base.py); git update-index --cacheinfo 100755,$b,tools/round81-append-debt.py
+t=$(git write-tree); git commit-tree $t -p 3ff23da3 -m "do-nothing fixture: base tree + one ARMS print line"        # 50d4c20d5ed151613d3b44afdf8de5ccac93482e
+unset GIT_INDEX_FILE
+
+export GIT_INDEX_FILE=$PWD/w/idx3; rm -f "$GIT_INDEX_FILE"; git read-tree 3ff23da3
+b=$(git hash-object -w w/stub_c3.py); git update-index --add --cacheinfo 100755,$b,tools/round86-pin-origin.py
+t=$(git write-tree); git commit-tree $t -p 3ff23da3 -m "do-nothing fixture: base tree + stub at the C3 instrument path" # b3b2b9a2979746c363ba4360a5e3990aa53d81bb
+unset GIT_INDEX_FILE

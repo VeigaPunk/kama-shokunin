@@ -1,0 +1,49 @@
+=== frozen instrument selftests at bafae7af
+$ bash -c for t in rendered-cells mutant-owners pin-origin; do echo "--- $t"; python3 tools/round86-$t.py --selftest; echo "rc=$?"; done
+--- rendered-cells
+RENDERED_CELLS_SELFTEST_PASS green RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1 newest_gate=85 newest_closure=85
+RENDERED_CELLS_SELFTEST_PASS fenced-shadow RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0 newest_gate=85 newest_closure=85
+RENDERED_CELLS_SELFTEST_PASS comment-shadow RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0 newest_gate=85 newest_closure=85
+RENDERED_CELLS_SELFTEST_PASS tilde-fence-shadow RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0 newest_gate=85 newest_closure=85
+RENDERED_CELLS_SELFTEST_PASS indent-shadow RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0 newest_gate=85 newest_closure=85
+RENDERED_CELLS_SELFTEST_PASS list-fence-shadow RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0 newest_gate=85 newest_closure=85
+RENDERED_CELLS_SELFTEST_PASS backtick-info-not-a-fence RENDERED_CELLS facts=3 mismatches=2 gate=1 closure=0 disposition=0 newest_gate=85 newest_closure=85
+RENDERED_CELLS_SELFTEST_PASS correction-shadow RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0 newest_gate=85 newest_closure=85
+RENDERED_CELLS_SELFTEST_PASS indent-row-shadow RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0 newest_gate=85 newest_closure=85
+RENDERED_CELLS_SELFTEST_PASS unclosed-fence-fails-closed could-not-evaluate: no rendered top-level Current authority cell
+RENDERED_CELLS_SELFTEST_PASS contradictory-receipt RENDERED_CELLS facts=3 mismatches=1 gate=0 closure=1 disposition=1 newest_gate=85 newest_closure=85
+RENDERED_CELLS_SELFTEST_PASS missing-receipt RENDERED_CELLS facts=3 mismatches=1 gate=0 closure=1 disposition=1 newest_gate=84 newest_closure=85
+RENDERED_CELLS_SELFTEST_PASS revision-carries-no-receipt RENDERED_CELLS facts=3 mismatches=1 gate=0 closure=1 disposition=1 newest_gate=85 newest_closure=85
+RENDERED_CELLS_SELFTEST_PASS command-round-disagrees RENDERED_CELLS facts=3 mismatches=1 gate=0 closure=1 disposition=1 newest_gate=85 newest_closure=85
+RENDERED_CELLS_SELFTEST_PASS names-other-receipt RENDERED_CELLS facts=3 mismatches=1 gate=0 closure=1 disposition=1 newest_gate=85 newest_closure=85
+RENDERED_CELLS_SELFTEST_PASS closure-only-stale RENDERED_CELLS facts=3 mismatches=2 gate=1 closure=0 disposition=0 newest_gate=85 newest_closure=85
+RENDERED_CELLS_SELFTEST_PASS no-closure-population could-not-evaluate: no committed corpus/lessons/round-<N>-verifier-spotcheck.md
+RENDERED_CELLS_SELFTEST pass=17 fail=0
+rc=0
+--- mutant-owners
+DEBT_MUTANT_OWNERS_SELFTEST_PASS pristine-green verdict=escaped owner=pristine green summary
+DEBT_MUTANT_OWNERS_SELFTEST_PASS owned-failure verdict=killed owner=note-deletion-equals-subject owning failure line present (1 FAIL lines)
+DEBT_MUTANT_OWNERS_SELFTEST_PASS forged-summary verdict=killed owner=summary-cardinality summary pass+fail=0 != arms=34
+DEBT_MUTANT_OWNERS_SELFTEST_PASS dropped-arm verdict=killed owner=arm-count arms=33 != expected=34; ARMS fail_lines=1 != summary fail=0
+DEBT_MUTANT_OWNERS_SELFTEST_PASS fail-lines-disagree verdict=killed owner=summary-cardinality ARMS fail_lines=2 != summary fail=1; ARMS fail_lines=2 != 0 FAIL lines
+DEBT_MUTANT_OWNERS_SELFTEST_PASS two-summaries verdict=invalid owner=summary-cardinality 2 summary lines
+DEBT_MUTANT_OWNERS_SELFTEST_PASS foreign-owner verdict=invalid owner=note-deletion-equals-subject exit 1 without the declared owning arm (['other-arm'])
+DEBT_MUTANT_OWNERS_SELFTEST_PASS traceback verdict=invalid owner=note-deletion-equals-subject traceback on stderr
+DEBT_MUTANT_OWNERS_SELFTEST_PASS exit-two verdict=invalid owner=note-deletion-equals-subject 0 summary lines
+DEBT_MUTANT_OWNERS_SELFTEST_PASS green-with-fail verdict=invalid owner=note-deletion-equals-subject exit 0 with fail=1
+DEBT_MUTANT_OWNERS_SELFTEST_PASS stderr-noise verdict=invalid owner=pristine non-empty stderr
+DEBT_MUTANT_OWNERS_SELFTEST_PASS summary-without-arms-field verdict=killed owner=summary-cardinality summary pass+fail=0 != arms=34
+DEBT_MUTANT_OWNERS_SELFTEST_PASS no-arms-line-disclosed-limit verdict=escaped owner=summary-cardinality green summary
+DEBT_MUTANT_OWNERS_SELFTEST pass=13 fail=0
+rc=0
+--- pin-origin
+PIN_ORIGIN_SELFTEST_PASS verified verdict=verified want=verified
+PIN_ORIGIN_SELFTEST_PASS fabricated-hash-consistent verdict=mismatch want=mismatch
+PIN_ORIGIN_SELFTEST_PASS digest-lie verdict=bad want=bad
+PIN_ORIGIN_SELFTEST_PASS malformed-header verdict=bad want=bad
+PIN_ORIGIN_SELFTEST_PASS missing-anchor verdict=bad want=bad
+PIN_ORIGIN_SELFTEST_PASS unreachable verdict=unreachable want=unreachable
+PIN_ORIGIN_SELFTEST_PASS range-outside-upstream verdict=mismatch want=mismatch
+PIN_ORIGIN_SELFTEST pass=7 fail=0
+rc=0
+exit=0
