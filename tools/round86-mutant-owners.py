@@ -86,6 +86,9 @@ SUMMARY_RE = re.compile(r"^APPEND_DEBT_SELFTEST pass=([0-9]+) fail=([0-9]+)(?: a
 ARMS_RE = re.compile(r"^APPEND_DEBT_SELFTEST_ARMS arms=([0-9]+) expected=([0-9]+) "
                      r"fail_lines=([0-9]+)$", re.M)
 FAIL_RE = re.compile(r"^APPEND_DEBT_SELFTEST_FAIL (\S+) ", re.M)
+# The arm population the frozen target line names (`arms=34`). Round-86 w1 critic: a subject copy
+# with 33 arms and EXPECTED_ARMS=33 still exited 0, so the printed population is pinned here.
+DECLARED_POPULATION = 34
 
 
 class CouldNotEvaluate(Exception):
@@ -111,21 +114,24 @@ def classify(stdout: str, stderr: str, rc: int, owner: str):
     fails = FAIL_RE.findall(stdout)
     if len(summaries) != 1:
         return "invalid", owner, f"{len(summaries)} summary lines"
-    if len(arms_lines) != 1:
-        return "invalid", owner, f"{len(arms_lines)} ARMS lines (exactly one declares the population)"
+    if len(arms_lines) > 1:
+        return "invalid", owner, f"{len(arms_lines)} ARMS lines (at most one)"
     passed, failed, arms = (int(x) if x else None for x in summaries[0])
-    declared, expected, fail_lines = (int(x) for x in arms_lines[0])
     problems = []
-    if arms is not None and arms != declared:
-        problems.append(f"summary arms={arms} != ARMS arms={declared}")
-    if passed + failed != declared:
-        problems.append(f"summary pass+fail={passed + failed} != arms={declared}")
-    if declared != expected:
-        problems.append(f"arms={declared} != expected={expected}")
-    if fail_lines != failed:
-        problems.append(f"ARMS fail_lines={fail_lines} != summary fail={failed}")
-    if fail_lines != len(fails):
-        problems.append(f"ARMS fail_lines={fail_lines} != {len(fails)} FAIL lines")
+    if arms_lines:
+        # The declared population is the ARMS line, and it is the clause's ground truth: the
+        # summary's pass+fail must reconcile with it whether or not the summary repeats `arms`.
+        declared, expected, fail_lines = (int(x) for x in arms_lines[0])
+        if arms is not None and arms != declared:
+            problems.append(f"summary arms={arms} != ARMS arms={declared}")
+        if passed + failed != declared:
+            problems.append(f"summary pass+fail={passed + failed} != arms={declared}")
+        if declared != expected:
+            problems.append(f"arms={declared} != expected={expected}")
+        if fail_lines != failed:
+            problems.append(f"ARMS fail_lines={fail_lines} != summary fail={failed}")
+        if fail_lines != len(fails):
+            problems.append(f"ARMS fail_lines={fail_lines} != {len(fails)} FAIL lines")
     if problems:
         label = "arm-count" if any("expected" in p for p in problems) else "summary-cardinality"
         return "killed", label, "; ".join(problems)
@@ -185,6 +191,8 @@ def grade(repo: pathlib.Path, rev: str, work: pathlib.Path):
     cardinality = "ok" if all(r[2] != "invalid" for r in results) else "bad"
     return {"results": results, "killed": killed, "escaped": escaped, "invalid": invalid,
             "owners": owners, "arms": arms_value, "cardinality": cardinality,
+            "population": ("unknown" if arms_value == "unknown"
+                           else "ok" if arms_value == str(DECLARED_POPULATION) else "bad"),
             "pristine": pristine.stdout.strip().splitlines()[-1]}
 
 
@@ -233,8 +241,12 @@ def selftest():
     arm("summary-without-arms-field",
         "APPEND_DEBT_SELFTEST_ARMS arms=34 expected=34 fail_lines=0\n"
         "APPEND_DEBT_SELFTEST pass=0 fail=0\n", "", 0, "summary-cardinality", "killed")
-    arm("no-arms-line", "APPEND_DEBT_SELFTEST pass=34 fail=0\n", "", 0,
-        "summary-cardinality", "invalid")
+    # Disclosed limit, pinned as a control: a run that prints NO ARMS line has no declared
+    # population to reconcile against, so it is not distinguishable from an honest green run.
+    # The round-81 base tree is exactly this shape (the before receipt's pristine line), which is
+    # why requiring one would make the do-nothing control unreproducible.
+    arm("no-arms-line-disclosed-limit", "APPEND_DEBT_SELFTEST pass=34 fail=0\n", "", 0,
+        "summary-cardinality", "escaped")
     fail = sum(1 for _, ok, _ in arms if not ok)
     for name, ok, detail in arms:
         print(f"DEBT_MUTANT_OWNERS_SELFTEST_{'PASS' if ok else 'FAIL'} {name} {detail}")
@@ -268,9 +280,13 @@ def main(argv=None):
         for name, owner, verdict, label, detail in result["results"]:
             print(f"DEBT_MUTANT_OWNER {name} owner={label} verdict={verdict} {detail}")
         print(f"DEBT_MUTANT_OWNER_PRISTINE {result['pristine']}")
+        if result["population"] == "bad":
+            print(f"DEBT_MUTANT_OWNERS_FINDING population arms={result['arms']} "
+                  f"!= declared={DECLARED_POPULATION}")
     return 0 if (result["killed"] == 5 and result["escaped"] == 0
                  and result["invalid"] == 0 and result["owners"] == 5
-                 and result["cardinality"] == "ok") else 1
+                 and result["cardinality"] == "ok"
+                 and result["population"] != "bad") else 1
 
 
 if __name__ == "__main__":

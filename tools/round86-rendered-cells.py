@@ -271,8 +271,11 @@ def gate_fact(tree, authority, newest):
         return findings
     token_round = int(token.group(1))
     if token_round != round_no:
+        # One finding per cause: a stale round already says the cell names another round's receipt,
+        # so the path clause below would only restate it (the frozen before receipt's 3 findings).
         findings.append(("gate", f"declared round={token_round} newest terminal receipt round={round_no} "
                                  f"({receipt_path})"))
+        return findings
     command = COMMAND.search(authority or "")
     if not command:
         findings.append(("gate", "no backticked tools/pre-report-gate.py command"))
@@ -288,17 +291,23 @@ def gate_fact(tree, authority, newest):
     if not revisions:
         findings.append(("gate", "no 40-hex revision in the authority cell"))
         return findings
+    # "names the newest terminal gate receipt" (frozen clause 1): the cell's receipt path must BE
+    # the newest receipt's path, not merely some .out whose bytes happen to carry the token
+    # (round-86 w1 critic fixtures 10-c1-nonnewest-receipt, 10-c1-round1-receipt-defines-newest).
+    if receipt_path not in receipts:
+        findings.append(("gate", f"cell names {receipts} but the newest terminal receipt is "
+                                 f"{receipt_path}"))
+        return findings
     coupled = []
     for revision in revisions:
         if not tree.ancestor(revision):
             continue
-        for path in receipts:
-            text = tree.blob_at(revision, path)
-            if text is not None and token.group(0).strip("`") in text:
-                coupled.append((revision, path))
+        text = tree.blob_at(revision, receipt_path)
+        if text is not None and token.group(0).strip("`") in text:
+            coupled.append((revision, receipt_path))
     if not coupled:
-        findings.append(("gate", f"no revision among {len(revisions)} is an ancestor carrying a "
-                                 f"declared receipt with the exact token"))
+        findings.append(("gate", f"no revision among {len(revisions)} is an ancestor carrying "
+                                 f"{receipt_path} with the exact token"))
     return findings
 
 
@@ -370,7 +379,7 @@ STALE_ROW = (
 
 def fixture(stale_live=True, shadow="", authority_extra="", row=None, receipt_text=None,
             drop_receipt=False, extra_files=None, cmd=GOOD_CMD, token=GOOD_TOKEN,
-            rev_files=None, row_shadow=""):
+            rev_files=None, row_shadow="", named_receipt=None):
     """One SCORECARD fixture. ``shadow`` is emitted FIRST so it is the first candidate cell.
 
     Round-86 w2 (MT01SelectorMutants): the earlier fixture put the stale live cell first, so a
@@ -378,9 +387,10 @@ def fixture(stale_live=True, shadow="", authority_extra="", row=None, receipt_te
     disabled. Order is the discrimination: an excluded construct must be the first candidate,
     otherwise the arm cannot see a selector that fails to exclude it.
     """
+    receipt = named_receipt or GOOD_RECEIPT
     live = (f"**Current authority (round 85):** assigned axes are operability + calibration; "
             f"Latest measured round: 85. Terminal gate measured at `{A}`: {cmd} printed {token}, "
-            f"exit0; receipt `{GOOD_RECEIPT}`.{authority_extra}")
+            f"exit0; receipt `{receipt}`.{authority_extra}")
     stale = (f"**Current authority (round 84):** assigned axes are operability + calibration; "
              f"Latest measured round: 84. Terminal gate measured at `{A}`: "
              f"`python3 tools/pre-report-gate.py --repo . --round 84 --tip master` printed "
@@ -458,6 +468,13 @@ def selftest():
     arm("command-round-disagrees",
         fixture(stale_live=False,
                 cmd="`python3 tools/pre-report-gate.py --repo . --round 84 --tip master`"),
+        1, {"gate": False}, 1)
+    # Round-86 w1 critic: a cell naming a receipt that is NOT the newest one passed.
+    arm("names-other-receipt",
+        fixture(stale_live=False,
+                named_receipt=".ufo/waves/round-85/measured/after/alt.out",
+                extra_files={".ufo/waves/round-85/measured/after/alt.out":
+                             "PRE_REPORT_ARM selfdesc exit=0 ok\n"}),
         1, {"gate": False}, 1)
     arm("closure-only-stale", fixture(stale_live=False, row=STALE_ROW), 1,
         {"gate": True, "closure": False, "disposition": False}, 2)
