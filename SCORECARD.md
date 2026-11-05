@@ -5302,6 +5302,42 @@ mined 284→286): S576 re-opened and its `used-by` extended, S578 (§4.5 fenced 
 indented code) admitted this round — the two rules C1's selector rests on. `Assimilation: none`: no
 `merge/kama/` theme fits three instrument repairs.
 
+### Round-86 w3 terminal falsification (2026-11-05)
+
+One v1 wave, 12 seats (3 reviewer, 2 mutation-tester, 2 executor, 1 critic, 1 scribe, 1 scout, 1 sentinel,
+1 connector; attack 6/12), dispatched at `bafae7afb41843564ac2468d28beb8e0bb98e8e6` through the inline
+handoff to attack the terminal record rather than to build. Spec/dispatch/ready
+`.ufo/waves/round-86/w3-{spec,dispatch,json}`, `.ufo/waves/round-86/w3.ready*`; outputs
+`.ufo/waves/round-86/w3/out/<seat>/`.
+
+- **Claims reproduce independently.** `RV01TerminalRepro` re-ran the frozen counter's three legs and
+  the three selftests on committed bytes and reproduced `mismatches=0 gate=1 closure=1 disposition=1`,
+  `mutants=5 killed=5 … owners=5/5`, `rows=5 verified=5 …` and 17/0, 13/0, 7/0 line for line;
+  `EX01IndependentCounter` re-derived C1's three facts and C2's five mutant outcomes with its own
+  throwaway checker (no import of the lane's modules) and agreed; `RV02CalibrationCells` re-derived
+  every named count in the three claim rows and found no mismatch in the claims themselves.
+- **Two record defects it found are repaired, append-only.** The mined M3 tally said `7/7` against a
+  receipt printing `mutants=10 killed=10`, and `measured/after/c2.out` prints an `arms=` suffix the
+  terminal bytes cannot print (superseded intermediate). Both are corrected in
+  `corpus/lessons/round-86.md` at `0fec2861` with dated clauses; no receipt byte is rewritten.
+- **C1 — four rules are unarmed** (`MT01SelectorMutants` survivors `MD`, `ME`; `MC` killed only
+  incidentally; probe `P1` shows the "first `## Axes` section" clause unenforced). None produces a
+  false green on the graded artifact; routed to the round-87 plan item 4.
+- **C2 — consistency is sufficient, not necessary, for escape** (`MT02ForgeryArms`: `b3`/`b6`/`b9`/`c2`
+  escape through an unparseable `ARMS` line; `F_forged_green.py` prints the exact target line from a
+  subject with 30 distinct arms). This is the disclosed M6 class, now demonstrated through the CLI;
+  the record's own terminal line is not forged (before-red/after-green on committed bytes). Routed to
+  round-87 plan item 5 and to `corpus/QUALITY.md` **KQ140**.
+- **C3's `--rev` leg is a presence gate** (`CR01DoNothingControl` `T4` exits 2 at the base, `T5`
+  prints the target from a base tree carrying a stub at the instrument path); folded into round-87
+  plan item 2 (execute the bytes at `--rev`).
+- **Containment.** `SN01ScopeAndMisroot`: no MANIFEST/`.ufo/state`/`.scratch`/sibling/domain write, no
+  credential-shaped bytes, 11/11 round commits authored and committed by the lane identity, no
+  hardcoded `/tmp` in the three instruments; fleet root held only the orchestrator's
+  `.scratch/run15-state.json` and an unattributed 0-byte `mo.tip`. `CN01OverlapScan` (connector)
+  attributes the nearest sibling precedents (souji/mori visibility oracles, tameshi fixture craft,
+  chousa claim-vs-source, kumitate gate cardinality) without absorbing their scope.
+
 **Capabilities — canonical list as of round 86**
 
 | Capability | What it can now do | Evidence pointer | First-working round |
