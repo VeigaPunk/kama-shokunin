@@ -184,3 +184,12 @@ L1 on a fixture whose round-85 closure gains one sentence and whose calibration 
 closure carries no `rejected-harmed` (count 0), so the committed number is unaffected — the class is.
 Captured-by: KQ133 ("the token is the receipt's own token") applied to the closure's verdict line.
 Fix: routed to round 87 plan item 7 (read the verdict line, not the body at large).
+
+**M11 — a seat's redirect resolved at the lane root.** Class: write-scope. Evidence: `abs.out` and
+`abs.err` appeared at the lane root at 2026-11-05 00:02 during w3 (the file is a C2 counter transcript
+naming the frozen target line); the frozen pre-report gate then reported `round-scope`/`round-clean`
+red on two untracked files. Captured-by: the §2 seat-path rule ("seat tools start at the fleet root …
+use absolute paths") and the w3 contract's "write only under `w3/out/<seat>/`". Fix: byte-exact copies
+moved to `.ufo/waves/round-86/w3/misroot/` (`cmp` verified), the lane-root copies deleted, wave dir
+committed; gate re-check green (13/13). The seat remains unidentified because the transcript carries no
+seat name — recorded as unidentified rather than guessed.
