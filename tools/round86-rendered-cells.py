@@ -60,7 +60,12 @@ PREDICATE = (
     "every mismatch as `RENDERED_CELLS_FINDING <fact> <detail>`."
 )
 
-FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
+# A fence may sit inside a list item or blockquote container (CommonMark 0.31.2 sections 5.2 and
+# 5.1): round-86 w2 `RV01RenderedAttack` case `a2-list-fence` opened one as `- ```markdown` and the
+# selector, not recognising the opener, read the CLOSING fence as an opener and swallowed `## Axes`.
+CONTAINER = r"(?: {0,3}(?:[-*+]|[0-9]{1,9}[.)])[ \t]+| {0,3}>[ \t]?)*"
+FENCE = re.compile(r"^" + CONTAINER + r" {0,3}(`{3,}|~{3,})(.*)$")
+FENCE_CLOSE = re.compile(r"^" + CONTAINER + r" {0,3}(`{3,}|~{3,})[ \t]*$")
 CORRECTION = re.compile(r"^ {0,3}(#{1,6})\s+round-[0-9]+ correction(?:\s|$)")
 HEADING = re.compile(r"^ {0,3}(#{1,6})\s+(.*)$")
 AUTHORITY = re.compile(r"^\*\*Current authority \(round ([0-9]+)\):")
@@ -173,7 +178,7 @@ def rendered(text: str) -> str:
             else:
                 continue
         if fence is not None:
-            close = re.match(r"^ {0,3}(`{3,}|~{3,})\s*$", line)
+            close = FENCE_CLOSE.match(line)
             if close and close.group(1)[0] == fence[0] and len(close.group(1)) >= fence[1]:
                 fence = None
             continue
@@ -189,7 +194,9 @@ def rendered(text: str) -> str:
             out.append("")
             continue
         opener = FENCE.match(line)
-        if opener:
+        # A backtick fence's info string may not contain a backtick (CommonMark 0.31.2 section
+        # 4.5); such a line is ordinary text, not a fence.
+        if opener and not (opener.group(1)[0] == "`" and "`" in opener.group(2)):
             fence = (opener.group(1)[0], len(opener.group(1)))
             continue
         heading = CORRECTION.match(line)
@@ -450,6 +457,14 @@ def selftest():
     arm("tilde-fence-shadow", fixture(stale_live=True, shadow=tilde), 1, {"gate": False}, 3)
     indented = "    " + correct + "\n    " + GOOD_ROW + "\n"
     arm("indent-shadow", fixture(stale_live=True, shadow=indented), 1, {"gate": False}, 3)
+    # w2 RV01RenderedAttack a2: a fence inside a list item must be excluded, and its CLOSING
+    # fence must never be read as an opener (that swallowed `## Axes` and exited 2).
+    list_fence = "- ```markdown\n  " + correct + "\n  ```\n"
+    arm("list-fence-shadow", fixture(stale_live=True, shadow=list_fence), 1, {"gate": False}, 3)
+    # w2 RV01RenderedAttack p1a: a backtick fence whose info string contains a backtick is not a
+    # fence (CommonMark 4.5), so the following cell is rendered.
+    arm("backtick-info-not-a-fence", fixture(stale_live=True, shadow="``` x`y\n" + correct + "\n"),
+        1, {"gate": True, "closure": False}, 2)
     correction = "### round-85 correction\n\n" + correct + "\n\n" + GOOD_ROW + "\n"
     arm("correction-shadow", fixture(stale_live=True, shadow=correction), 1,
         {"gate": False}, 3)

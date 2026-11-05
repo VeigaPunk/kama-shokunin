@@ -3,7 +3,7 @@
 tools/round86-rendered-cells.py must turn its own declared selftest arm red.
 
 Usage: TMPDIR=<scratch> python3 c1-mutants.py [<lane repo>]
-Prints one line per mutant and a `RENDERED_CELLS_MUTANTS mutants=8 killed=8 escaped=0` summary.
+Prints one line per mutant and a `RENDERED_CELLS_MUTANTS mutants=10 killed=10 escaped=0` summary.
 """
 import pathlib
 import subprocess
@@ -13,8 +13,8 @@ import tempfile
 REPO = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
 MUTANTS = {
     "a-fence-off": (
-        "        opener = FENCE.match(line)\n        if opener:\n"
-        "            fence = (opener.group(1)[0], len(opener.group(1)))\n            continue\n", ""),
+        '        if opener and not (opener.group(1)[0] == "`" and "`" in opener.group(2)):',
+        "        if False:"),
     "b-comment-off": (
         '        while "<!--" in line:\n            before, rest = line.split("<!--", 1)\n'
         '            if "-->" in rest:\n                line = before + rest.split("-->", 1)[1]\n'
@@ -30,8 +30,8 @@ MUTANTS = {
         'CALIBRATION = re.compile(r"^\\|\\s*calibration\\s*\\|")',
         'CALIBRATION = re.compile(r"^\\s*\\|\\s*calibration\\s*\\|")'),
     "f-tilde-off": (
-        'FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")',
-        'FENCE = re.compile(r"^ {0,3}(`{3,})(.*)$")'),
+        'FENCE = re.compile(r"^" + CONTAINER + r" {0,3}(`{3,}|~{3,})(.*)$")',
+        'FENCE = re.compile(r"^" + CONTAINER + r" {0,3}(`{3,})(.*)$")'),
     "e-receipt-bytes-off": (
         "    coupled = []\n    for revision in revisions:\n"
         "        if not tree.ancestor(revision):\n            continue\n"
@@ -40,6 +40,12 @@ MUTANTS = {
         "            coupled.append((revision, receipt_path))",
         "    coupled = [(r, receipt_path) for r in revisions if tree.ancestor(r)]"),
     "g-newest-path-off": ("    if receipt_path not in receipts:", "    if False:"),
+    "h-container-off": (
+        'FENCE = re.compile(r"^" + CONTAINER + r" {0,3}(`{3,}|~{3,})(.*)$")',
+        'FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")'),
+    "i-backtick-info-off": (
+        'if opener and not (opener.group(1)[0] == "`" and "`" in opener.group(2)):',
+        'if opener:'),
 }
 
 
