@@ -165,8 +165,8 @@ repaired this round: the counter is frozen and the claim is scored on it.
 
 **M9 — a closing fence was recognised wherever an opening fence would be.** Class: grammar
 conformance. Evidence: `.ufo/waves/round-86/w3/out/SB01SectionDraft/` — fixture
-`probes/P-A-list-marker-fence.md` (top-level ```` ```markdown ```` fence whose content includes a
-`- ```` `` line), `cmark -t xml` shows lines 4–8 as one `code_block` and the *rendered* cells stale,
+`probes/P-A-list-marker-fence.md` (top-level three-backtick fence with the info string `markdown` whose content includes a
+a list-marker line (`-` then three backticks)), `cmark -t xml` shows lines 4–8 as one `code_block` and the *rendered* cells stale,
 while `tools/round86-rendered-cells.py:66-68,180-184` lets `CONTAINER` match on the closer and ends the
 fence early, so the in-fence cells are read as live. L1 reproduction: `RENDERED_CELLS … gate declared
 round=85 …` on the fixture commit (scratch, not citable; fixture and script committed). Captured-by:
