@@ -1,0 +1,38 @@
+BASE sha256=e038b2c0ab52533ce86ba1551b0c8b66937bc664a395fae33ad82a7186bddcf9
+mutant f sha256=a7cc6450a12f59e9648f15d75b3167d0d4aa6d8b719724af90f33cbdf97158b8
+
+# pristine vs mutant on shadow-only trees (production shape: the only
+# candidate cell lives in a fence/comment/correction/indented block)
+shadow-only-authority/fenced mutant=a-fence-exclusion-off pristine_exit=2 mutant_exit=0
+  pristine: could-not-evaluate: no rendered top-level Current authority cell
+  mutant  : RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1 newest_gate=85 newest_closure=85
+shadow-only-authority/commented mutant=a-fence-exclusion-off pristine_exit=2 mutant_exit=2
+  pristine: could-not-evaluate: no rendered top-level Current authority cell
+  mutant  : could-not-evaluate: no rendered top-level Current authority cell
+shadow-only-authority/tilde-fenced mutant=a-fence-exclusion-off pristine_exit=2 mutant_exit=0
+  pristine: could-not-evaluate: no rendered top-level Current authority cell
+  mutant  : RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1 newest_gate=85 newest_closure=85
+shadow-only-authority/correction mutant=a-fence-exclusion-off pristine_exit=2 mutant_exit=2
+  pristine: could-not-evaluate: no rendered top-level Current authority cell
+  mutant  : could-not-evaluate: no rendered top-level Current authority cell
+shadow-only-authority/indented mutant=a-fence-exclusion-off pristine_exit=2 mutant_exit=2
+  pristine: could-not-evaluate: no rendered top-level Current authority cell
+  mutant  : could-not-evaluate: no rendered top-level Current authority cell
+shadow-only-authority/commented mutant=b-comment-exclusion-off pristine_exit=2 mutant_exit=0
+  pristine: could-not-evaluate: no rendered top-level Current authority cell
+  mutant  : RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1 newest_gate=85 newest_closure=85
+shadow-only-authority/correction mutant=c-correction-exclusion-off pristine_exit=2 mutant_exit=0
+  pristine: could-not-evaluate: no rendered top-level Current authority cell
+  mutant  : RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1 newest_gate=85 newest_closure=85
+shadow-only-authority/indented mutant=d-column0-relaxed pristine_exit=2 mutant_exit=0
+  pristine: could-not-evaluate: no rendered top-level Current authority cell
+  mutant  : RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1 newest_gate=85 newest_closure=85
+indented-row-only mutant=d2-calibration-column0-relaxed pristine_exit=2 mutant_exit=0
+  pristine: could-not-evaluate: no rendered top-level calibration row inside ## Axes
+  mutant  : RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1 newest_gate=85 newest_closure=85
+shadow-only-authority/tilde-fenced mutant=f-tilde-fence-off pristine_exit=2 mutant_exit=0
+  pristine: could-not-evaluate: no rendered top-level Current authority cell
+  mutant  : RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1 newest_gate=85 newest_closure=85
+
+FALSE_GREEN_COUNT=7 of 10 probes (pristine fails closed exit 2, mutant grades green exit 0)
+BASE_AFTER sha256=e038b2c0ab52533ce86ba1551b0c8b66937bc664a395fae33ad82a7186bddcf9

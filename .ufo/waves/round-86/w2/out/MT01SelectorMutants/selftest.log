@@ -1,0 +1,33 @@
+BASE sha256=e038b2c0ab52533ce86ba1551b0c8b66937bc664a395fae33ad82a7186bddcf9 bytes=20237
+
+=== a-fence-exclusion-off: (a) fence exclusion disabled: opener detection block deleted so no fence is ever tracked
+mutant sha256=f440fc213e808e2040c815e2209108d529b65015d0804de5539b19a6cf3ddb8b selftest_exit=1 red_arms=['unclosed-fence-fails-closed']
+summary=RENDERED_CELLS_SELFTEST pass=10 fail=1
+
+=== b-comment-exclusion-off: (b) HTML-comment exclusion disabled: <!-- strip block deleted so in_comment can never arm
+mutant sha256=73bbdc9564173754684039b3b88dcb6348e4115da61eaef66654875c460e02ca selftest_exit=0 red_arms=NONE
+summary=RENDERED_CELLS_SELFTEST pass=11 fail=0
+
+=== c-correction-exclusion-off: (c) round-N correction block exclusion disabled: CORRECTION match block deleted so depth is never set
+mutant sha256=20db830d3e2f020d4be1386b14edb58b3bf88bc07479b3b9377e3aed3f5b2d80 selftest_exit=0 red_arms=NONE
+summary=RENDERED_CELLS_SELFTEST pass=11 fail=0
+
+=== d-column0-relaxed: (d) column-0 requirement relaxed: AUTHORITY regex anchored with \s*
+mutant sha256=fbaffab5a3ae59e114e547fb002f25d836cca03e770a76be965dae793e6933c9 selftest_exit=0 red_arms=NONE
+summary=RENDERED_CELLS_SELFTEST pass=11 fail=0
+
+=== e-gate-coupling-to-revision-only: (e) coupled gate fact reduced to 'revision present': receipt-bytes membership test dropped
+mutant sha256=3531412f8ba334f5e10b61ef4d6bf89cd7c4b233aaccb840061e8229b59ce9fb selftest_exit=1 red_arms=['contradictory-receipt']
+summary=RENDERED_CELLS_SELFTEST pass=10 fail=1
+
+=== d2-calibration-column0-relaxed: (d2) extra probe: CALIBRATION regex column-0 relaxed to any indentation
+mutant sha256=9980b18f6c19c99e7d63958c5abb1fc4ce9d3b1f399efc897a7a581d0a2f9d30 selftest_exit=0 red_arms=NONE
+summary=RENDERED_CELLS_SELFTEST pass=11 fail=0
+
+BASE_AFTER sha256=e038b2c0ab52533ce86ba1551b0c8b66937bc664a395fae33ad82a7186bddcf9 restored=yes
+VERDICT a-fence-exclusion-off exit=1 red=1 CAUGHT unclosed-fence-fails-closed
+VERDICT b-comment-exclusion-off exit=0 red=0 SURVIVED
+VERDICT c-correction-exclusion-off exit=0 red=0 SURVIVED
+VERDICT d-column0-relaxed exit=0 red=0 SURVIVED
+VERDICT e-gate-coupling-to-revision-only exit=1 red=1 CAUGHT contradictory-receipt
+VERDICT d2-calibration-column0-relaxed exit=0 red=0 SURVIVED

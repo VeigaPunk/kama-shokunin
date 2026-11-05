@@ -1,0 +1,161 @@
+{
+  "base": "67eddac89f44e768b670301ea0feff06e766f32d",
+  "selftest_tail": [
+    "RENDERED_CELLS_SELFTEST pass=11 fail=0"
+  ],
+  "cases": [
+    {
+      "case": "a1-blockquote-fence",
+      "sha": "d35be45ebdd0",
+      "exit": 1,
+      "line": "RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0 newest_gate=85 newest_closure=85",
+      "renderer_truth": "HIDDEN(code-or-comment)",
+      "note": "renderer: fence inside blockquote hides both cells",
+      "class": "rejects-as-finding(exit1, renderer-hidden)"
+    },
+    {
+      "case": "a2-list-fence",
+      "sha": "5893cddb6657",
+      "exit": 2,
+      "line": "(none)",
+      "renderer_truth": "HIDDEN(code-or-comment)",
+      "note": "renderer: fence inside list item hides both cells",
+      "class": "reject-fail-closed(exit2, renderer-hidden)"
+    },
+    {
+      "case": "a3-blockquote-lazy",
+      "sha": "bb9a4fe1e8b2",
+      "exit": 0,
+      "line": "RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1 newest_gate=85 newest_closure=85",
+      "renderer_truth": "HIDDEN(code-or-comment)",
+      "note": "renderer arbiter: col-0 line after blockquote fence \u2014 live or not?",
+      "class": "WRONG-ACCEPT(defect)"
+    },
+    {
+      "case": "b-correction",
+      "sha": "cec9f5bf8ac1",
+      "exit": 1,
+      "line": "RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0 newest_gate=85 newest_closure=85",
+      "renderer_truth": "HIDDEN(code-or-comment)",
+      "note": "correction section body must be hidden; end marker resumes live cells",
+      "class": "rejects-as-finding(exit1, renderer-hidden)"
+    },
+    {
+      "case": "b2-capital-correction",
+      "sha": "f5123ec4cbde",
+      "exit": 1,
+      "line": "RENDERED_CELLS facts=3 mismatches=1 gate=0 closure=1 disposition=1 newest_gate=85 newest_closure=85",
+      "renderer_truth": "HIDDEN(code-or-comment)",
+      "note": "selector regex is case-sensitive lowercase; renderer has no case semantics",
+      "class": "rejects-as-finding(exit1, renderer-hidden)"
+    },
+    {
+      "case": "c1-indent",
+      "sha": "b7f377b9b1f0",
+      "exit": 1,
+      "line": "RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0 newest_gate=85 newest_closure=85",
+      "renderer_truth": "HIDDEN(code-or-comment)",
+      "note": "renderer: indented code hides both cells",
+      "class": "rejects-as-finding(exit1, renderer-hidden)"
+    },
+    {
+      "case": "c2-col0-after-indent-fence",
+      "sha": "11c2615f8989",
+      "exit": 0,
+      "line": "RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1 newest_gate=85 newest_closure=85",
+      "renderer_truth": "HIDDEN(code-or-comment)",
+      "note": "renderer arbiter: col-0 line ends indented code \u2014 live or not?",
+      "class": "WRONG-ACCEPT(defect)"
+    },
+    {
+      "case": "d-comment",
+      "sha": "0dd3baa0c47a",
+      "exit": 1,
+      "line": "RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0 newest_gate=85 newest_closure=85",
+      "renderer_truth": "HIDDEN(code-or-comment)",
+      "note": "renderer: multi-line comments hide both fresh cells; stale live cells remain",
+      "class": "rejects-as-finding(exit1, renderer-hidden)"
+    },
+    {
+      "case": "e-fenced-shadow",
+      "sha": "6186063f309d",
+      "exit": 1,
+      "line": "RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0 newest_gate=85 newest_closure=85",
+      "renderer_truth": "HIDDEN(code-or-comment)",
+      "note": "the R85 false green: fenced fresh copy + stale live cells must stay red",
+      "class": "rejects-as-finding(exit1, renderer-hidden)"
+    },
+    {
+      "case": "p1a-backtick-info-open",
+      "sha": "7d9e4d14ca8e",
+      "exit": 2,
+      "line": "(none)",
+      "renderer_truth": "HIDDEN(code-or-comment)",
+      "note": "renderer: paragraph text, live cells stay live; selector: enters fence state?",
+      "class": "reject-fail-closed(exit2, renderer-hidden)"
+    },
+    {
+      "case": "p1b-backtick-info-closed",
+      "sha": "5efba3fb46e6",
+      "exit": 2,
+      "line": "(none)",
+      "renderer_truth": "HIDDEN(code-or-comment)",
+      "note": "same trigger, closed; renderer: both lines are paragraph text",
+      "class": "reject-fail-closed(exit2, renderer-hidden)"
+    },
+    {
+      "case": "p2-close-without-open",
+      "sha": "c0e70db3b9eb",
+      "exit": 2,
+      "line": "(none)",
+      "renderer_truth": "HIDDEN(code-or-comment)",
+      "note": "renderer: fence from banner-line to row-line; is a real fence",
+      "class": "reject-fail-closed(exit2, renderer-hidden)"
+    },
+    {
+      "case": "p3-script-block",
+      "sha": "303de102ede9",
+      "exit": 0,
+      "line": "RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1 newest_gate=85 newest_closure=85",
+      "renderer_truth": "HIDDEN(code-or-comment)",
+      "note": "renderer: raw HTML block, cells invisible; selector has no rule",
+      "class": "WRONG-ACCEPT(defect)"
+    },
+    {
+      "case": "p5-codespan-comment-open",
+      "sha": "5c91a364be0a",
+      "exit": 2,
+      "line": "(none)",
+      "renderer_truth": "HIDDEN(code-or-comment)",
+      "note": "renderer: code span, no comment; selector: substring comment state",
+      "class": "reject-fail-closed(exit2, renderer-hidden)"
+    },
+    {
+      "case": "p6-codespan-comment-closed",
+      "sha": "1061e035eea2",
+      "exit": 2,
+      "line": "(none)",
+      "renderer_truth": "HIDDEN(code-or-comment)",
+      "note": "renderer: all rendered; selector: comment swallows live cells?",
+      "class": "reject-fail-closed(exit2, renderer-hidden)"
+    },
+    {
+      "case": "p7-indent-comment-open",
+      "sha": "8fec8f7acd1a",
+      "exit": 2,
+      "line": "(none)",
+      "renderer_truth": "HIDDEN(code-or-comment)",
+      "note": "renderer: indented code literal; selector: comment state?",
+      "class": "reject-fail-closed(exit2, renderer-hidden)"
+    },
+    {
+      "case": "p4-correction-fence-leak",
+      "sha": "babec2dd3c77",
+      "exit": 2,
+      "line": "(none)",
+      "renderer_truth": "HIDDEN(code-or-comment)",
+      "note": "renderer: fence hidden inside correction; ## Axes + row live; selector: fence state opened before correction-end check",
+      "class": "reject-fail-closed(exit2, renderer-hidden)"
+    }
+  ]
+}

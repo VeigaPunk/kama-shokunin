@@ -682,7 +682,11 @@ def selftest() -> int:
     # Round-86: the summary must be reconcilable with the arm population and the failure
     # lines it accompanies. A dropped arm and a forged summary both used to pass green.
     print(f"APPEND_DEBT_SELFTEST_ARMS arms={len(cases)} expected={EXPECTED_ARMS} fail_lines={fail}")
-    print(f"APPEND_DEBT_SELFTEST pass={len(cases) - fail} fail={fail} arms={len(cases)}")
+    # The summary line keeps its round-81 shape: `tools/pre-report-gate.py` arm 11 requires
+    # `APPEND_DEBT_SELFTEST pass=<n> fail=0` by fullmatch, and the arm population is carried by
+    # the ARMS line above, which the round-86 counter reconciles (pass+fail, declared==expected,
+    # fail_lines). Extending the summary broke that frozen consumer on 2026-11-04.
+    print(f"APPEND_DEBT_SELFTEST pass={len(cases) - fail} fail={fail}")
     return 0 if fail == 0 and len(cases) == EXPECTED_ARMS else 1
 
 

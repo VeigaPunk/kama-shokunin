@@ -1,0 +1,91 @@
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture init -q -b master .
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture rev-parse --show-toplevel
+rc=0
+/fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture
+TOPLEVEL-ASSERT want=/fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture got=/fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture equal=True
+$ /usr/bin/python3 /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/build_fixture.py A  (cwd=/fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture)
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture add -A
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture commit -q -m A stale base (round-84 cells; P85 present with stale digits)
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture rev-parse HEAD
+rc=0
+c1c6bff3faacfccb06d76f9129639c724fbcc0ee
+$ /usr/bin/python3 /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/build_fixture.py B c1c6bff3faacfccb06d76f9129639c724fbcc0ee  (cwd=/fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture)
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture add -A
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture commit -q -m B terminal round-85 receipt with final digits
+rc=0
+$ /usr/bin/python3 /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/build_fixture.py C c1c6bff3faacfccb06d76f9129639c724fbcc0ee  (cwd=/fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture)
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture add -A
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture commit -q -m C graded scorecard naming rev A + final token
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture rev-parse HEAD
+rc=0
+87554b30b2ad4f0b90dd6a500f4bb08c46d27871
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture switch -q -c stalecarry c1c6bff3faacfccb06d76f9129639c724fbcc0ee
+rc=0
+$ /usr/bin/python3 /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/build_fixture.py SC c1c6bff3faacfccb06d76f9129639c724fbcc0ee  (cwd=/fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture)
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture add -A
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture commit -q -m SC names rev A while P85 here still has stale digits
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture switch -q -c vanish c1c6bff3faacfccb06d76f9129639c724fbcc0ee
+rc=0
+$ /usr/bin/python3 /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/build_fixture.py V c1c6bff3faacfccb06d76f9129639c724fbcc0ee  (cwd=/fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture)
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture add -A
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture commit -q -m V deletes P85; only the stale ancestor carried it
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture switch -q -c side c1c6bff3faacfccb06d76f9129639c724fbcc0ee
+rc=0
+$ /usr/bin/python3 /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/build_fixture.py S  (cwd=/fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture)
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture add -A
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture commit -q -m S non-ancestor tip carrying a round-86 receipt
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture rev-parse side
+rc=0
+dd5d24610f0ef4a67aa7f3c09ea4fd87ef5a5c3f
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture switch -q master
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture switch -q -c ghost
+rc=0
+$ /usr/bin/python3 /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/build_fixture.py G dd5d24610f0ef4a67aa7f3c09ea4fd87ef5a5c3f  (cwd=/fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture)
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture add -A
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture commit -q -m G graded tree claiming the side tip's receipt
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture switch -q master
+rc=0
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture log --oneline --graph --all --decorate
+rc=0
+* c72d3df (ghost) G graded tree claiming the side tip's receipt
+* 87554b3 (HEAD -> master) C graded scorecard naming rev A + final token
+* 7a3b696 B terminal round-85 receipt with final digits
+| * dd5d246 (side) S non-ancestor tip carrying a round-86 receipt
+|/  
+| * ce82124 (stalecarry) SC names rev A while P85 here still has stale digits
+|/  
+| * 0e47ef9 (vanish) V deletes P85; only the stale ancestor carried it
+|/  
+* c1c6bff A stale base (round-84 cells; P85 present with stale digits)
+$ git -C /fast/scratch/hyaku/kama-r86/EX02CoupledBinding/fixture branch -v
+rc=0
+ghost      c72d3df G graded tree claiming the side tip's receipt
+* master     87554b3 C graded scorecard naming rev A + final token
+  side       dd5d246 S non-ancestor tip carrying a round-86 receipt
+  stalecarry ce82124 SC names rev A while P85 here still has stale digits
+  vanish     0e47ef9 V deletes P85; only the stale ancestor carried it
+shaA=c1c6bff3faacfccb06d76f9129639c724fbcc0ee
+sha_master=87554b30b2ad4f0b90dd6a500f4bb08c46d27871
+sha_side=dd5d24610f0ef4a67aa7f3c09ea4fd87ef5a5c3f

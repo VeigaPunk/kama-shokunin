@@ -1,0 +1,41 @@
+a-identical exit= 0 rev= b1e6da4a7c4a0001057467249865296a790b4b5f
+   PIN_ORIGIN rows=1 verified=1 mismatch=0 unreachable=0 bad=0
+   PIN_ORIGIN_ROW fixture/v1 verdict=verified anchors=2/2 corpus/anchors/a.txt: upstream 2-4 byte-identical; corpus/anchors/b.txt: upstream 2-4 byte-identical
+b-fabricated-hash-consistent exit= 1 rev= 0856bb8a735f257696130e7f2808c871ea6eeaeb
+   PIN_ORIGIN rows=1 verified=0 mismatch=1 unreachable=0 bad=0
+   PIN_ORIGIN_ROW fixture/v1 verdict=mismatch anchors=1/2 corpus/anchors/a.txt: upstream 2-4 byte-identical; corpus/anchors/b.txt: stored body differs from upstream 2-4
+c-digest-lie exit= 1 rev= fa116ce30e06baf24e1313a0c8b318aa48bf28b5
+   PIN_ORIGIN rows=1 verified=0 mismatch=0 unreachable=0 bad=1
+   PIN_ORIGIN_ROW fixture/v1 verdict=bad anchors=1/2 corpus/anchors/a.txt: upstream 2-4 byte-identical; corpus/anchors/b.txt: declared digest does not match the stored body
+d-range-outside exit= 1 rev= 188f22618209aff5f84e1d7c7e476e5c447e09a7
+   PIN_ORIGIN rows=1 verified=0 mismatch=1 unreachable=0 bad=0
+   PIN_ORIGIN_ROW fixture/v1 verdict=mismatch anchors=1/2 corpus/anchors/a.txt: upstream 2-4 byte-identical; corpus/anchors/b.txt: declared range 5-99 outside upstream (6 lines)
+e-malformed-header exit= 1 rev= 9bd61c0d4f8c1bf1fba3840821b5005ca9ee2b6d
+   PIN_ORIGIN rows=1 verified=0 mismatch=0 unreachable=0 bad=1
+   PIN_ORIGIN_ROW fixture/v1 verdict=bad anchors=1/2 corpus/anchors/a.txt: upstream 2-4 byte-identical; corpus/anchors/b.txt: malformed anchor header: # url=http://127.0.0.1:36489/up/README.md sha256=abc ref=v2 lines=2-4
+x1-crlf-upstream-lf-body exit= 0 rev= f77e51bb343ce1fec1d2355b1e3f47e0319790a2
+   PIN_ORIGIN rows=1 verified=1 mismatch=0 unreachable=0 bad=0
+   PIN_ORIGIN_ROW fixture/v1 verdict=verified anchors=2/2 corpus/anchors/a.txt: upstream 2-3 byte-identical; corpus/anchors/b.txt: upstream 2-3 byte-identical
+x2-upstream-no-final-newline exit= 0 rev= 4682cc53736129dac385976dfd3f1a51b989f747
+   PIN_ORIGIN rows=1 verified=1 mismatch=0 unreachable=0 bad=0
+   PIN_ORIGIN_ROW fixture/v1 verdict=verified anchors=2/2 corpus/anchors/a.txt: upstream 2-3 byte-identical; corpus/anchors/b.txt: upstream 2-3 byte-identical
+x3-formfeed-line-split exit= 1 rev= eb50dd02d8b9cb3743f7e810c82d35c477b757cc
+   PIN_ORIGIN rows=1 verified=0 mismatch=1 unreachable=0 bad=0
+   PIN_ORIGIN_ROW fixture/v1 verdict=mismatch anchors=0/2 corpus/anchors/a.txt: stored body differs from upstream 2-2; corpus/anchors/b.txt: stored body differs from upstream 2-2
+x3b-formfeed-fabricated-body exit= 0 rev= bb2973f59fb56cb158e191922f014cf39bc6bf6d
+   PIN_ORIGIN rows=1 verified=1 mismatch=0 unreachable=0 bad=0
+   PIN_ORIGIN_ROW fixture/v1 verdict=verified anchors=2/2 corpus/anchors/a.txt: upstream 3-3 byte-identical; corpus/anchors/b.txt: upstream 3-3 byte-identical
+x4-inverted-range-blank-body exit= 0 rev= e1133be74d28bed06152ffa86a56ac5906f1f5db
+   PIN_ORIGIN rows=1 verified=1 mismatch=0 unreachable=0 bad=0
+   PIN_ORIGIN_ROW fixture/v1 verdict=verified anchors=2/2 corpus/anchors/a.txt: upstream 4-2 byte-identical; corpus/anchors/b.txt: upstream 2-4 byte-identical
+x5-header-only-register exit= 0 rev= abfb596b3e944c62c997de677cd45f7765c548d2
+   PIN_ORIGIN rows=0 verified=0 mismatch=0 unreachable=0 bad=0
+selftest exit= 0 rev= -
+   PIN_ORIGIN_SELFTEST_PASS verified verdict=verified want=verified
+   PIN_ORIGIN_SELFTEST_PASS fabricated-hash-consistent verdict=mismatch want=mismatch
+   PIN_ORIGIN_SELFTEST_PASS digest-lie verdict=bad want=bad
+   PIN_ORIGIN_SELFTEST_PASS malformed-header verdict=bad want=bad
+   PIN_ORIGIN_SELFTEST_PASS missing-anchor verdict=bad want=bad
+   PIN_ORIGIN_SELFTEST_PASS unreachable verdict=unreachable want=unreachable
+   PIN_ORIGIN_SELFTEST_PASS range-outside-upstream verdict=mismatch want=mismatch
+   PIN_ORIGIN_SELFTEST pass=7 fail=0

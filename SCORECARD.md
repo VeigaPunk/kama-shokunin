@@ -52,11 +52,11 @@ tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.servic
 
 The live plan follows; historical plans remain as filed (round 78's in `plans/round-78-claims.md`, executed in the §Round 78 section below; round 77's at the end of the §Round 77 section).
 
-### Planned (round 86)
+### Planned (round 87)
 
-1. Calibration: prospectively freeze rendered-cell selection excluding fenced code and HTML comments; retain round85 false-green committed specimens and bind revision/command/receipt as one assertion.
-2. Operability: prospectively map each mutant to explicit owning arms and reconcile one completed selftest summary with failure-line cardinality; retain round85 actual M2/M3/M4 observations without calling the classifier generally robust.
-3. Freshness: source-origin corroboration remains distinct from hash integrity; no moved/drifted class is claimed without observed source bytes.
+1. Operability: wire the round-86 instruments into `tools/pre-report-gate.py` as one new arm (freezing the arm count 13→14 in the round-87 plan), so the rendered-cell, mutant-owner and pin-origin verdicts are composed by the gate instead of cited beside it; the round-86 w2 `EX02GateArms` finding 3 is the motivating evidence.
+2. Calibration: bind the frozen counter's *executed* instrument bytes to `--rev` (hash the `git show <rev>:tools/round86-*.py` bytes and run those), closing the tampered-worktree green the round-86 w2 `CR01SizingControl` receipts demonstrate; freeze the new counter in a plan before any data.
+3. Freshness: extend pin-origin to a row class the register does not yet carry (`moved`/`drifted`) only when live upstream bytes show one; no class is claimed from documentary inference.
 
 ## Retired
 
@@ -5250,3 +5250,104 @@ Measured source revision `948dec784a9736b4a36d6a10d303fbee054b19c6`, commands/st
 | C2 operability | frozen `count.py c2 --repo . --rev REV --work /fast/scratch/hyaku/kama-r85/L1`: killed0/escaped3→killed3/escaped0, invalid0 both, exit1→0; pristine31/0→34/0 | 8→8 | finite delivered M2/M3/M4 executions verified: M2 equality arm33/1, M3 above-subject arm33/1, M4 coverage arms32/2, all child exit1 with empty stderr and one consistent summary |
 
 Full gate at this measured revision: `PRE_REPORT round=85 arms=13 failed=1 uncommitted=0`, exit1. Sole failed arm is existing append-debt: events79/accepted53/late23/pending1/unaccepted3/bad_rows0, exit1; the three round84 events are inherited unaccepted debt newly inside round85's base. Grade and main source bytes are unchanged (`source-identity.json`); no gate-green claim is made. Round84 wrong-subject invocation retains exactly one binding finding, exit1, unaccepted2/bad_rows1; its pending4 is revision-specific. Source census315→317, validate0, append-only0. No capability admitted; overall **honest stop**, all numeric scores unchanged.
+
+
+## Round 86 — rendered-cell identity, mutant owning arms and pin origin (2026-11-04)
+
+Fresh-start round after three rejected closures (round 83 harmed, rounds 84 and 85 honest stops;
+operator "Resume all eight once", run-15 amendment 11). Base `3ff23da3f291ce8abf7bf5c54f9abacec67e3e8d`;
+frozen plan `plans/round-86-claims.md`, frozen counter `.ufo/waves/round-86/count.py`, freeze
+`c07e1f909414aafb2d8de5605a81fd3bd4e3550e`. Three claims on three axes, each with its own receipt and
+its own before/no-work control; assigned calibration 7 / operability 8, and calibration is the lowest
+assigned axis. No axis score is claimed to move; three capabilities enter the repertoire.
+
+### Round-86 measured results
+
+| Claim / axis | Before → after | Counting command | Evidence |
+|---|---|---|---|
+| C1 calibration — rendered-cell identity of the live self-assessment cells | `RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0` exit1 → `RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1` exit0; selftest 14/0 (11 before the w2 repair), 7 source mutants each killed by a named arm | `python3 .ufo/waves/round-86/count.py c1 --repo . --rev <measured> --work <scratch>` | `.ufo/waves/round-86/measured/before/c1.out`, `.ufo/waves/round-86/measured/after/c1.out`, `.ufo/waves/round-86/measured/after/c1-selftest.out`, `.ufo/waves/round-86/measured/after/c1-mutants.out` |
+| C2 operability — every declared mutant maps to an owning arm; summary reconciles | `DEBT_MUTANT_OWNERS mutants=5 killed=3 escaped=2 invalid=0 arms=unknown cardinality=ok owners=3/5` exit1 → `mutants=5 killed=5 escaped=0 invalid=0 arms=34 cardinality=ok owners=5/5` exit0; selftest 10/0 | `python3 .ufo/waves/round-86/count.py c2 --repo . --rev <measured> --work <scratch>` | `.ufo/waves/round-86/measured/before/c2.out`, `.ufo/waves/round-86/measured/after/c2.out`, `.ufo/waves/round-86/measured/after/c2-selftest.out` |
+| C3 freshness — pin-recheck rows corroborated against live upstream bytes | `could-not-evaluate: no tools/round86-pin-origin.py at 3ff23da3…` exit2 → `PIN_ORIGIN rows=5 verified=5 mismatch=0 unreachable=0 bad=0` exit0; selftest 7/0 with a fabricated hash-consistent extract refused as `mismatch` | `python3 .ufo/waves/round-86/count.py c3 --repo . --rev <measured> --work <scratch>` | `.ufo/waves/round-86/measured/before/c3.out`, `.ufo/waves/round-86/measured/after/c3.out`, `.ufo/waves/round-86/measured/after/c3-selftest.out` |
+
+The wave falsified the instruments, not the predicates. Round-86 w1 reviewer fixtures f1/f4 showed the
+gate fact reading the receipt at the *graded* revision instead of the revision the banner names; the
+instrument now reads `git show R:path` (arm `revision-carries-no-receipt`). Round-86 w2
+`MT01SelectorMutants` showed the four `*-shadow` arms were vacuous — the stale live cell came first, so
+a selector with fence, comment, correction or column-0 exclusion disabled still passed; the fixture now
+emits the shadow **first**, and `comment-shadow`, `correction-shadow`, `indent-shadow`,
+`indent-row-shadow` and `tilde-fence-shadow` each kill their own source mutant (receipt
+`.ufo/waves/round-86/measured/after/c1-mutants.out`). Round-86 w2 `EX02GateArms` found the C2 commit
+had turned frozen gate arm 11 red by extending the debt selftest's summary line; the summary keeps its
+round-81 shape and the arm population rides the `APPEND_DEBT_SELFTEST_ARMS` line. The round also
+accepted the four round-84/85 append-only events in `registry/append-only-late.tsv` (15 rows), which
+were the inherited red arm.
+
+**Disclosed limits.** The frozen counter executes the instrument bytes from `--repo`'s working tree, not
+from `--rev`: a tampered worktree instrument prints a green line at any revision (w2 `CR01SizingControl`
+receipts `c1-tamper-green-at-base.out`, `c3-tamper-green-at-head.out`). The counter is frozen before
+data and is not amended; the final measurement is run on a clean tree whose worktree bytes equal the
+graded revision's. The round-86 instruments are not wired into any gate arm (w2 `EX02GateArms`
+finding 3): adding an arm changes the gate's frozen arm count, so it is routed to round 87.
+C3 proves documentary origin at fetch time; it does not judge whether a row's verdict word is the right
+reading of a semantic change.
+
+Source census `validate --root /home/vgpnk/Projects/shokunin kama` exit0, 317→319 rows (A302→304,
+mined 284→286): S576 re-opened and its `used-by` extended, S578 (§4.5 fenced code) and S579 (§4.4
+indented code) admitted this round — the two rules C1's selector rests on. `Assimilation: none`: no
+`merge/kama/` theme fits three instrument repairs.
+
+**Capabilities — canonical list as of round 86**
+
+| Capability | What it can now do | Evidence pointer | First-working round |
+| late-delta | Re-derive a late register's round delta against the frozen generator: carried rows bound byte-wise to the base revision, new rows by cell and by accepting/deletion round order | `tools/round82-late-delta.py` | 82 |
+| selfrecord-round81 | Re-derive six declared facts of the round-81 self-record at the sealed revision and grade dated value-bound corrections whose fix path carries the new token at the tip | `tools/round82-selfrecord-round81.py` | 82 |
+| sources-registry | Curate where kama learns: tier-scoped, revision-anchored rows; contract-v1 census clean | `corpus/SOURCES.md` | 10 |
+| append-debt | Grade the append-only acceptance population under a late-acceptance rule: a later round's row binds by strict ancestry and round order and accepts what the frozen cutoff cannot | `tools/round81-append-debt.py`, `registry/append-only-late.tsv` | 81 |
+| ollama-offline-evidence-replay | Reconcile caller-supplied `/api/tags` + `/api/ps` captures fail-closed | `tools/kama-ollama-evidence.py` | 14 |
+| live-llamacpp-lifecycle | Start the pinned llama.cpp server on an unregistered loopback port, capture loading/ready surfaces, grade, tear down | `.ufo/waves/round-16/live/receipt.json` | 16 |
+| gguf-declared-identity-replay | Decode bounded local GGUF metadata offline and compare declared metadata with a captured receipt | `tools/gguf-identity.py` | 20 |
+| context-capacity-receipt | Run the registered context-capacity cells on the lane-owned llama.cpp fixture and write a sha256-bound receipt | `tools/kama-context-capacity.py` | 25 |
+| instrument-agreement | Run a lane instrument N times over one tree and emit a receipt with per-run digests and an agreement counter | `tools/instrument-agreement.py` | 30 |
+| pin-watch | List upstream release tags for each pinned serving engine and report the newest tag and how many releases sort above it | `tools/pin-watch.py` | 41 |
+| digest-ledger | Classify every full SHA-256 the lane's documents cite: committed blob, ledger-declared external artifact, unverifiable with reason, or flagged known-wrong | `tools/digest-ledger.py` | 42 |
+| hexrun-census | Classify every lower-case hex run of 32–127 chars the lane's documents cite | `tools/hexrun-census.py` | 43 |
+| append-only-audit | Grade the lane's contract-declared append-only self-description against its git history, every deleted line accounted | `tools/append-only-audit.py` | 46 |
+| live-receipt-replay | Re-acquire a pinned receipt's server archive and model from recorded https URLs, verify sha256 before execution, re-run the lifecycle from an empty home | `tools/kama-live-replay.py` | 47 |
+| live-ollama-lifecycle | Start the pinned Ollama binary on an unregistered loopback port, create a qualified model, capture surfaces, grade, tear down | `tools/kama-ollama-live.py` | 61 |
+| worktree-landing-check | Prove at report time that each declared self-record path's worktree bytes are byte-identical to its HEAD blob | `tools/round67-worktree-landing-check.py` | 67 |
+| receipt-pointer-audit | Audit every section-relative `measured/…` receipt citation against an append-only ledger whose own target must exist | `tools/round68-receipt-pointer-audit.py` | 68 |
+| newest-closure-counter | Resolve the lane's newest non-author closure mechanically and fail when the calibration row names an older one | `tools/round69-newest-closure-counter.py` | 69 |
+| pre-report-gate | Run the round's reconciled instruments as ONE gate; exit 0 only when every arm is green and the tree is clean | `tools/pre-report-gate.py` | 71 |
+| province-host-claims | Re-derive every `province-host:` marker against the live host and require a later dated correction | `tools/round71-province-host-claims.py` | 71 |
+| round-scope | Grade a round's own scope as a verdict: frozen plan at the tip, no uncommitted record path, no ignored wave path | `tools/round72-round-scope.py` | 72 |
+| receipt-tip-binding | Bind every cited receipt to the revision it measured: header names an ancestor and the `rev..tip` delta touches only record paths | `tools/round72-receipt-tip-binding.py` | 72 |
+| round-scope-cases | Grade linked-worktree dirt, newer-round ignored work and nested submodule dirt in addition to the inherited scope cases | `tools/round73-round-scope-cases.py` | 73 |
+| receipt-claim-binding | Reject a three-token tip claim whose cited receipt header names another revision; real records use explicit revisions | `tools/round73-receipt-claim-binding.py` | 73 |
+| province-host-drift | Compare the newest recorded kernel/architecture/distribution triple with the live triple | `tools/round73-province-host-drift.py` | 73 |
+| selfdesc-canon | Resolve the capability repertoire from the newest capability table by round number regardless of heading markup | `tools/round74-selfdesc-canon.py` | 74 |
+| receipt-claim-v2 | Bind a self-record's receipt citations by explicit revision with paragraph-scoped claim grading | `tools/round74-receipt-claim-binding.py` | 74 |
+| province-host-drift-v2 | Require every `recorded at <rev>` host block to be byte-identical at its recorded revision and the tip | `tools/round74-province-host-drift.py` | 74 |
+| interpretation-pins | Bind the lane's two routed interpretation debts to boundary fixtures whose declared reading the committed module produces and whose reversed reading a mutated copy is caught producing | `tools/round75-interpretation-pins.py` | 75 |
+| survivor-probe | Certify the shipped receipt-claim arms by source mutation: five named mutants must each turn their owning selftest arm red | `tools/round75-survivor-probe.py` | 75 |
+| append-accepted | Grade every audit-undisclosed deletion event as accepted history through a committed, hash- and class-bound register with the temporal cutoff | `tools/round75-append-accepted.py` | 75 |
+| receipt-scope | Classify a self-record's citation population: fenced quotation excluded, self-description deltas non-shifting, every live citation named | `tools/round76-receipt-scope.py` | 76 |
+| selfrecord-facts | Re-derive eight declared self-record facts at the revisions they name and count value-bound corrections | `tools/round76-selfrecord-facts.py` | 76 |
+| append-exempt-class | Account every audit event once and preserve a multi-register introduction cutoff — **partial**: the round-76 counter is red on its own target (`unaccounted=41` at its audit revision) and stays as the historical probe; `append-registers` (round 77) and `append-registers-tip` (round 78) supersede the accounting | `tools/round76-append-exempt.py` | 76 |
+| citation-baseline | Bind a pre-round measurement receipt by header ancestry and byte reproducibility at its introducing commit while the at-the-tip delta rule still shifts ordinary receipts | `tools/round77-citation-baseline.py` | 77 |
+| append-registers | Account every audit event once across two registers with independent introduction cutoffs, the audit's `permitted` carriage class and the contract's `out_of_region` class, with rotation detection | `tools/round77-append-registers.py` | 77 |
+| selfrecord-round76 | Re-derive six sealed round-76 facts and accept only value-bound corrections whose stated value re-derives | `tools/round77-selfrecord-round76.py` | 77 |
+| selfrecord-round77 | Re-derive six declared facts of the round-77 self-record at the sealed revision and grade dated value-bound corrections | `tools/round78-selfrecord-round77.py` | 78 |
+| append-registers-tip | Account every append-only audit event at the audited revision with ancestry-filtered, commit-bound register rows and both register digests | `tools/round78-append-registers.py` | 78 |
+| live-reconcile | Exercise the probe's MODEL_OK / MODEL_MISMATCH / DEAD verdicts end-to-end against the pinned llama.cpp child on an unregistered loopback port | `tools/round78-live-reconcile.py` | 78 |
+| selfrecord-round78 | Re-derive six declared facts of the round-78 self-record at the sealed revision and grade dated value-bound corrections whose new values re-derive at the tip | `tools/round79-selfrecord-round78.py` | 79 |
+| gate-arm-composition | Compose a round's own instrument selftests as one pre-report-gate arm, fail-closed on a red, malformed or absent instrument | `tools/pre-report-gate.py` (arm 10 `round78-instruments`) | 79 |
+| unregistered-census | Classify a serving listener by whether a registry row declares its port, graded by two fixture registries over the lane-owned pinned child | `tools/round79-unregistered-census.py`, `tools/kama-probe.sh listeners` | 79 |
+| selfrecord-round79 | Re-derive six declared facts of the round-79 self-record at its sealed revision and grade one dated value-bound correction per stale fact against the tip | `tools/round80-selfrecord-round79.py` | 80 |
+| engine-pin-relations | Relate every pinned serving-engine ref the lane holds to its upstream newest release and tag identity from a committed tag list, with each cell re-derivable offline | `tools/round80-engine-pin-relations.py`, `registry/engine-pin-relations.tsv` | 80 |
+| class-engine-register | Prove the `registered` census class on a second engine fixture (Ollama v0.40.11) and audit an engine register whose every row names its receipt | `tools/round80-ollama-census.py`, `registry/unregistered-class-engines.tsv` | 80 |
+| late-path-binding | Bind a caller-supplied late-register path to its committed identity — repo-relative path, commit-tracked presence, committed-byte equality — and resolve the file's and each row's introduction at the audited revision, or refuse with exit 2 | `tools/round81-append-debt.py` (`load_late`; arms `late-path-outside-repo`, `late-path-untracked`, `late-path-dirty`, `late-path-bound`) | 83 |
+| pending-falls | Show a previous round's declared `pending` count falling at the next round's base: recompute the window from the frozen audit, require every window event accepted, and fail when the declared number disagrees with the window | `tools/round83-pending-falls.py` | 83 |
+| pin-recheck | Grade one recheck row per engine relation row by byte comparison of two committed anchor extracts, with a four-value verdict and an explicit `ungraded` class that never counts as graded | `tools/round83-pin-rechecks.py`, `registry/pin-recheck-rows.tsv`, `corpus/anchors/` | 83 |
+| rendered-cell-identity | Select a self-assessment cell only from rendered Markdown — HTML comments, backtick/tilde fences, `round-N correction` blocks and non-column-0 lines are not cells — and grade three coupled facts: the head banner names the newest terminal gate receipt with its revision, command and receipt bytes, the calibration row names the newest committed verifier spotcheck by highest round number, and that row names its disposition | `tools/round86-rendered-cells.py` | 86 |
+| mutant-owning-arms | Map every declared mutant of the debt selftest to a declared owning arm and reconcile each completed summary with its arm population and its failure-line cardinality, so a dropped arm or a forged summary is a red run | `tools/round86-mutant-owners.py` | 86 |
+| pin-origin-corroboration | Corroborate every pin-recheck row against the live source bytes at its declared URL and line range, separating remote origin from the local extract pair's hash integrity | `tools/round86-pin-origin.py` | 86 |

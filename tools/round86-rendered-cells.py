@@ -115,20 +115,44 @@ class GitTree:
             ["git", "-C", self.repo, "merge-base", "--is-ancestor", revision, self.rev],
             capture_output=True).returncode == 0
 
+    def blob_at(self, revision: str, path: str):
+        """Bytes of ``path`` AT ``revision`` (None when absent there).
+
+        The gate fact's coupling is about the named revision carrying the named receipt
+        (frozen predicate, clause 5); reading the graded revision's copy let a banner cite a
+        revision that never held the receipt (round-86 w1 reviewer fixtures f1/f4).
+        """
+        if revision == self.rev:
+            return self.blob(path)
+        try:
+            return subprocess.check_output(
+                ["git", "-C", self.repo, "show", f"{revision}:{path}"], text=True,
+                stderr=subprocess.DEVNULL)
+        except subprocess.CalledProcessError:
+            return None
+
 
 class DictTree:
-    """Fixture tree for --selftest: files, ancestors, revision label."""
+    """Fixture tree for --selftest: files, ancestors, revision label, per-revision overrides."""
 
-    def __init__(self, files, ancestors, rev):
+    def __init__(self, files, ancestors, rev, rev_files=None):
         self.files = files
         self.ancestors = set(ancestors) | {rev}
         self.rev = rev
+        self.rev_files = rev_files
 
     def paths(self):
         return sorted(self.files)
 
     def blob(self, path):
         return self.files.get(path)
+
+    def blob_at(self, revision, path):
+        if self.rev_files is None:
+            return self.files.get(path)
+        if revision == self.rev:
+            return self.files.get(path)
+        return self.rev_files.get(revision, {}).get(path)
 
     def ancestor(self, revision):
         return revision in self.ancestors
@@ -269,7 +293,7 @@ def gate_fact(tree, authority, newest):
         if not tree.ancestor(revision):
             continue
         for path in receipts:
-            text = tree.blob(path) if path in tree.paths() else None
+            text = tree.blob_at(revision, path)
             if text is not None and token.group(0).strip("`") in text:
                 coupled.append((revision, path))
     if not coupled:
@@ -345,7 +369,15 @@ STALE_ROW = (
 
 
 def fixture(stale_live=True, shadow="", authority_extra="", row=None, receipt_text=None,
-            drop_receipt=False, extra_files=None, cmd=GOOD_CMD, token=GOOD_TOKEN):
+            drop_receipt=False, extra_files=None, cmd=GOOD_CMD, token=GOOD_TOKEN,
+            rev_files=None, row_shadow=""):
+    """One SCORECARD fixture. ``shadow`` is emitted FIRST so it is the first candidate cell.
+
+    Round-86 w2 (MT01SelectorMutants): the earlier fixture put the stale live cell first, so a
+    shadow never became a candidate and every shadow arm passed with the exclusion rules
+    disabled. Order is the discrimination: an excluded construct must be the first candidate,
+    otherwise the arm cannot see a selector that fails to exclude it.
+    """
     live = (f"**Current authority (round 85):** assigned axes are operability + calibration; "
             f"Latest measured round: 85. Terminal gate measured at `{A}`: {cmd} printed {token}, "
             f"exit0; receipt `{GOOD_RECEIPT}`.{authority_extra}")
@@ -354,7 +386,8 @@ def fixture(stale_live=True, shadow="", authority_extra="", row=None, receipt_te
              f"`python3 tools/pre-report-gate.py --repo . --round 84 --tip master` printed "
              f"`PRE_REPORT round=84 arms=13 failed=0 uncommitted=0`, exit0; receipt "
              f"`.ufo/waves/round-84/measured/after/gate-final-green.out`.")
-    score = "# fixture\n\n" + (stale if stale_live else live) + "\n" + shadow + "\n## Axes\n\n" + \
+    body = (stale if stale_live else live)
+    score = "# fixture\n\n" + shadow + "\n## Axes\n\n" + body + "\n" + row_shadow + \
             (row if row is not None else (STALE_ROW if stale_live else GOOD_ROW)) + "\n"
     files = {
         "SCORECARD.md": score,
@@ -371,7 +404,7 @@ def fixture(stale_live=True, shadow="", authority_extra="", row=None, receipt_te
         files.pop(GOOD_RECEIPT, None)
     if extra_files:
         files.update(extra_files)
-    return DictTree(files, {A}, "c" * 40)
+    return DictTree(files, {A}, "c" * 40, rev_files=rev_files)
 
 
 def selftest():
@@ -393,33 +426,35 @@ def selftest():
 
     arm("green", fixture(stale_live=False), 0,
         {"gate": True, "closure": True, "disposition": True})
-    fenced = "```markdown\n" + (
-        "**Current authority (round 85):** Latest measured round: 85. Terminal gate measured at "
-        f"`{A}`: {GOOD_CMD} printed {GOOD_TOKEN}, exit0; receipt `{GOOD_RECEIPT}`.") + "\n" + \
-        GOOD_ROW + "\n```\n"
+    # Every shadow arm puts the excluded construct FIRST: it is then the first candidate cell,
+    # so a selector that fails to exclude it reads a green gate. With the stale live cells as
+    # the only rendered cells the arm must stay red (exit 1, gate False, 3 mismatches).
+    correct = ("**Current authority (round 85):** Latest measured round: 85. Terminal gate "
+               f"measured at `{A}`: {GOOD_CMD} printed {GOOD_TOKEN}, exit0; receipt "
+               f"`{GOOD_RECEIPT}`.")
+    fenced = "```markdown\n" + correct + "\n" + GOOD_ROW + "\n```\n"
     arm("fenced-shadow", fixture(stale_live=True, shadow=fenced), 1, {"gate": False}, 3)
-    commented = "<!--\n" + (
-        "**Current authority (round 85):** Latest measured round: 85. Terminal gate measured at "
-        f"`{A}`: {GOOD_CMD} printed {GOOD_TOKEN}, exit0; receipt `{GOOD_RECEIPT}`.") + "\n" + \
-        GOOD_ROW + "\n-->\n"
+    commented = "<!--\n" + correct + "\n" + GOOD_ROW + "\n-->\n"
     arm("comment-shadow", fixture(stale_live=True, shadow=commented), 1, {"gate": False}, 3)
-    tilde = "~~~\n" + (
-        "**Current authority (round 85):** Latest measured round: 85. Terminal gate measured at "
-        f"`{A}`: {GOOD_CMD} printed {GOOD_TOKEN}, exit0; receipt `{GOOD_RECEIPT}`.") + "\n" + \
-        GOOD_ROW + "\n~~~\n"
+    tilde = "~~~\n" + correct + "\n" + GOOD_ROW + "\n~~~\n"
     arm("tilde-fence-shadow", fixture(stale_live=True, shadow=tilde), 1, {"gate": False}, 3)
-    indented = "    " + (
-        "**Current authority (round 85):** Latest measured round: 85. Terminal gate measured at "
-        f"`{A}`: {GOOD_CMD} printed {GOOD_TOKEN}, exit0; receipt `{GOOD_RECEIPT}`.") + "\n    " + \
-        GOOD_ROW + "\n"
+    indented = "    " + correct + "\n    " + GOOD_ROW + "\n"
     arm("indent-shadow", fixture(stale_live=True, shadow=indented), 1, {"gate": False}, 3)
-    unclosed = "```\n" + (
-        "**Current authority (round 85):** Latest measured round: 85. Terminal gate measured at "
-        f"`{A}`: {GOOD_CMD} printed {GOOD_TOKEN}, exit0; receipt `{GOOD_RECEIPT}`.") + "\n"
+    correction = "### round-85 correction\n\n" + correct + "\n\n" + GOOD_ROW + "\n"
+    arm("correction-shadow", fixture(stale_live=True, shadow=correction), 1,
+        {"gate": False}, 3)
+    arm("indent-row-shadow", fixture(stale_live=True, row_shadow="    " + GOOD_ROW + "\n"), 1,
+        {"gate": False, "closure": False}, 3)
+    unclosed = "```\n" + correct + "\n"
     arm("unclosed-fence-fails-closed", fixture(stale_live=True, shadow=unclosed), 2)
     arm("contradictory-receipt", fixture(stale_live=False, receipt_text="PRE_REPORT round=85 "
                                         "arms=12 failed=0 uncommitted=0\n"), 1, {"gate": False}, 1)
     arm("missing-receipt", fixture(stale_live=False, drop_receipt=True), 1, {"gate": False}, 1)
+    # Round-86 w1 reviewer escape (fixtures f1/f4): a banner naming an ancestor revision that
+    # never carried the declared receipt passed while the receipt existed only at the graded
+    # revision. The frozen predicate's clause 5 reads the receipt AT R.
+    arm("revision-carries-no-receipt", fixture(stale_live=False, rev_files={A: {}}), 1,
+        {"gate": False}, 1)
     arm("command-round-disagrees",
         fixture(stale_live=False,
                 cmd="`python3 tools/pre-report-gate.py --repo . --round 84 --tip master`"),

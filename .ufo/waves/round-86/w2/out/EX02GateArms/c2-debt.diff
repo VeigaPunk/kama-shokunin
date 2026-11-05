@@ -1,0 +1,30 @@
+diff --git a/tools/round81-append-debt.py b/tools/round81-append-debt.py
+index 3d5a9712..e6c1dc69 100755
+--- a/tools/round81-append-debt.py
++++ b/tools/round81-append-debt.py
+@@ -478,6 +478,11 @@ def _event(commit, file, digest, count, klass, status="unrestored"):
+             "undisclosed": [{"line_sha256": digest, "count": count, "classes": [klass]}]}
+ 
+ 
++# The declared selftest arm population. Round-86 froze it so a dropped arm is a red summary
++# instead of a quietly smaller green one (round-85 receipt: pass=34 fail=0).
++EXPECTED_ARMS = 34
++
++
+ def selftest() -> int:
+     A, B, C = "a" * 40, "b" * 40, "c" * 40
+     D = "d" * 40
+@@ -674,8 +679,11 @@ def selftest() -> int:
+             fail += 1
+             print(f"APPEND_DEBT_SELFTEST_FAIL {name} exit={got} want={want_exit} "
+                   f"summary={s} findings={result.get('findings', [])[:2]}")
+-    print(f"APPEND_DEBT_SELFTEST pass={len(cases) - fail} fail={fail}")
+-    return 0 if fail == 0 else 1
++    # Round-86: the summary must be reconcilable with the arm population and the failure
++    # lines it accompanies. A dropped arm and a forged summary both used to pass green.
++    print(f"APPEND_DEBT_SELFTEST_ARMS arms={len(cases)} expected={EXPECTED_ARMS} fail_lines={fail}")
++    print(f"APPEND_DEBT_SELFTEST pass={len(cases) - fail} fail={fail} arms={len(cases)}")
++    return 0 if fail == 0 and len(cases) == EXPECTED_ARMS else 1
+ 
+ 
+ # ---------------------------------------------------------------- main

@@ -49,6 +49,34 @@ instead of by a date field the historical files do not carry. Fix: the round-86 
 highest round number and reported the stale pointer as `closure=0` at base. The round-69 instrument is
 left unchanged — it is historical, and its `--since-round 63` scope is the workaround.
 
+**M3 — the shadow-control arms were vacuous, so five selector mutants survived.** Class:
+control discrimination. Evidence: `.ufo/waves/round-86/w2/out/MT01SelectorMutants/findings.md` — the
+fixture emitted the stale live cell first and the shadow after it, so `select_cells` never saw the
+shadow; with the HTML-comment, `round-N correction`, column-0 or tilde-fence exclusion disabled the
+selftest still printed `pass=11 fail=0`. Captured-by: an exclusion arm must make the excluded
+construct the **first** candidate cell; a control whose subject never enters the population cannot
+fail. Fix: the fixture emits the shadow first and gains `correction-shadow` and `indent-row-shadow`;
+7/7 source mutants are now killed by named arms (`RENDERED_CELLS_MUTANTS mutants=7 killed=7
+escaped=0`, `.ufo/waves/round-86/measured/after/c1-mutants.out`). Shown able to fail: each mutant run
+exits 1 naming its own arm.
+
+**M4 — a selftest summary-format extension turned a frozen gate arm red.** Class:
+consumer coupling. Evidence: `.ufo/waves/round-86/w2/out/EX02GateArms/EX02GateArms.md` finding 1 —
+`round81-instruments` was green at the base (`APPEND_DEBT_SELFTEST pass=34 fail=0`) and red at the
+tip (`… fail=0 arms=34`), because `tools/pre-report-gate.py` arm 11 fullmatches the old shape.
+Captured-by: before changing a line another frozen instrument parses, run every consumer of that
+line. Fix: the summary keeps its round-81 shape and the arm population rides the separate
+`APPEND_DEBT_SELFTEST_ARMS` line the round-86 counter reconciles.
+
+**M5 — the gate fact read the receipt at the graded revision, not at the revision it named.** Class:
+provenance binding. Evidence: `.ufo/waves/round-86/w1/out/RV01ClaimsReview/` fixtures f1/f4 — a
+banner naming an ancestor that never carried the declared receipt graded `gate=1` while the receipt
+existed only at the tip. Captured-by: the frozen predicate's clause 5 ("the receipt's bytes at `R`
+containing that exact token") read literally. Fix: `GitTree.blob_at(R, path)` and the arm
+`revision-carries-no-receipt`; a tampered worktree instrument is a separate, disclosed limit
+(w2 `CR01SizingControl`), routed to round 87.
+
+
 ## Append-only provenance erratum (R84V5)
 
 The round-84 frozen plan (`plans/round-84-claims.md`) cites a red control at

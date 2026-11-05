@@ -3536,3 +3536,58 @@ Motivation: round84 outside closure R84V2–V5 and CR01/MT01 finite escapes. Fro
 Round84 citation erratum (R84V5): `plans/round-84-claims.md` promised `.ufo/waves/round-84/measured/before/red-selfrecord.out`, which is absent. The retained `.ufo/waves/round-84/measured/after/c2-red.out` is a `--no-corrections` red demonstration, not a historical uncorrected-tree run. This appended correction preserves that provenance limitation; frozen plan and historical receipts are not rewritten.
 
 Round85 terminal measurement at `948dec784a9736b4a36d6a10d303fbee054b19c6`: C1 actual-cell mismatches2→0 exit1→0, finite controls27/0; **C1 fails** its frozen false-pass kill rule because the settled critic/sentinel controls place fake cells in literal/comment blocks and pass while real cells stay stale. C2 actual delivered M2/M3/M4 killed0→3, escaped3→0, invalid0, pristine34/0; source grade/main identical to base. Full gate is honestly red arms13/failed1/uncommitted0, solely inherited round84 acceptance debt: events79/accepted53/late23/pending1/unaccepted3/bad0. No debt rows or audit semantics changed. Command/stream/exit receipts `.ufo/waves/round-85/measured/after/`; all10 wave seats settled before publication, one scout output empty with no recorded error. Source registry315→317 (A300→302, mined283→284, rejected24→25), validate0/append-only0. No capability or numeric score increase; round honest stop. KQ137/KQ138 learn from actual-cell and owning-transcript escapes; prospective fixes remain next-round declarations, not changes to this frozen rule.
+
+## Round 86 — rendered-cell identity, mutant owning arms and pin origin (2026-11-04)
+
+Fresh-start round after three rejected closures (r83 harmed, r84 and r85 honest stops; operator
+"Resume all eight once"). Base `3ff23da3f291ce8abf7bf5c54f9abacec67e3e8d`; frozen plan
+`plans/round-86-claims.md` and counter `.ufo/waves/round-86/count.py` at
+`c07e1f909414aafb2d8de5605a81fd3bd4e3550e`. Motivation: R85V1 (a raw-line selector read fenced and
+commented copies as live cells), R85V2 (a dropped arm and a forged summary both passed), R85V3/R84V3
+(extract-pair integrity never proved remote origin).
+
+C1 calibration — rendered-cell identity. `tools/round86-rendered-cells.py` selects the head authority
+paragraph and the calibration row only from rendered text (HTML comments, backtick/tilde fences,
+`round-N correction` blocks and non-column-0 lines are not cells) and grades three coupled facts: the
+banner names the newest terminal gate receipt with its revision, command and receipt bytes; the row
+names the newest committed verifier spotcheck by highest round number; the row names that closure's
+disposition. Before `mismatches=3` (`.ufo/waves/round-86/measured/before/c1.out`, exit1); after
+`mismatches=0` exit0. Selftest 11/0 with the round-85 false green as a red arm.
+
+C2 operability — owning arms and summary cardinality. `tools/round86-mutant-owners.py` maps five
+mutants to declared owning arms and reconciles each completed summary with its arm population and
+failure lines; `tools/round81-append-debt.py` gains `EXPECTED_ARMS`, an ARMS line and an arm-count
+assertion. Before `killed=3 escaped=2 arms=unknown` (M5 dropped arm, M6 forged summary); after
+`killed=5 escaped=0 arms=34 cardinality=ok owners=5/5` exit0. Production grading bytes unchanged
+outside the selftest.
+
+C3 freshness — pin origin corroboration (capability acquisition). `tools/round86-pin-origin.py`
+re-reads each anchor header, recomputes its digest, fetches the URL live and compares the stored body
+with the upstream range byte for byte. Before: `could-not-evaluate: no tools/round86-pin-origin.py`,
+exit2. After: `PIN_ORIGIN rows=5 verified=5 mismatch=0 unreachable=0 bad=0` exit0 on this host;
+fabricated-hash-consistent and digest-lie controls refuse.
+
+Frontier: SOURCES 317→319 rows, A302→304, mined284→286, `validate` exit0; S578 (CommonMark §4.5
+fenced code) and S579 (§4.4 indented code) opened this round, S576's used-by extended to this lesson.
+Lesson `corpus/lessons/round-86.md` mines the fenced-shadow false green and the round-69 date-ordering
+exit 2, and appends the R84V5 provenance erratum. `Assimilation: none` — no staged theme fits three
+instrument repairs.
+
+Wave settlement and instrument repairs (w1 12 seats, w2 12 seats; the L1 is the sole integrator). w1
+reviewer `RV01ClaimsReview` proved the gate fact read the receipt at the *graded* revision, so a banner
+could name an ancestor that never carried it (fixtures f1/f4); the instrument now reads
+`git show R:path` and the arm `revision-carries-no-receipt` holds it. w2 `MT01SelectorMutants` proved
+the four `*-shadow` arms were vacuous — the stale live cell was emitted first, so a selector with
+fence, comment, correction or column-0 exclusion disabled still passed, and five source mutants
+survived; the fixture now emits the shadow first and 7/7 source mutants are killed by named arms
+(`.ufo/waves/round-86/measured/after/c1-mutants.out`). w2 `EX02GateArms` proved the C2 commit had
+turned frozen gate arm 11 red by extending the debt selftest's summary line; the summary keeps its
+round-81 shape and the arm population rides the `APPEND_DEBT_SELFTEST_ARMS` line. w2
+`CR01SizingControl` proved the frozen counter executes the worktree instrument, so a tampered
+worktree prints green at any revision — disclosed, not amended: the counter is frozen before data and
+the final measurement runs on a clean tree.
+
+Append-only debt accepted (the inherited red gate arm): 15 rows in `registry/append-only-late.tsv`
+accept the four round-84/85 SCORECARD in-place events (`3e93febb`, `65665250` twelve rows,
+`c0d7fbd8`, `948dec78`), each row naming its commit subject and the deletion round it accepts;
+`APPEND_DEBT round=86` then reports unaccepted0/bad_rows0.
