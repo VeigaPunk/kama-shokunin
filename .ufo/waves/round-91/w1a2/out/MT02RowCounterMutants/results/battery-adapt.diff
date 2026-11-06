@@ -1,0 +1,33 @@
+--- .ufo/waves/round-91/controls/c2-forgeries.py	2026-11-06 19:00:13.868811256 -0300
++++ .ufo/waves/round-91/w1a2/out/MT02RowCounterMutants/c2-forgeries-path.py	2026-11-06 20:26:50.703119969 -0300
+@@ -2,9 +2,11 @@
+ """Round-91 C2 pre-freeze forgery battery for tools/round91-threshold-rows.py.
+ 
+ Builds a scratch fixture git repo (never the lane), one commit per variant, and runs the counter
+-from the lane (its bytes at the freeze) against each commit. Usage:
+-    python3 c2-forgeries.py --lane <lane> --scratch <dir>
++named by --counter against each commit. Usage:
++    python3 c2-forgeries-path.py --lane <lane> --counter <counter.py> --scratch <dir>
+ Every variant prints its expectation label first, then the counter's output and exit code.
++MT02 adaptation: the ONLY change from controls/c2-forgeries.py is the --counter argument; the
++fixture construction and expectations are byte-identical.
+ """
+ import argparse
+ import re
+@@ -35,6 +37,7 @@
+ def main():
+     ap = argparse.ArgumentParser()
+     ap.add_argument("--lane", required=True)
++    ap.add_argument("--counter", required=True)
+     ap.add_argument("--scratch", required=True)
+     a = ap.parse_args()
+     Path(a.scratch).mkdir(parents=True, exist_ok=True)
+@@ -96,7 +99,7 @@
+             (D / "SKILL.md").write_text(text)
+             g(D, "add", "-A")
+             g(D, "-c", "user.name=fixture", "-c", "user.email=fixture@invalid", "commit", "-q", "-m", name)
+-            p = subprocess.run([sys.executable, str(Path(a.lane) / "tools/round91-threshold-rows.py"),
++            p = subprocess.run([sys.executable, str(Path(a.counter)),
+                                 "--repo", str(D), "--rev", "HEAD"], capture_output=True, text=True)
+             print(f"== {name}: {label}")
+             print(p.stdout.rstrip())

@@ -40,3 +40,23 @@ The values are defaults read from source at one tag each; a unit's argv or envir
 kama does not read service units (operator-owned). No row was measured on a live server this round. SGLang
 is not covered: its `server_args.py` at v0.5.22 moved its defaults into `sglang/srt/arg_groups/` (opened, not
 mined this round; see the round-91 lesson Gate).
+
+## Round 91 correction (2026-11-06) — wave-1 non-author read
+
+Rules 1, 3 and 4 above overreach or misstate; the body is kept (append-only), read it through this section.
+Evidence: `.ufo/waves/round-91/w1/RV02ThresholdRows.md` (per-row table, tag bisect) and
+`.ufo/waves/round-91/w1/SC01SourceReopen.md`; the L1 re-ran the pinned binary's `--help`
+(`-np, --parallel N number of server slots (default: -1, -1 = auto)`).
+
+- **Rule 4, llama.cpp half, is wrong.** `S593 line 464` is the `common_params` default; `llama-server`
+  overrides it to auto (`common/arg.cpp:1373`), which resolves to 4 slots with unified KV
+  (`tools/server/server.cpp:126-129`). A default llama-server b12177 decodes up to 4 sequences at once. The
+  Ollama half (one request per model, S594 line 277) stands, but requests to a loaded runner bypass the
+  512-request queue (`server/sched.go:245`), so the queue explains overflow only for requests waiting on a load.
+- **Rule 1 history is wrong.** The port moved 8080 → 9931 between b11500 and b11550; `timeout_read = 3600`
+  is unchanged from b11000 to b12177. `timeout_read` bounds a quiet socket, not a request's run time.
+- **Rule 3 overreaches.** Ollama's 5 minutes are a stall window from the last load progress
+  (`llm/llama_server.go:1331-1339`); vLLM's 600 s apply per engine-ready wait (`v1/engine/core_client.py:738-739`),
+  so total startup can exceed 600 s. Elapsed time alone does not prove loading.
+- Lesson: a struct default is not the runtime default until the binary's own argument parser or `--help`
+  agrees (QUALITY KQ146, `corpus/lessons/round-91.md` M1).

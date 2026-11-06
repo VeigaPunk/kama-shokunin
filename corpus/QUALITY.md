@@ -692,3 +692,11 @@ Next free id KQ145 (highest present KQ144).
 | ID | Admit only when | Reject or limit when | Motivating lesson |
 |---|---|---|---|
 | KQ145 (qualifies every sanitizer on a parsed input) | A rule that sanitizes listener-supplied text escapes it in place, so the item it belongs to keeps its effect on the verdict; dropping an item is admitted only with a cell where the dropped item would have changed the verdict and the verdict is unchanged. | The sanitizer drops the item (an entry, a status, a header) and no cell shows the drop is verdict-neutral. Falsifier: a single-entry listing whose only entry carries the hostile byte and a non-ready status; if the probe then grades the endpoint ready, the drop changed the verdict. | `corpus/lessons/round-90.md` M4 (round-90 M `f968fb19` dropped router entries with control-character ids, so a `loading` router read `MODEL_OK expected-wildcard`; repaired at `a09effae`, `.ufo/waves/round-90/repair/rv01-matrix-base-M-Mprime.out`) |
+
+## Criterion added — round 91 (2026-11-06; from wave-1 RV02 BLOCKER-1, C2 K2)
+
+Next free id KQ146 (highest present KQ145).
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ146 (qualifies every default-value row read from source) | A row that states an engine's default names the line that sets it **for the binary kama reads** — the program's own argument parser or entry point — and, where the pinned binary prints its defaults, the row's value equals the `--help` default. | The row cites a shared struct or library default (e.g. `common_params`) that a program-specific parser overrides, or no one compared it with the pinned `--help`. Falsifier: `llama-server --help` at the pin prints a different default than the row's value (b12177 `-np`: `-1 = auto`, row T07: `1`). | `corpus/lessons/round-91.md` M1 (C2 row T07 bound to `common.h:464` `n_parallel = 1`; `common/arg.cpp:1373` sets `-1` for the server, resolved to 4 slots). |

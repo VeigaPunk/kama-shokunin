@@ -1853,3 +1853,11 @@ Frontier after round 88:
   in about 1-2 s, base killed at 120 s); one awk pass, the expected id passed through `ENVIRON` (S592).
 - **Frontier (not held):** SGLang defaults (moved to `sglang/srt/arg_groups/` at v0.5.22); live measurement of
   any threshold (rows are source defaults); the python-free fallback's JSON-escaped id compare (r90 EX03 F2).
+
+## Coverage correction — round 91 (appended, 2026-11-06)
+
+The round-91 core line above says llama.cpp b12177 runs "one sequence" by default: that is the `common_params`
+default, not the server's. `llama-server` b12177 defaults to `-np -1` (auto → 4 slots); T02/T04/T09/T10/T11/T13
+decisions overreach. Read `SKILL.md` §Round 91 correction and `corpus/knowledge/serving-thresholds.md` §Round 91
+correction; round-91 C2 is not verified (lesson M1, KQ146). The threshold table stays frontier-adjacent until a round
+re-binds it under KQ146.

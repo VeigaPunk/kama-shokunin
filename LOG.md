@@ -3738,3 +3738,21 @@ reproduces both (`.ufo/waves/round-90/controls/c1-base.out`: a 64 MiB answer rea
   re-checks, `jstr` loop, Content-Type strip, router-id filter); CR01 counter forgeable by a 1 MiB-cap probe;
   CR02 counter is a form judge; MT02 8/8 binding mutants killed; EX02 harm unchanged, C1 adds ≤10 % latency;
   SN01 time bound absent (207 s, present at base). All routed to §Planned (round 91).
+
+## Round 91 — 2026-11-06 (large answers graded in linear time; serving thresholds, C2 not verified)
+
+Frozen plan `plans/round-91-claims.md` (freeze `9a41912a`; base `c06838c5`). Motivating evidence: round-90 closure R5
+and wave-1 SN01 (207 s for a 4 MiB answer of 200 000 ids); the round-91 base control reproduces it
+(`.ufo/waves/round-91/controls/c1-base.out`: T1/T2/T4/T5 killed at 120 s, `mismatches=5`). Depth was the lowest axis (7).
+
+- **C1 operability (sourced S592):** `tools/kama-probe.sh` applies the served-id rule in one awk pass and joins with
+  `paste -sd,` (`3decfa36`); counter `tools/round91-answer-time.py` `5/0 → 0/0`, every cell ≤ 2.1 s
+  (`measured/c1.out`); harm unchanged (`measured/harm-M.out`). Wave 1: EX01 21/21 held-out cells agree, EX02 no
+  python-free harm, RV01 verdict-equivalent; CR01/MT01 show the counter does not own the rule (disclosed limits).
+- **C2 depth:** SKILL §Serving timeout and limit thresholds, 14 rows from S593–S595 (`3f317ecd`); counter
+  `rows=0 → 14 bound=14 engines=3` (`measured/c2.out`). **Not verified:** frozen K2 fired — wave-1 RV02 (with SC01)
+  shows T07 states `n_parallel` 1 while llama-server b12177 defaults to auto → 4 slots (`--help`:
+  `default: -1, -1 = auto`). Dated corrections in `SKILL.md` and `corpus/knowledge/serving-thresholds.md`; QUALITY
+  KQ146; falsifier `measured/kq146-help-check.out` (`disagree=1`, exit 1).
+- r90 R2 verified-at correction (`corpus/knowledge/probe-answer-bounds.md`); lesson `corpus/lessons/round-91.md` (M1–M3,
+  driver-side double-dispatch note). Wave `w1` 12 seats canonical, `w1a2` duplicate spawned by the orchestrator (7 kept).

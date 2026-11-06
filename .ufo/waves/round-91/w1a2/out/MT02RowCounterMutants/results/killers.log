@@ -1,0 +1,69 @@
+++ python3 mt02-killers.py --lane /home/vgpnk/Projects/shokunin/kama-shokunin --frozen /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round91-threshold-rows.py --mutants ./mutants --scratch /fast/scratch/hyaku/kama-r91/MT02RowCounterMutants/kill --out ./results
+== K01-min-rows (target M12-MIN_ROWS-10-to-0)
+   rule: three genuinely bound rows from three engines isolate the n>=10 floor (V1 cannot: engines=1 also fails)
+   expect pristine: rows=3 bound=3 engines=3 exit=1 (rows<10)
+   pristine: agg=(3, 3, 0, 0, 3, 0) exit=1 rows=[('T01', '1', 'bound'), ('T02', '1', 'bound'), ('T03', '1', 'bound')]
+   mutant  : agg=(3, 3, 0, 0, 3, 0) exit=0 rows=[('T01', '1', 'bound'), ('T02', '1', 'bound'), ('T03', '1', 'bound')]
+   VERDICT: KILLED-aggregate
+== K02-heading-suffix (target M14-heading-prefix-match)
+   rule: a heading with a suffix must not open the section
+   expect pristine: rows=0 exit=1 (heading is not exact)
+   pristine: agg=(0, 0, 0, 0, 0, 0) exit=1 rows=[]
+   mutant  : agg=(1, 1, 0, 0, 1, 0) exit=1 rows=[('T01', '1', 'bound')]
+   VERDICT: KILLED-aggregate
+== K03-indented-source (target M15-src-re-any-indent)
+   rule: a SOURCES row indented 4 spaces is not a data row
+   expect pristine: bound=0 why=source-absent (4-space SOURCES row is not a source row)
+   pristine: agg=(1, 0, 1, 0, 0, 0) exit=1 rows=[('T01', '0', 'source-absent')]
+   mutant  : agg=(1, 1, 0, 0, 1, 0) exit=1 rows=[('T01', '1', 'bound')]
+   VERDICT: KILLED-aggregate
+== K04-url-in-parens (target M17-url-rstrip-dropped)
+   rule: the URL token inside a SOURCES cell ends with `)`
+   expect pristine: bound=1 (closing paren stripped from the URL)
+   pristine: agg=(1, 1, 0, 0, 1, 0) exit=1 rows=[('T01', '1', 'bound')]
+   mutant  : agg=(1, 0, 1, 0, 0, 1) exit=1 rows=[('T01', '0', 'fetch-failed')]
+   VERDICT: KILLED-aggregate
+== K05-tier-c-source (target M18-tier-check-dropped)
+   rule: a mined tier-C row is not a tier-A/B source
+   expect pristine: bound=0 why=source-status=mined/tier=C
+   pristine: agg=(1, 0, 1, 0, 0, 0) exit=1 rows=[('T01', '0', 'source-status=mined/tier=C')]
+   mutant  : agg=(1, 1, 0, 0, 1, 0) exit=1 rows=[('T01', '1', 'bound')]
+   VERDICT: KILLED-aggregate
+== K06-B2-value (target M01-drop-B2-value-in-literal)
+   rule: value 9.9 is not in line 35 while B7's `threshold` is: the battery's T03 also fails B7
+   expect pristine: bound=0 why=value-not-in-literal
+   pristine: agg=(1, 0, 1, 0, 0, 0) exit=1 rows=[('T01', '0', 'value-not-in-literal')]
+   mutant  : agg=(1, 1, 0, 0, 1, 0) exit=1 rows=[('T01', '1', 'bound')]
+   VERDICT: KILLED-aggregate
+== K07-B4-moving-ref (target M02-drop-B4-moving-ref)
+   rule: master URL whose live bytes currently equal the tag digest; the battery's T04 also fails B7
+   expect pristine: bound=0 why=moving-ref
+   pristine: agg=(1, 0, 1, 0, 0, 0) exit=1 rows=[('T01', '0', 'moving-ref')]
+   mutant  : agg=(1, 1, 0, 0, 1, 0) exit=1 rows=[('T01', '1', 'bound')]
+   VERDICT: KILLED-aggregate
+== K08-B4-pin (target M03-drop-pin-check)
+   rule: engine pin curl-8_3_0 absent from the curl-8_23_0 URL; the battery's T06 also fails B7
+   expect pristine: bound=0 why=pin-not-in-url
+   pristine: agg=(1, 0, 1, 0, 0, 0) exit=1 rows=[('T01', '0', 'pin-not-in-url')]
+   mutant  : agg=(1, 1, 0, 0, 1, 0) exit=1 rows=[('T01', '1', 'bound')]
+   VERDICT: KILLED-aggregate
+== K09-B4-engine (target M04-drop-engine-check)
+   rule: engine vllm absent from a curl URL; the battery's T07 also fails B6
+   expect pristine: bound=0 why=engine-not-in-url
+   pristine: agg=(1, 0, 1, 0, 0, 0) exit=1 rows=[('T01', '0', 'engine-not-in-url')]
+   mutant  : agg=(1, 1, 0, 0, 1, 0) exit=1 rows=[('T01', '1', 'bound')]
+   VERDICT: KILLED-aggregate
+== K10-B5-sha (target M05-sha-compare-removed)
+   rule: SOURCES digest is all zeros for the real URL; the battery's T05 also fails B7
+   expect pristine: bound=0 why=sha-mismatch
+   pristine: agg=(1, 0, 1, 0, 0, 0) exit=1 rows=[('T01', '0', 'sha-mismatch')]
+   mutant  : agg=(1, 1, 0, 0, 1, 0) exit=1 rows=[('T01', '1', 'bound')]
+   VERDICT: KILLED-aggregate
+== K11-B1-empty-decision (target M19-empty-cell-check-removed)
+   rule: otherwise-legit row with a `-` decision; the battery's T10 also fails B2/B7
+   expect pristine: bound=0 why=empty-cell
+   pristine: agg=(1, 0, 1, 0, 0, 0) exit=1 rows=[('T01', '0', 'empty-cell')]
+   mutant  : agg=(1, 1, 0, 0, 1, 0) exit=1 rows=[('T01', '1', 'bound')]
+   VERDICT: KILLED-aggregate
+
+all_killer_fixtures_flip=yes

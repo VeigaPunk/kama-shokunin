@@ -439,3 +439,7 @@ Round 90: the **probe's own answer boundary** is part of the surface. Every loop
 characters out of its table and JSON output; graded on lane-owned stub listeners by
 `tools/round90-hostile-answers.py`. The probe's reason codes are a SKILL decision table whose rows bind to probe
 answers captured on stub cells by `tools/round90-reason-capture.py`, checked by `tools/round90-reason-rows.py`.
+
+Round 91: the probe's **time on a large answer** is part of the surface — a `/v1/models` answer under the 4 MiB cap
+is graded in linear time (`tools/round91-answer-time.py`). The engines' default timeouts and limits are read, never
+tuned (`SKILL.md` §Serving timeout and limit thresholds, with its round-91 correction).

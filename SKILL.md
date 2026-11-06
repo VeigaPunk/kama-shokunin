@@ -1893,3 +1893,26 @@ Context, reading rules and the Gate: `corpus/knowledge/serving-thresholds.md`.
 | T12 | ollama v0.40.11 | request queue limit `OLLAMA_MAX_QUEUE` | 512 | S594 | 281 | `MaxQueue = Uint("OLLAMA_MAX_QUEUE", 512)` | at most 512 requests wait by default; an error a consumer gets only under heavy concurrent load is queue overflow to report, not an endpoint identity fault |
 | T13 | vllm v0.32.0 | engine-ready startup wait `VLLM_ENGINE_READY_TIMEOUT_S` | 600 s | S595 | 26 | `VLLM_ENGINE_READY_TIMEOUT_S: int = 600` | the API server waits up to 10 minutes for its engine cores at startup; a vLLM listener not ready inside that window has failed startup, inside it read it as loading |
 | T14 | vllm v0.32.0 | idle HTTP keep-alive `VLLM_HTTP_TIMEOUT_KEEP_ALIVE` | 5 s | S595 | 111 | `VLLM_HTTP_TIMEOUT_KEEP_ALIVE: int = 5` | the server closes an idle kept-alive connection after 5 s; a client that reuses one later gets a reset and must reconnect, which is not a server fault |
+
+### Round 91 correction (2026-11-06) — non-author wave-1 read (RV02, SC01); rows above unchanged
+
+The rows above are the measured C2 surface and stay byte-identical; read them through this correction. Wave-1
+reviewer RV02 (`.ufo/waves/round-91/w1/RV02ThresholdRows.md`) and scout SC01 (`w1/SC01SourceReopen.md`) read
+every row against its line and the code that consumes it, so round-91 C2 is **not verified** (kill rule K2).
+
+- **T07 misstates the server default.** `common.h:464` (`n_parallel = 1`) is the `common_params` default for
+  the non-server examples. For `llama-server` b12177, `common/arg.cpp:1373` sets `n_parallel = -1` (auto) and
+  `tools/server/server.cpp:126-129` resolves auto to **4 slots with unified KV**; the pinned binary's `--help`
+  prints `-np, --parallel N number of server slots (default: -1, -1 = auto)`. Read: a default llama-server
+  decodes up to 4 sequences at once; requests beyond the slot count queue; report the latency, never tune it.
+- **T02:** `timeout_read` bounds a quiet socket (no read/write progress), not how long a generation runs.
+- **T04:** 8192 MiB is the prompt-cache cap; memory near it is consistent with the cache but growth alone does
+  not establish the cause.
+- **T09:** a per-request `keep_alive` overrides the 5-minute default; `/api/tags` listing is outside S594.
+- **T10:** the 5 minutes are a stall window measured from the last load progress, not a first-answer window;
+  whether a slow first answer is loading comes from `/api/ps` or runner status, not elapsed time.
+- **T11:** requests to an already-loaded runner bypass the T12 queue; T11/T12 do not establish how they
+  serialise.
+- **T13:** the 600 s apply per engine-ready wait; with several engine cores the total startup can exceed 600 s.
+- **Intro:** the port did not move at b12177 — `common.h` carries 8080 at b11500 and 9931 at b11550, and
+  `timeout_read = 3600` is unchanged from b11000 to b12177 (RV02 tag bisect).

@@ -1,0 +1,232 @@
+{
+ "pristine": {
+  "tag": "pristine",
+  "battery": {
+   "V1-one-legit-row": {
+    "agg": [
+     1,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    "exit": 1,
+    "rows": {
+     "T01 1": "bound"
+    }
+   },
+   "V2-ten-prose-rows-absent-source": {
+    "agg": [
+     10,
+     0,
+     10,
+     0,
+     0,
+     0
+    ],
+    "exit": 1,
+    "rows": {
+     "T01 0": "source-absent",
+     "T02 0": "source-absent",
+     "T03 0": "source-absent",
+     "T04 0": "source-absent",
+     "T05 0": "source-absent",
+     "T06 0": "source-absent",
+     "T07 0": "source-absent",
+     "T08 0": "source-absent",
+     "T09 0": "source-absent",
+     "T10 0": "source-absent"
+    }
+   },
+   "V3-mixed-forgeries": {
+    "agg": [
+     11,
+     1,
+     9,
+     1,
+     1,
+     0
+    ],
+    "exit": 1,
+    "rows": {
+     "T01 1": "bound",
+     "T02 0": "literal-not-at-line",
+     "T03 0": "value-not-in-literal",
+     "T04 0": "moving-ref",
+     "T05 0": "sha-mismatch",
+     "T06 0": "pin-not-in-url",
+     "T07 0": "engine-not-in-url",
+     "T08 0": "source-status=queued/tier=A",
+     "T09 0": "duplicate",
+     "T10 0": "empty-cell",
+     "T14 0": "name-not-in-literal"
+    }
+   },
+   "V4-ten-bound-rows-one-engine": {
+    "agg": [
+     10,
+     10,
+     0,
+     0,
+     1,
+     0
+    ],
+    "exit": 1,
+    "rows": {
+     "T01 1": "bound",
+     "T02 1": "bound",
+     "T03 1": "bound",
+     "T04 1": "bound",
+     "T05 1": "bound",
+     "T06 1": "bound",
+     "T07 1": "bound",
+     "T08 1": "bound",
+     "T09 1": "bound",
+     "T10 1": "bound"
+    }
+   }
+  },
+  "battery_exit": 0,
+  "m2": {
+   "agg": [
+    14,
+    14,
+    0,
+    0,
+    3,
+    0
+   ],
+   "exit": null
+  },
+  "m2_exit": 0
+ },
+ "mutants": [
+  {
+   "tag": "M01-drop-B2-value-in-literal",
+   "verdict": "KILLED-rowwhy",
+   "diff": [
+    "V3-mixed-forgeries: rows [('T03 0', 'value-not-in-literal', 'name-not-in-literal')]"
+   ]
+  },
+  {
+   "tag": "M02-drop-B4-moving-ref",
+   "verdict": "KILLED-rowwhy",
+   "diff": [
+    "V3-mixed-forgeries: rows [('T04 0', 'moving-ref', 'name-not-in-literal')]"
+   ]
+  },
+  {
+   "tag": "M03-drop-pin-check",
+   "verdict": "KILLED-rowwhy",
+   "diff": [
+    "V3-mixed-forgeries: rows [('T06 0', 'pin-not-in-url', 'name-not-in-literal')]"
+   ]
+  },
+  {
+   "tag": "M04-drop-engine-check",
+   "verdict": "KILLED-rowwhy",
+   "diff": [
+    "V3-mixed-forgeries: rows [('T07 0', 'engine-not-in-url', 'literal-not-at-line')]"
+   ]
+  },
+  {
+   "tag": "M05-sha-compare-removed",
+   "verdict": "KILLED-rowwhy",
+   "diff": [
+    "V3-mixed-forgeries: rows [('T05 0', 'sha-mismatch', 'name-not-in-literal')]"
+   ]
+  },
+  {
+   "tag": "M06-line-off-by-one",
+   "verdict": "KILLED-aggregate",
+   "diff": [
+    "V1-one-legit-row: aggregate/exit (1, 1, 0, 0, 1, 0)/1 -> (1, 0, 1, 0, 0, 0)/1",
+    "V3-mixed-forgeries: aggregate/exit (11, 1, 9, 1, 1, 0)/1 -> (11, 0, 10, 1, 0, 0)/1",
+    "V4-ten-bound-rows-one-engine: aggregate/exit (10, 10, 0, 0, 1, 0)/1 -> (10, 0, 10, 0, 0, 0)/1",
+    "M2: {'agg': (14, 14, 0, 0, 3, 0), 'exit': None} exit 0 -> {'agg': (14, 0, 14, 0, 0, 0), 'exit': None} exit 1"
+   ]
+  },
+  {
+   "tag": "M07-comment-stripping-disabled",
+   "verdict": "KILLED-aggregate",
+   "diff": [
+    "V3-mixed-forgeries: aggregate/exit (11, 1, 9, 1, 1, 0)/1 -> (12, 1, 9, 2, 1, 0)/1"
+   ]
+  },
+  {
+   "tag": "M08-fence-detection-disabled",
+   "verdict": "KILLED-aggregate",
+   "diff": [
+    "V3-mixed-forgeries: aggregate/exit (11, 1, 9, 1, 1, 0)/1 -> (12, 1, 9, 2, 1, 0)/1"
+   ]
+  },
+  {
+   "tag": "M09-duplicate-rule-removed",
+   "verdict": "KILLED-aggregate",
+   "diff": [
+    "V3-mixed-forgeries: aggregate/exit (11, 1, 9, 1, 1, 0)/1 -> (11, 1, 10, 0, 1, 0)/1"
+   ]
+  },
+  {
+   "tag": "M10-B7-removed",
+   "verdict": "KILLED-aggregate",
+   "diff": [
+    "V3-mixed-forgeries: aggregate/exit (11, 1, 9, 1, 1, 0)/1 -> (11, 2, 8, 1, 1, 0)/1"
+   ]
+  },
+  {
+   "tag": "M11-MIN_ENGINES-3-to-1",
+   "verdict": "KILLED-aggregate",
+   "diff": [
+    "V4-ten-bound-rows-one-engine: aggregate/exit (10, 10, 0, 0, 1, 0)/1 -> (10, 10, 0, 0, 1, 0)/0"
+   ]
+  },
+  {
+   "tag": "M12-MIN_ROWS-10-to-0",
+   "verdict": "SURVIVED",
+   "diff": []
+  },
+  {
+   "tag": "M13-row-re-allows-indent",
+   "verdict": "KILLED-aggregate",
+   "diff": [
+    "V3-mixed-forgeries: aggregate/exit (11, 1, 9, 1, 1, 0)/1 -> (12, 1, 9, 2, 1, 0)/1"
+   ]
+  },
+  {
+   "tag": "M14-heading-prefix-match",
+   "verdict": "SURVIVED",
+   "diff": []
+  },
+  {
+   "tag": "M15-src-re-any-indent",
+   "verdict": "SURVIVED",
+   "diff": []
+  },
+  {
+   "tag": "M16-duplicate-pair-check-dropped",
+   "verdict": "KILLED-aggregate",
+   "diff": [
+    "V3-mixed-forgeries: aggregate/exit (11, 1, 9, 1, 1, 0)/1 -> (11, 1, 10, 0, 1, 0)/1"
+   ]
+  },
+  {
+   "tag": "M17-url-rstrip-dropped",
+   "verdict": "SURVIVED",
+   "diff": []
+  },
+  {
+   "tag": "M18-tier-check-dropped",
+   "verdict": "SURVIVED",
+   "diff": []
+  },
+  {
+   "tag": "M19-empty-cell-check-removed",
+   "verdict": "KILLED-rowwhy",
+   "diff": [
+    "V3-mixed-forgeries: rows [('T10 0', 'empty-cell', 'value-not-in-literal')]"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,20 @@
+# bench-suffix-removal.out — SB01LessonDraft attempt 2, 2026-11-06
+# interpreter: GNU bash, version 5.3.20(1)-release (x86_64-pc-linux-gnu) — the probe's interpreter (shebang '#!/usr/bin/env bash'; counters run ["bash", probe])
+# the tool shell used for shell built-ins by this seat is bash 5.2.37(1)-release; this bench runs under /usr/bin/bash deliberately
+# string shape: ids=$(served_ids ...) strips the trailing newline, so tr '\n' ',' leaves NO trailing comma (the base probe's pattern never matched)
+# start uptime:  20:36:49  up 4 days  8:29,  1 user,  load average: 43.50, 36.19, 21.52
+case=unmatched-50000          bytes=400000   locale=en_US.UTF-8  ms=2635 len=399999 tail2=00
+case=unmatched-100000         bytes=800000   locale=en_US.UTF-8  ms=11220 len=799999 tail2=00
+case=unmatched-200000         bytes=1600000  locale=en_US.UTF-8  ms=47221 len=1599999 tail2=00
+case=unmatched-200000         bytes=1600000  locale=C            ms=43748 len=1599999 tail2=00
+case=matched-trailing-comma   bytes=1600001  locale=en_US.UTF-8  ms=19 len=1600000 tail2=0,
+join_equivalence base_vs_paste=yes len_a=1599999 len_b=1599999
+# end uptime:  20:39:19  up 4 days  8:32,  1 user,  load average: 30.54, 34.16, 23.01
+
+# CORRECTION (this seat, same session): the 'locale=C' row above is INVALID — LC_ALL was set only on the
+# tr element of the pipeline, so the parameter expansion still ran in en_US.UTF-8. The expansion must be timed
+# in a bash process whose own locale is C. Re-run:
+# uptime:  20:39:43  up 4 days  8:32,  1 user,  load average: 29.11, 33.61, 23.07
+case=unmatched-200000       bytes=1600000  bash_locale=C            ms=7796 len=1599999
+case=unmatched-200000       bytes=1600000  bash_locale=en_US.UTF-8  ms=43849 len=1599999 (repeat of run 3 above)
+# end uptime:  20:40:35  up 4 days  8:33,  1 user,  load average: 27.70, 32.53, 23.31

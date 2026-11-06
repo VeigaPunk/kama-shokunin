@@ -1,0 +1,100 @@
+# sources-recheck.out — SB01LessonDraft (round 91, w1a2, attempt 2), 2026-11-06
+# Every URL below fetched by this seat with curl 8.23.0, read-only GET, no credentials.
+# All four S592-S595 digests were compared with the committed corpus/SOURCES.md rows (awk over the row's
+# "sha256 <64 hex>" token), not copied from them.
+#
+# Provenance note on this file: the first fetch (20:33, scratch /fast/scratch/hyaku/kama-r91/SB01LessonDraft/)
+# produced the digests listed in section 1; that scratch directory was deleted at ~20:36 by the peer holding the
+# same path (see the seat report), so the files were re-fetched at 20:36 into /fast/scratch/hyaku/kama-r91/SB01LessonDraft-a2/
+# with identical digests. This file replaces an earlier version that was truncated by `tee /dev/stderr` (tee opens
+# its output with O_TRUNC, which truncated the redirected receipt) and whose SKILL-row block used wrong awk fields.
+
+## 1. S592-S595 re-open (2026-11-06)
+
+fetched at 20:33 and again at 20:36; identical digests both times
+S592 file=awk.html  row_sha256=6df7d0776af4b28dbc3ec667a02a18e51ccd5066ea45a22166214e7e3832f898 file_sha256=6df7d0776af4b28dbc3ec667a02a18e51ccd5066ea45a22166214e7e3832f898 equal=yes bytes=144111 lines=2485 http=200
+S593 file=common.h  row_sha256=c3010a3c662a14556adb651b79bff00089564fde6b5e336959403e3db34e6073 file_sha256=c3010a3c662a14556adb651b79bff00089564fde6b5e336959403e3db34e6073 equal=yes bytes=58830 lines=1355 http=200
+S594 file=config.go row_sha256=0b0ea669b31cfe2b54313427257326a2b7a909bbc7bf8a671035efc446fb1895 file_sha256=0b0ea669b31cfe2b54313427257326a2b7a909bbc7bf8a671035efc446fb1895 equal=yes bytes=16343 lines=468 http=200
+S595 file=envs.py   row_sha256=e963af06cf6c775fe285147e0d811ea5b4d679e5cbd6958980ec2a0d1da70694 file_sha256=e963af06cf6c775fe285147e0d811ea5b4d679e5cbd6958980ec2a0d1da70694 equal=yes bytes=118996 lines=2488 http=200
+
+## 2. Quotes read at their lines (recording for the Gate rows)
+
+awk.html 107: "following the <equals-sign> shall be interpreted as if they appeared in the <i>awk</i> program preceded and followed by a"
+awk.html 108: "double-quote (<tt>'"'</tt> ) character, as a <b>STRING</b> token ..." (markup as served)
+awk.html 185: "<p>In addition, all environment variables shall be visible via the <i>awk</i> variable <b>ENVIRON</b>.</p>"
+awk.html 796: "value of each array element shall be a string consisting of the value of that variable. If appropriate, the environment variable"
+awk.html 797: "shall be considered a <i>numeric string</i> ...; the array element shall also"
+common.h 632: "    int32_t port                = 9931;          // server listens on this network port"
+common.h 634: "    int32_t timeout_read        = 3600;          // http read timeout in seconds"
+common.h 636: "    int32_t sse_ping_interval   = 30;            // SSE ping interval in seconds"
+common.h 644: "    int32_t cache_ram_mib       = 8192;  // -1 = no limit, 0 - disable, 1 = 1 MiB, etc."
+common.h 669: "    int sleep_idle_seconds = -1;   // if >0, server will sleep after this many seconds of idle time"
+common.h 703: "    int models_max = 4;                 // maximum number of models to load simultaneously"
+common.h 464: "    int32_t n_parallel            =     1; // number of parallel sequences to decode"
+config.go 21: "// Default is scheme \"http\" and host \"127.0.0.1:11434\""
+config.go 23: "\tdefaultPort := \"11434\""
+config.go 128: "// Default is 5 minutes."
+config.go 130: "\tkeepAlive = 5 * time.Minute"
+config.go 148: "// Default is 5 minutes."
+config.go 150: "\tloadTimeout = 5 * time.Minute"
+config.go 277: "\tNumParallel = Uint(\"OLLAMA_NUM_PARALLEL\", 1)"
+config.go 281: "\tMaxQueue = Uint(\"OLLAMA_MAX_QUEUE\", 512)"
+envs.py 14: "if TYPE_CHECKING:"   (the typed declarations run to line 337; 26 and 111 are type-checker mirrors)
+envs.py 26: "    VLLM_ENGINE_READY_TIMEOUT_S: int = 600"
+envs.py 111: "    VLLM_HTTP_TIMEOUT_KEEP_ALIVE: int = 5  # seconds"
+envs.py 809: "    # Timeout in seconds for waiting for engine cores to become ready"
+envs.py 810: "    # during startup. Default is 600 seconds (10 minutes)."
+envs.py 811: "    \"VLLM_ENGINE_READY_TIMEOUT_S\": lambda: int("
+envs.py 812: "        os.environ.get(\"VLLM_ENGINE_READY_TIMEOUT_S\", \"600\")"
+envs.py 1142: "    # Timeout in seconds for keeping HTTP connections alive in API server"
+envs.py 1143: "    \"VLLM_HTTP_TIMEOUT_KEEP_ALIVE\": lambda: int("
+envs.py 1144: "        os.environ.get(\"VLLM_HTTP_TIMEOUT_KEEP_ALIVE\", \"5\")"
+server_args.py 230: "class ServerArgs:"
+server_args.py 233: "    Add fields to the matching namespace in ``arg_groups/fields/`` using"
+server_args.py 234: "    ``A[T, help]`` or ``A[T, Arg(...)]``; see ``arg_utils.Arg`` for CLI metadata."
+server_args.py 350: "    def add_cli_args(parser: argparse.ArgumentParser):"
+server_args.py 352: "        add_cli_args_from_dataclass(parser, ServerArgs)"
+sglang-serving-fields.py 65: "    host: A[str, \"The host of the HTTP server.\"] = \"127.0.0.1\""
+sglang-serving-fields.py 66: "    port: A[int, \"The port of the HTTP server.\"] = 30000"
+
+## 3. Unreachable host — GNU gawk manual (2026-11-06, curl 8.23.0)
+
+attempt 1: curl -sS -L --max-time 45 -o gawk-assignment.html https://www.gnu.org/software/gawk/manual/html_node/Assignment-Options.html
+  curl: (28) Connection timed out after 45001 milliseconds; http=000 bytes=0; exit=28
+attempt 2: same URL, --max-time 60, -w with phases: ns=0.000902 conn=0.000000 tls=0.000000 ttfb=60.001886; exit=28
+same host: https://www.gnu.org/software/gawk/manual/html_node/Command-Line-Options.html -> exit 28, http=000, 0 bytes
+same host: https://www.gnu.org/ (root) -4 -> exit 28 conn=0.000000; -6 -> exit 28 conn=0.000000
+DNS: getent ahostsv4 www.gnu.org -> 209.51.188.116; getent hosts -> 2001:470:142:5::116 (both resolve)
+Precedent: S053 (corpus/SOURCES.md:65) records "the www.gnu.org page timed out on 2026-10-20".
+
+## 4. SGLang v0.5.22 (2026-11-06)
+
+server_args.py http=200 bytes=35396 lines=893 sha256=d1b9ffc79edcbc857efd02a47d47eed9b414f8ac44bc4e3214d78a7922e90e03
+arg_groups/fields/serving.py http=200 bytes=13638 sha256=66a9ab458053c31290f21d9b7ce6686c7a9d83e6387f2a12a61a0e5599ff4923
+class ServerArgs (line 230) carries no field defaults; add_cli_args builds the CLI from the dataclass (350-352);
+the field modules under sglang/srt/arg_groups/fields/ hold the defaults.
+
+## 5. SKILL.md §Serving timeout and limit thresholds: each T row's literal on its declared line
+
+T01 src=S593 file=common.h declared_line=632 literal_matches_lines=632 literal_on_declared_line=yes value=9931
+T02 src=S593 file=common.h declared_line=634 literal_matches_lines=634 literal_on_declared_line=yes value=3600 s
+T03 src=S593 file=common.h declared_line=636 literal_matches_lines=636 literal_on_declared_line=yes value=30 s
+T04 src=S593 file=common.h declared_line=644 literal_matches_lines=644 literal_on_declared_line=yes value=8192 MiB
+T05 src=S593 file=common.h declared_line=669 literal_matches_lines=669 literal_on_declared_line=yes value=-1 (off)
+T06 src=S593 file=common.h declared_line=703 literal_matches_lines=703 literal_on_declared_line=yes value=4
+T07 src=S593 file=common.h declared_line=464 literal_matches_lines=464 literal_on_declared_line=yes value=1
+T08 src=S594 file=config.go declared_line=23 literal_matches_lines=23 literal_on_declared_line=yes value=11434
+T09 src=S594 file=config.go declared_line=130 literal_matches_lines=130 literal_on_declared_line=yes value=5 min
+T10 src=S594 file=config.go declared_line=150 literal_matches_lines=150 literal_on_declared_line=yes value=5 min
+T11 src=S594 file=config.go declared_line=277 literal_matches_lines=277 literal_on_declared_line=yes value=1
+T12 src=S594 file=config.go declared_line=281 literal_matches_lines=281 literal_on_declared_line=yes value=512
+T13 src=S595 file=envs.py declared_line=26 literal_matches_lines=26 literal_on_declared_line=yes value=600 s
+T14 src=S595 file=envs.py declared_line=111 literal_matches_lines=111 literal_on_declared_line=yes value=5 s
+rows_checked=14 literal_on_declared_line_yes=14
+
+## 6. Not verified by this seat (K2 owner's read)
+
+Threshold-name spelling (LLAMA_ARG_PORT, -to/--timeout, --sse-ping-interval, --cache-ram, --sleep-idle-seconds,
+--models-max, -np/--parallel, OLLAMA_HOST, OLLAMA_KEEP_ALIVE, OLLAMA_LOAD_TIMEOUT, OLLAMA_NUM_PARALLEL,
+OLLAMA_MAX_QUEUE) and the probe-decision prose of each row were not re-derived here; RV02 owns the C2 reviewer read.
+What this seat checked is the binding rule the counter grades: digest, line, literal and value.
