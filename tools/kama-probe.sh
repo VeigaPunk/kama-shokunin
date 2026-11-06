@@ -27,7 +27,7 @@
 #
 # Verdict vocabulary (exact strings):
 #   MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP
-#   MODEL_LOADING
+#   MODEL_LOADING MODEL_UNLOADED
 #
 # MODEL_LOADING: GET /v1/models answered 503 with the exact llama.cpp single-model
 # loading envelope {"error":{"message":"Loading model","type":"unavailable_error","code":503}}
@@ -36,6 +36,18 @@
 # body-shape match only — runtime identity and served model are unverified. The
 # router's own /v1/models never answers with it; requires python3 (without it the
 # body keeps FOREIGN_SERVICE).
+#
+# Router mode (round 88; llama.cpp tools/server/README.md "Using multiple models",
+# SOURCES S581): a router lists every model it can serve in GET /v1/models, each with
+# a `status` object, and answers /health 200 with nothing loaded. With
+# --no-models-autoload a completion for an unloaded model answers HTTP 400 "model is
+# not loaded". When the entries matching the expected id (normalize_id rule; every
+# entry for a wildcard expectation) carry `status.value`: `loaded` -> MODEL_OK
+# (unchanged); `loading`/`downloading` -> MODEL_LOADING reason router-<value>; any other
+# value (`unloaded`, `sleeping`, `incomplete`, unknown) -> MODEL_UNLOADED reason
+# router-<value>[-failed]. Any matching `loaded` or status-less entry wins, then any
+# loading/downloading. Entries without `status` (single-model servers) keep the old
+# verdict. MODEL_UNLOADED is drift; requires python3 (without it the old verdict stays).
 #
 # Exit codes: 0 every declared consumer reconciles | 2 at least one drift
 #             1 probe error (bad arg, missing dep, unreadable registry) — never a verdict
@@ -61,7 +73,7 @@
 set -euo pipefail
 umask 077
 
-VOCAB="MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP MODEL_LOADING"
+VOCAB="MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP MODEL_LOADING MODEL_UNLOADED"
 
 SELF_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT=$(cd -- "$SELF_DIR/.." && pwd)
@@ -116,7 +128,7 @@ flags:
   --timeout S          per-request curl --max-time in seconds (default 5)
   --connect-timeout S  per-request curl --connect-timeout in seconds (default 2)
 
-verdicts: MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP MODEL_LOADING
+verdicts: MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP MODEL_LOADING MODEL_UNLOADED
 exit: 0 reconciled | 2 drift | 1 probe error
 EOF
 }
@@ -448,6 +460,59 @@ sys.exit(1)
 PY
 }
 
+# Router mode: one line per data[] (else models[]) entry with a string id:
+# "<id>\t<status.value or ->\t<1 if status.failed is true else 0>". A status object
+# without a string value prints value `?` (unknown, never ready).
+router_entries() { # $1 body file
+  [ "$HAVE_PY" -eq 1 ] || return 0
+  python3 - "$1" <<'PY' 2>/dev/null || true
+import json, sys
+try:
+    doc = json.load(open(sys.argv[1]))
+except Exception:
+    sys.exit(0)
+if not isinstance(doc, dict):
+    sys.exit(0)
+seq = doc.get("data") if isinstance(doc.get("data"), list) else doc.get("models")
+for e in seq if isinstance(seq, list) else []:
+    if not isinstance(e, dict) or not isinstance(e.get("id"), str) or not e["id"]:
+        continue
+    st = e.get("status")
+    if not isinstance(st, dict):
+        val, failed = "-", 0
+    else:
+        v = st.get("value")
+        val = v if isinstance(v, str) and v and "\t" not in v and "\n" not in v else "?"
+        failed = 1 if st.get("failed") is True else 0
+    print(f"{e['id']}\t{val}\t{failed}")
+PY
+}
+
+# $1 body file, $2 expected -> sets RT_VERDICT/RT_REASON when the router `status` of the
+# matching entries refines a MODEL_OK; leaves both empty otherwise (see header).
+router_refine() {
+  local body=$1 expected=$2 id val failed wild=0 any_status=0 ok=0 loading='' down=''
+  RT_VERDICT='' RT_REASON=''
+  case "$expected" in ''|'*'|'-') wild=1 ;; esac
+  while IFS=$'\t' read -r id val failed; do
+    [ -n "$id" ] || continue
+    if [ "$wild" -eq 0 ]; then
+      model_matches "$id" "$expected" || continue
+    fi
+    [ "$val" = "-" ] || any_status=1
+    case "$val" in
+      -|loaded) ok=1 ;;
+      loading|downloading) [ -n "$loading" ] || loading=$val ;;
+      *) if [ -z "$down" ]; then down="router-$val"; [ "$failed" = 1 ] && down="$down-failed"; fi ;;
+    esac
+  done < <(router_entries "$body")
+  [ "$any_status" -eq 1 ] || return 0
+  [ "$ok" -eq 1 ] && return 0
+  if [ -n "$loading" ]; then RT_VERDICT=MODEL_LOADING; RT_REASON="router-$loading"
+  elif [ -n "$down" ]; then RT_VERDICT=MODEL_UNLOADED; RT_REASON=$down
+  fi
+}
+
 # ---------------------------------------------------------------- classify
 # shellcheck disable=SC2034
 classify() { # $1 port, $2 expected -> sets C_VERDICT C_SERVED C_EVIDENCE C_REASON
@@ -541,6 +606,10 @@ classify() { # $1 port, $2 expected -> sets C_VERDICT C_SERVED C_EVIDENCE C_REAS
           *) C_VERDICT=MODEL_MISMATCH; C_REASON='served-id-mismatch' ;;
         esac ;;
     esac
+    if [ "$C_VERDICT" = "MODEL_OK" ]; then
+      router_refine "$FBODY" "$expected"
+      if [ -n "$RT_VERDICT" ]; then C_VERDICT=$RT_VERDICT; C_REASON=$RT_REASON; fi
+    fi
     local ev="$base (runtime=$runtime; expected=${expected:--}; reason=$C_REASON)"
     local h; h=$(probe_short "$port" "/health")
     case "$h" in 200\|*json*) ev="$ev; GET /health -> $h" ;; esac
@@ -740,7 +809,7 @@ classify_registration() {
   local port=$1 verdict=$2 declared
   [ "$REG_PORTS_STATUS" = "ok" ] || { printf '%s' '-'; return 0; }
   case "$verdict" in
-    MODEL_OK|MODEL_MISMATCH|MODEL_LOADING|UNAUTHORIZED_SERVICE) ;;
+    MODEL_OK|MODEL_MISMATCH|MODEL_LOADING|MODEL_UNLOADED|UNAUTHORIZED_SERVICE) ;;
     *) printf '%s' '-'; return 0 ;;
   esac
   if [ "${#REG_PORTS[@]}" -gt 0 ]; then
@@ -772,7 +841,7 @@ cmd_listeners() {
     port=${ports[i]}
     classify "$port" "${OPT_EXPECT:-}"
     case "$C_VERDICT" in
-      MODEL_OK|MODEL_MISMATCH) n_model=$((n_model+1)) ;;
+      MODEL_OK|MODEL_MISMATCH|MODEL_UNLOADED) n_model=$((n_model+1)) ;;
       DEAD) n_dead=$((n_dead+1)) ;;
       FOREIGN_SERVICE) n_foreign=$((n_foreign+1)) ;;
       NOT_HTTP) n_nothttp=$((n_nothttp+1)) ;;
@@ -988,7 +1057,7 @@ diff_baseline() {
       # garbage lines are dropped (warned + noted in DELTA.md), not turned into
       # phantom row-absent transitions and not silently forgiven
       case " ${v:-} " in
-        *\ MODEL_OK\ *|*\ MODEL_MISMATCH\ *|*\ FOREIGN_SERVICE\ *|*\ UNAUTHORIZED_SERVICE\ *|*\ DEAD\ *|*\ NOT_HTTP\ *|*\ MODEL_LOADING\ *) : ;;
+        *\ MODEL_OK\ *|*\ MODEL_MISMATCH\ *|*\ FOREIGN_SERVICE\ *|*\ UNAUTHORIZED_SERVICE\ *|*\ DEAD\ *|*\ NOT_HTTP\ *|*\ MODEL_LOADING\ *|*\ MODEL_UNLOADED\ *) : ;;
         *) warn "latest.tsv: dropping malformed baseline row for id='$id'"
            MAL_NOTES+=("- $ts baseline-note malformed-row-dropped id='$(persist_clean "$id")'")
            bad=1; continue ;;

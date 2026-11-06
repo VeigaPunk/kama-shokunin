@@ -150,7 +150,7 @@ def live_leg(probe: Path, repo: Path, exclude: set[int] | None = None) -> dict:
     rows = doc.get("listeners") or []
     unreg = [int(r["port"]) for r in rows
              if r.get("registered") == "no" and int(r.get("port", -1)) not in (exclude or set())
-             and r.get("verdict") in ("MODEL_OK", "MODEL_MISMATCH", "MODEL_LOADING",
+             and r.get("verdict") in ("MODEL_OK", "MODEL_MISMATCH", "MODEL_LOADING", "MODEL_UNLOADED",
                                       "UNAUTHORIZED_SERVICE")]
     return {"model_endpoints": summary.get("model_endpoints"),
             "governed": summary.get("governed"), "unregistered": summary.get("unregistered"),
