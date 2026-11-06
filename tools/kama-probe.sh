@@ -44,10 +44,17 @@
 # not loaded". When the entries matching the expected id (normalize_id rule; every
 # entry for a wildcard expectation) carry `status.value`: `loaded` -> MODEL_OK
 # (unchanged); `loading`/`downloading` -> MODEL_LOADING reason router-<value>; any other
-# value (`unloaded`, `sleeping`, `incomplete`, unknown) -> MODEL_UNLOADED reason
+# value (`unloaded`, `incomplete`, unknown) -> MODEL_UNLOADED reason
 # router-<value>[-failed]. Any matching `loaded` or status-less entry wins, then any
 # loading/downloading. Entries without `status` (single-model servers) keep the old
 # verdict. MODEL_UNLOADED is drift; requires python3 (without it the old verdict stays).
+# Round-88 repair (wave-1 CR01; receipt .ufo/waves/round-88/measured/router-lifecycle.out):
+# a request wakes a `sleeping` model and, when the router's bare GET /props reports
+# {"role":"router","models_autoload":true}, loads an `unloaded` (not failed) one; both
+# answer the request (200), so they grade MODEL_OK with reason router-sleeping /
+# router-unloaded-autoload (a cold start, not drift). Precedence: loaded or status-less,
+# then these cold-start states, then loading/downloading, then MODEL_UNLOADED. /props is
+# read bare only (`/props?model=` would route to, and may load, an instance).
 #
 # Exit codes: 0 every declared consumer reconciles | 2 at least one drift
 #             1 probe error (bad arg, missing dep, unreadable registry) — never a verdict
@@ -488,10 +495,28 @@ for e in seq if isinstance(seq, list) else []:
 PY
 }
 
-# $1 body file, $2 expected -> sets RT_VERDICT/RT_REASON when the router `status` of the
-# matching entries refines a MODEL_OK; leaves both empty otherwise (see header).
+# $1 port -> 0 when the bare GET /props body is {"role":"router",...,"models_autoload":true}
+router_autoload() {
+  [ "$HAVE_PY" -eq 1 ] || return 1
+  local port=$1 pbody="$TMP_ROOT/props$1.body"
+  curl -sS --noproxy '*' --connect-timeout "$CONNECT_TIMEOUT" --max-time "$TIMEOUT" \
+    -o "$pbody" "http://127.0.0.1:$port/props" 2>/dev/null || return 1
+  python3 - "$pbody" <<'PY' 2>/dev/null
+import json, sys
+try:
+    doc = json.load(open(sys.argv[1]))
+except Exception:
+    sys.exit(1)
+ok = isinstance(doc, dict) and doc.get("role") == "router" and doc.get("models_autoload") is True
+sys.exit(0 if ok else 1)
+PY
+}
+
+# $1 body file, $2 expected, $3 port -> sets RT_VERDICT/RT_REASON when the router `status`
+# of the matching entries refines a MODEL_OK; leaves both empty otherwise (see header).
 router_refine() {
-  local body=$1 expected=$2 id val failed wild=0 any_status=0 ok=0 loading='' down=''
+  local body=$1 expected=$2 port=$3 id val failed wild=0 any_status=0 ok=0 loading='' down=''
+  local sleeping=0 unloaded=0
   RT_VERDICT='' RT_REASON=''
   case "$expected" in ''|'*'|'-') wild=1 ;; esac
   while IFS=$'\t' read -r id val failed; do
@@ -502,12 +527,18 @@ router_refine() {
     [ "$val" = "-" ] || any_status=1
     case "$val" in
       -|loaded) ok=1 ;;
+      sleeping) sleeping=1 ;;
       loading|downloading) [ -n "$loading" ] || loading=$val ;;
-      *) if [ -z "$down" ]; then down="router-$val"; [ "$failed" = 1 ] && down="$down-failed"; fi ;;
+      *) [ "$val" = unloaded ] && [ "$failed" != 1 ] && unloaded=1
+         if [ -z "$down" ]; then down="router-$val"; [ "$failed" = 1 ] && down="$down-failed"; fi ;;
     esac
   done < <(router_entries "$body")
   [ "$any_status" -eq 1 ] || return 0
   [ "$ok" -eq 1 ] && return 0
+  if [ "$sleeping" -eq 1 ]; then RT_VERDICT=MODEL_OK; RT_REASON=router-sleeping; return 0; fi
+  if [ "$unloaded" -eq 1 ] && router_autoload "$port"; then
+    RT_VERDICT=MODEL_OK; RT_REASON=router-unloaded-autoload; return 0
+  fi
   if [ -n "$loading" ]; then RT_VERDICT=MODEL_LOADING; RT_REASON="router-$loading"
   elif [ -n "$down" ]; then RT_VERDICT=MODEL_UNLOADED; RT_REASON=$down
   fi
@@ -607,7 +638,7 @@ classify() { # $1 port, $2 expected -> sets C_VERDICT C_SERVED C_EVIDENCE C_REAS
         esac ;;
     esac
     if [ "$C_VERDICT" = "MODEL_OK" ]; then
-      router_refine "$FBODY" "$expected"
+      router_refine "$FBODY" "$expected" "$port"
       if [ -n "$RT_VERDICT" ]; then C_VERDICT=$RT_VERDICT; C_REASON=$RT_REASON; fi
     fi
     local ev="$base (runtime=$runtime; expected=${expected:--}; reason=$C_REASON)"

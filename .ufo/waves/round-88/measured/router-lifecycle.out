@@ -1,0 +1,22 @@
+# round-88 lane-owned router lifecycle receipt, 2026-11-06T16:10:07-03:00; binary ~/.local/opt/llama-b11755/llama-server sha256 b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804; model sha256 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d; probe = tools/kama-probe.sh at f77d2ae9f2797a19e7548989fb9e64d8f9411d3f
+# cmd: llama-server --models-dir <scratch>/models --no-models-autoload --models-max 1 --host 127.0.0.1 --port 52821 --sleep-idle-seconds 3
+## 1 fresh
+status [('stories260K', 'unloaded')]
+$ GET /health -> {"status":"ok"} HTTP200
+$ kama-probe check --port P --expect stories260K -> MODEL_UNLOADED router-unloaded
+$ POST /v1/chat/completions -> rror"}} HTTP400 {"error":{"code":400,"message":"model is not loaded","type":"invalid_request_error"}} HTTP400
+## 2 load
+{"success":true}
+status [('stories260K', 'loaded')]
+$ kama-probe check --port P --expect stories260K -> MODEL_OK matched
+$ POST /v1/chat/completions -> 77778}} HTTP200 (completion body omitted)
+## 3 idle 6s (sleep-idle-seconds 3)
+status [('stories260K', 'sleeping')]
+$ kama-probe check --port P --expect stories260K -> MODEL_UNLOADED router-sleeping
+$ POST /v1/chat/completions -> 99625}} HTTP200 (completion body omitted)
+status [('stories260K', 'loaded')]
+## 4 unload
+{"success":true}
+status [('stories260K', 'unloaded')]
+$ kama-probe check --port P --expect stories260K -> MODEL_UNLOADED router-unloaded
+$ POST /v1/chat/completions -> rror"}} HTTP400 {"error":{"code":400,"message":"model is not loaded","type":"invalid_request_error"}} HTTP400
