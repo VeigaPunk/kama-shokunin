@@ -1,0 +1,12 @@
+== proof 1: child bind while the counter/harness runs ==
+LISTEN 0      512        127.0.0.1:43969      0.0.0.0:*    users:(("llama-server",pid=3753139,fd=5))
+harness=3752968 child=3753139
+== proof 2: SIGTERM the parent (no handler in the tool) ==
+parent alive after SIGTERM: 0 (0 = dead)
+child alive after SIGTERM:  1
+    PID    PPID     ELAPSED COMMAND
+3753139    1487       00:03 /home/vgpnk/.local/opt/llama-b11755/llama-server --models-dir /fast/scratch/hyaku/kama-r88/SN01FixtureSafety/sigdemo-lRMP/models --no-models-autoload --models-max 1 --host 127.0.0.1 --port 43969
+== proof 3: child still listening (orphan) ==
+LISTEN 0      512        127.0.0.1:43969      0.0.0.0:*    users:(("llama-server",pid=3753139,fd=5))
+== reaping the orphan I started ==
+post-reap listeners for that pid: 0

@@ -1,0 +1,49 @@
+server port 33463
+[F1-present-correct] exit=0 out='FETCH_PINNED model=/fast/scratch/hyaku/kama-r88/SN01FixtureSafety/ft/f1-present/m.gguf sha256=270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d action=present' err=''
+F1 mtime unchanged: True digest ok: True
+[F2-present-wrong] exit=1 out='FETCH_PINNED_FINDING existing file digest 4d8a7ea29b8ca8e09016d3ec8d356a14ae8de688ef61e6d3dab03308bb8699a6 != pin 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d: /fast/scratch/hyaku/kama-r88/SN01FixtureSafety/ft/f2-wrong/m.gguf (refused)' err=''
+F2 file untouched: True part created: False
+[F3-bad-download] exit=1 out='FETCH_PINNED_FINDING downloaded digest 4d8a7ea29b8ca8e09016d3ec8d356a14ae8de688ef61e6d3dab03308bb8699a6 != pin 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d (discarded)' err=''
+F3 dest absent: True part absent: True leftovers: []
+[F4-part-symlink] exit=1 out='FETCH_PINNED_FINDING downloaded digest 4d8a7ea29b8ca8e09016d3ec8d356a14ae8de688ef61e6d3dab03308bb8699a6 != pin 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d (discarded)' err=''
+F4 victim overwritten: True victim bytes: 1280 victim still exists: True part path exists: False dest: False
+[F4b-part-symlink-good] exit=0 out='FETCH_PINNED model=/fast/scratch/hyaku/kama-r88/SN01FixtureSafety/ft/f4b-part-symlink-good/m.gguf sha256=270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d action=fetched' err=''
+F4b victim now model: True dest is symlink: True dest digest: 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d
+[F5-redirect-other-host] exit=0 out='FETCH_PINNED model=/fast/scratch/hyaku/kama-r88/SN01FixtureSafety/ft/f5-redirect/m.gguf sha256=270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d action=fetched' err=''
+F5 fetched: True
+F6 part exists mid-flight: True size: 262144
+F6 exit: -2 stdout: Traceback (most recent call last):
+  File "/fast/scratch/hyaku/kama-r88/SN01FixtureSafety/fetch.py", line 69, in <module part leftover after SIGINT: True dest: False
+[F7-dest-symlink-wrong] exit=1 out='FETCH_PINNED_FINDING existing file digest 4d8a7ea29b8ca8e09016d3ec8d356a14ae8de688ef61e6d3dab03308bb8699a6 != pin 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d: /fast/scratch/hyaku/kama-r88/SN01FixtureSafety/ft/f7-dest-symlink-wrong/m.gguf (refused)' err=''
+F7 refused: True target untouched: True still symlink: True
+----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 49228)
+Traceback (most recent call last):
+  File "/usr/lib/python3.14/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/http/server.py", line 500, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/http/server.py", line 488, in handle_one_request
+    method()
+    ~~~~~~^^
+  File "/fast/scratch/hyaku/kama-r88/SN01FixtureSafety/fetch_tests.py", line 33, in do_GET
+    self.wfile.write(b"x" * 10_000)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/socketserver.py", line 845, in write
+    self._sock.sendall(b)
+    ~~~~~~~~~~~~~~~~~~^^^
+BrokenPipeError: [Errno 32] Broken pipe
+----------------------------------------
+[F8-dest-symlink-good] exit=0 out='FETCH_PINNED model=/fast/scratch/hyaku/kama-r88/SN01FixtureSafety/ft/f8-dest-symlink-good/m.gguf sha256=270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d action=present' err=''
+F8 action present: True
+[F9-missing-parent] exit=0 out='FETCH_PINNED model=/fast/scratch/hyaku/kama-r88/SN01FixtureSafety/ft/f9-nested/deep/m.gguf sha256=270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d action=fetched' err=''
+F9 created+fetched: True
+F10 default dest const: ['DEST = Path.home() / ".cache/kama-shokunin/models/stories260K.gguf"']

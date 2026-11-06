@@ -1,0 +1,89 @@
+### curl b7200 README
+$ curl -sS -m 40 -o /fast/scratch/hyaku/kama-r88/CN01SiblingOverlap/b7200-readme.md -w 'HTTP=%{http_code} bytes=%{size_download}\n' https://raw.githubusercontent.com/ggml-org/llama.cpp/ab49f094d29057b2c4d2b0f1e822c9140df1b0e1/tools/server/README.md
+rc=0
+HTTP=200 bytes=72181
+
+### sha256 b7200
+$ sha256sum /fast/scratch/hyaku/kama-r88/CN01SiblingOverlap/b7200-readme.md
+rc=0
+fb4ab6f2e4db180bf9c89533ef63556559c60a66f9c39a92f0c23cd88f6c6a53  /fast/scratch/hyaku/kama-r88/CN01SiblingOverlap/b7200-readme.md
+
+### b7200 router count
+$ grep -ci router /fast/scratch/hyaku/kama-r88/CN01SiblingOverlap/b7200-readme.md
+rc=1
+0
+
+### b7200 status-object count
+$ grep -ci 'status object' /fast/scratch/hyaku/kama-r88/CN01SiblingOverlap/b7200-readme.md
+rc=1
+0
+
+### b7200 unloaded count
+$ grep -ci unloaded /fast/scratch/hyaku/kama-r88/CN01SiblingOverlap/b7200-readme.md
+rc=1
+0
+
+### b7200 v1/models line
+$ grep -n 'GET ./.v1/models' /fast/scratch/hyaku/kama-r88/CN01SiblingOverlap/b7200-readme.md
+rc=1
+
+
+### kengaku blame/date
+$ git -C /home/vgpnk/Projects/shokunin/kengaku-shokunin log -1 --format='%H %ad %s' --date=short -- corpus/knowledge/served-endpoint-identity-pin.md
+rc=0
+11e79380d33d6e811f0010f2a2a0c22a3cdc359e 2026-10-28 round-51: C1 surface truth landed (PROVINCE dated verdicts + successor endpoint row + manifest) and C2 routed-finding attribution (75 rows, owner+disposition)
+
+### base census blob
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-parse 9b4c7af16fdd4bba9e4815f4615f4b003f340747:corpus/knowledge/unregistered-listener-census.md
+rc=0
+b042425b515d684de276e6851267baa64ee6ab13
+
+### base census readiness line
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show 9b4c7af16fdd4bba9e4815f4615f4b003f340747:corpus/knowledge/unregistered-listener-census.md | grep -n 'not a readiness claim\|status.value'
+rc=0
+1:source: S553 — llama.cpp server README at commit 39febd2adb947b70da35e95f9351b3bf58ad170a, §Router mode `GET /models` note 1 (the router lists models that are not running, each with a `status.value`); the probe surface it is read against is the lane's own `tools/kama-probe.sh listeners`; lane policy: `plans/round-79-claims.md` §C3. Record-keeping: `corpus/lessons/round-79.md` §Gate.
+28:## Why a model list is not a readiness claim
+32:object carries `status.value` — `loaded`, `loading`, `unloaded`, `sleeping`, and the same list
+
+### base router-mode-readiness absent
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin cat-file -e 9b4c7af16fdd4bba9e4815f4615f4b003f340747:corpus/knowledge/router-mode-readiness.md
+rc=128
+fatal: path 'corpus/knowledge/router-mode-readiness.md' exists on disk, but not in '9b4c7af16fdd4bba9e4815f4615f4b003f340747'
+
+### base S553 row
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show 9b4c7af16fdd4bba9e4815f4615f4b003f340747:corpus/SOURCES.md | grep -c '^| S553 '
+rc=0
+1
+
+### sibling stories260K
+$ grep -rIl stories260K /home/vgpnk/Projects/shokunin/*/ --include='*.md' --include='*.py' --include='*.sh' --include='*.json' --include='*.tsv' 2>/dev/null | grep -v '/kama-shokunin/' | grep -v '/\.ufo/' | wc -l
+rc=0
+0
+
+### kengaku prober status read
+$ grep -n 'r.status' /home/vgpnk/Projects/shokunin/kengaku-shokunin/plans/round51_surfaces.py
+rc=0
+127:                    if r.status == 200:
+129:                    last = "%s -> %s" % (url, r.status)
+### b7200 v1/models heading
+443:Note for `multimodal_data` in JSON object prompts. This should be an array of strings, containing base64 encoded multimodal data such as images and audio. There must be an identical number of MTMD media markers in the string prompt element which act as placeholders for the data provided to this parameter. The multimodal data files will be substituted in order. The marker string (e.g. `<__media__>`) can be found by calling `mtmd_default_marker()` defined in [the MTMD C API](https://github.com/ggml-org/llama.cpp/blob/5fd160bbd9d70b94b5b11b0001fd7f477005e4a0/tools/mtmd/mtmd.h#L87). A client *must not* specify this field unless the server has the multimodal capability. Clients should check `/models` or `/v1/models` for the `multimodal` capability before a multimodal request.
+1157:### GET `/v1/models`: OpenAI-compatible Model Info API
+rc=0
+
+### pointer lines
+57:   serves one are two pins; the router's list is a catalogue, not a statement about what is
+368:1. Probe the endpoint, not the config: `GET /v1/models` + `/health` on the
+915:2. Probe every endpoint before freeze (`/v1/models`, `/health`); a
+1029:| Served local router (:1234) | http | `http://127.0.0.1:1234` | present — llama.cpp router, `lfm3-server.service` | Surfaces:Served local model (round 51 successor) |
+43:| Verify model endpoint is real | `curl -fsS <endpoint-minus-/v1>/health` → `{"status":"ok"}` | trusting `status`'s `endpoint` line — it prints config, never probes | port 8080 was a Jitsi videobridge on 2026-09-28 while llama-server served the model on 34113 |
+63:- configured model endpoint `127.0.0.1:8080` (dead: Jitsi) vs live llama-server on `34113`
+355:its URL is already S080. The Ollama OpenAPI staged row was refused as kama's
+46:| ADJ-01 | A local model endpoint or served-model identity is wrong; GPU readiness alone cannot decide this | Kernel, driver, device and user-unit state | kama | Capture time; driver query and unit-state command/exit; reported endpoint symptom without credentials. Kama must obtain its own endpoint evidence; no endpoint diagnosis from `nvidia-smi` | `OUT-002` |
+122:| OUT-002 | ADJ-01 | `kama-shokunin/PROVINCE.md` @ `e75cf680b534` | `# kama-shokunin — Province` | `GET /v1/models` vs `--alias` vs the configured model id | Kama owns served-model identity reconciliation; an endpoint or served-model mismatch is kama's analysis, not a driver/GPU-readiness finding. |
+138:- OUT-002 `kama-shokunin/PROVINCE.md` @ e75cf680b53484a61709ee1b2787d8dbc6419f74 sha256 799432d748bd40bcf859de806cc2ef90df069da14c8e5c07bf72250ac411c7a6
+308:19)` whose own **ADJ row** cell names that finding class (ADJ-01 → OUT-002, ADJ-02 → OUT-003,
+129:| Model call returns an HTML page (`text/html`, 404 body) | Reconcile that registered endpoint with `bash tools/kama-probe.sh check` | `FOREIGN_SERVICE` | Identify the responder; report the consumer pin for operator correction. September example: Jitsi at 8080. Never alter the foreign service. |
+308:| Invocation history | gate + persistence: `bash tools/kama-probe.sh snapshot --history DIR` | 0 clean; 2 failed/drift captured; 1 could-not-evaluate/probe or persistence error | `bash tools/test-snapshot.sh`; committed fixture expectations include normalized fields, transition ids, stable rerun, malformed baseline and symlink refusal | Explicit history DIR; default `registry/history/` |
+353:- Invocation history and teardown: `corpus/knowledge/snapshot-history.md`,
+1:source: S553 — llama.cpp server README at commit 39febd2adb947b70da35e95f9351b3bf58ad170a, §Router mode `GET /models` note 1 (the router lists models that are not running, each with a `status.value`); the probe surface it is read against is the lane's own `tools/kama-probe.sh listeners`; lane policy: `plans/round-79-claims.md` §C3. Record-keeping: `corpus/lessons/round-79.md` §Gate.
+rc=0

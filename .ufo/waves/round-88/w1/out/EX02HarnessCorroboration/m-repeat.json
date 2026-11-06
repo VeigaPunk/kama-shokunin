@@ -1,0 +1,757 @@
+{
+  "schema": "kama-probe-verdicts/v1",
+  "probe": "/fast/scratch/hyaku/kama-r88/EX02HarnessCorroboration/probe-M.sh",
+  "probe_sha256": "bd7a6a2228d04b69abcc5d19f2907a9caf737347ef96ff92722edbc3180e7bdf",
+  "matrix_sources": [
+    "AuthAndDead.json",
+    "EnvelopeShapes.json",
+    "ForeignControls.json",
+    "LoadingEnvelope.json",
+    "LoadingRace.json",
+    "NearMissTriple.json",
+    "NonLoadingStatuses.json",
+    "Overbroad503.json",
+    "ReadyControls.json",
+    "RouterStatus.json"
+  ],
+  "tests": 21,
+  "passes": 7,
+  "failures": 14,
+  "records": [
+    {
+      "name": "RouterStatus.loaded-single",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "Router entry for the expected id carries status.value=loaded: the frozen rule leaves MODEL_OK/matched unchanged.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_OK",
+        "reason": "matched",
+        "exit": 0
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 0,
+      "verdict": "MODEL_OK",
+      "reason": "matched",
+      "drift": false,
+      "served_model": "stories260K",
+      "served_model_expected": "stories260K",
+      "served_model_ok": true,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=matched)",
+      "error": null,
+      "passed": true,
+      "port": 45889
+    },
+    {
+      "name": "RouterStatus.unloaded-single",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "Router entry for the expected id carries status.value=unloaded while /health is 200: the false green of base B; frozen rule makes it MODEL_UNLOADED drift.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_UNLOADED",
+        "reason": "router-unloaded",
+        "exit": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 2,
+      "verdict": "MODEL_UNLOADED",
+      "reason": "router-unloaded",
+      "drift": true,
+      "served_model": "stories260K",
+      "served_model_expected": "-",
+      "served_model_ok": false,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=router-unloaded); GET /health -> 200|application/json",
+      "error": null,
+      "passed": false,
+      "port": 37923
+    },
+    {
+      "name": "RouterStatus.loading-single",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "Status.value=loading is readiness drift with reason router-loading, distinct from the 503 loading envelope's reason llamacpp-loading.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_LOADING",
+        "reason": "router-loading",
+        "exit": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 2,
+      "verdict": "MODEL_LOADING",
+      "reason": "router-loading",
+      "drift": true,
+      "served_model": "stories260K",
+      "served_model_expected": "-",
+      "served_model_ok": false,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=router-loading)",
+      "error": null,
+      "passed": false,
+      "port": 42147
+    },
+    {
+      "name": "RouterStatus.downloading-single",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "Status.value=downloading is the second loading-class value: MODEL_LOADING reason router-downloading.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_LOADING",
+        "reason": "router-downloading",
+        "exit": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 2,
+      "verdict": "MODEL_LOADING",
+      "reason": "router-downloading",
+      "drift": true,
+      "served_model": "stories260K",
+      "served_model_expected": "-",
+      "served_model_ok": false,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=router-downloading)",
+      "error": null,
+      "passed": false,
+      "port": 36305
+    },
+    {
+      "name": "RouterStatus.sleeping-single",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "Status.value=sleeping is neither loaded nor loading: MODEL_UNLOADED reason router-sleeping.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_UNLOADED",
+        "reason": "router-sleeping",
+        "exit": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 2,
+      "verdict": "MODEL_UNLOADED",
+      "reason": "router-sleeping",
+      "drift": true,
+      "served_model": "stories260K",
+      "served_model_expected": "-",
+      "served_model_ok": false,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=router-sleeping)",
+      "error": null,
+      "passed": false,
+      "port": 46869
+    },
+    {
+      "name": "RouterStatus.incomplete-single",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "Status.value=incomplete is a non-ready router value: MODEL_UNLOADED reason router-incomplete.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_UNLOADED",
+        "reason": "router-incomplete",
+        "exit": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 2,
+      "verdict": "MODEL_UNLOADED",
+      "reason": "router-incomplete",
+      "drift": true,
+      "served_model": "stories260K",
+      "served_model_expected": "-",
+      "served_model_ok": false,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=router-incomplete)",
+      "error": null,
+      "passed": false,
+      "port": 36815
+    },
+    {
+      "name": "RouterStatus.failed-flag",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "status.failed=true appends -failed to the router reason: MODEL_UNLOADED router-unloaded-failed.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_UNLOADED",
+        "reason": "router-unloaded-failed",
+        "exit": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 2,
+      "verdict": "MODEL_UNLOADED",
+      "reason": "router-unloaded-failed",
+      "drift": true,
+      "served_model": "stories260K",
+      "served_model_expected": "-",
+      "served_model_ok": false,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=router-unloaded-failed)",
+      "error": null,
+      "passed": false,
+      "port": 36887
+    },
+    {
+      "name": "RouterStatus.unknown-value",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "An unrecognised but string status value is not ready: MODEL_UNLOADED with reason router-<value> carrying the value verbatim.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_UNLOADED",
+        "reason": "router-paused",
+        "exit": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 2,
+      "verdict": "MODEL_UNLOADED",
+      "reason": "router-paused",
+      "drift": true,
+      "served_model": "stories260K",
+      "served_model_expected": "-",
+      "served_model_ok": false,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=router-paused)",
+      "error": null,
+      "passed": false,
+      "port": 46809
+    },
+    {
+      "name": "RouterStatus.statusless-single",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "A matching entry with no status object is a single-model server: today's MODEL_OK/matched must survive unchanged.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_OK",
+        "reason": "matched",
+        "exit": 0
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 0,
+      "verdict": "MODEL_OK",
+      "reason": "matched",
+      "drift": false,
+      "served_model": "stories260K",
+      "served_model_expected": "stories260K",
+      "served_model_ok": true,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=matched)",
+      "error": null,
+      "passed": true,
+      "port": 39239
+    },
+    {
+      "name": "RouterStatus.two-entry-loaded-wins",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "Two matching entries, unloaded first and loaded second: any loaded match wins over MODEL_UNLOADED.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_OK",
+        "reason": "matched",
+        "exit": 0
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 0,
+      "verdict": "MODEL_OK",
+      "reason": "matched",
+      "drift": false,
+      "served_model": "stories260K",
+      "served_model_expected": "stories260K",
+      "served_model_ok": true,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=matched)",
+      "error": null,
+      "passed": true,
+      "port": 38519
+    },
+    {
+      "name": "RouterStatus.two-entry-loading-beats-unloaded",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "Precedence with no loaded match: loading/downloading beats a non-ready value (unloaded listed first).",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_LOADING",
+        "reason": "router-loading",
+        "exit": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 2,
+      "verdict": "MODEL_LOADING",
+      "reason": "router-loading",
+      "drift": true,
+      "served_model": "stories260K",
+      "served_model_expected": "-",
+      "served_model_ok": false,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=router-loading)",
+      "error": null,
+      "passed": false,
+      "port": 46347
+    },
+    {
+      "name": "RouterStatus.two-entry-statusless-beats-unloaded",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "A status-less matching entry wins over a non-ready sibling, preserving MODEL_OK for servers that mix entry shapes.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_OK",
+        "reason": "matched",
+        "exit": 0
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 0,
+      "verdict": "MODEL_OK",
+      "reason": "matched",
+      "drift": false,
+      "served_model": "stories260K",
+      "served_model_expected": "stories260K",
+      "served_model_ok": true,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=matched)",
+      "error": null,
+      "passed": true,
+      "port": 43709
+    },
+    {
+      "name": "RouterStatus.two-entry-nonmatch-ignored",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "Precedence is scoped to entries matching the expected id: a loaded non-matching neighbour must not rescue an unloaded expected id.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_UNLOADED",
+        "reason": "router-unloaded",
+        "exit": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 2,
+      "verdict": "MODEL_UNLOADED",
+      "reason": "router-unloaded",
+      "drift": true,
+      "served_model": "LFM3-1.7B,stories260K",
+      "served_model_expected": "-",
+      "served_model_ok": false,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=router-unloaded)",
+      "error": null,
+      "passed": false,
+      "port": 46319
+    },
+    {
+      "name": "RouterStatus.wildcard-statusless",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "Wildcard expectation with no status object anywhere keeps today's MODEL_OK/expected-wildcard.",
+      "port_mode": "stub",
+      "expect": "*",
+      "expected": {
+        "verdict": "MODEL_OK",
+        "reason": "expected-wildcard",
+        "exit": 0
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 0,
+      "verdict": "MODEL_OK",
+      "reason": "expected-wildcard",
+      "drift": false,
+      "served_model": "alpha,beta",
+      "served_model_expected": "alpha,beta",
+      "served_model_ok": true,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=*; reason=expected-wildcard)",
+      "error": null,
+      "passed": true,
+      "port": 43665
+    },
+    {
+      "name": "RouterStatus.wildcard-loaded-wins",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "Wildcard precedence over all entries: one unloaded entry plus one loaded entry stays MODEL_OK/expected-wildcard (reason unchanged, not 'matched').",
+      "port_mode": "stub",
+      "expect": "*",
+      "expected": {
+        "verdict": "MODEL_OK",
+        "reason": "expected-wildcard",
+        "exit": 0
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 0,
+      "verdict": "MODEL_OK",
+      "reason": "expected-wildcard",
+      "drift": false,
+      "served_model": "alpha,beta",
+      "served_model_expected": "alpha,beta",
+      "served_model_ok": true,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=*; reason=expected-wildcard)",
+      "error": null,
+      "passed": true,
+      "port": 36459
+    },
+    {
+      "name": "RouterStatus.wildcard-all-unloaded",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "Wildcard where every status-bearing entry is non-ready must drift: first non-ready value in entry order supplies the reason.",
+      "port_mode": "stub",
+      "expect": "*",
+      "expected": {
+        "verdict": "MODEL_UNLOADED",
+        "reason": "router-unloaded",
+        "exit": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 2,
+      "verdict": "MODEL_UNLOADED",
+      "reason": "router-unloaded",
+      "drift": true,
+      "served_model": "alpha,beta",
+      "served_model_expected": "-",
+      "served_model_ok": false,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=*; reason=router-unloaded)",
+      "error": null,
+      "passed": false,
+      "port": 36485
+    },
+    {
+      "name": "RouterStatus.normalized-id",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "Entry ids match under the existing normalize_id rule (basename, .gguf stripped): /models/stories260K.gguf answers for expect=stories260K.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_UNLOADED",
+        "reason": "router-unloaded",
+        "exit": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 2,
+      "verdict": "MODEL_UNLOADED",
+      "reason": "router-unloaded",
+      "drift": true,
+      "served_model": "/models/stories260K.gguf",
+      "served_model_expected": "-",
+      "served_model_ok": false,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=router-unloaded)",
+      "error": null,
+      "passed": false,
+      "port": 43281
+    },
+    {
+      "name": "RouterStatus.nonstring-status-value",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "SPEC BOUNDARY: the frozen rule refines only when status carries a STRING value; a numeric value is outside it, so the literal rule keeps today's MODEL_OK/matched. Divergence probe, not a frozen cell.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_OK",
+        "reason": "matched",
+        "exit": 0
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 2,
+      "verdict": "MODEL_UNLOADED",
+      "reason": "router-?",
+      "drift": true,
+      "served_model": "stories260K",
+      "served_model_expected": "-",
+      "served_model_ok": false,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=router-?)",
+      "error": null,
+      "passed": false,
+      "port": 45777
+    },
+    {
+      "name": "RouterStatus.loaded-with-failed-flag",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "status.failed only appends -failed to a non-ready reason; a loaded entry with failed=true is still MODEL_OK/matched.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_OK",
+        "reason": "matched",
+        "exit": 0
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 0,
+      "verdict": "MODEL_OK",
+      "reason": "matched",
+      "drift": false,
+      "served_model": "stories260K",
+      "served_model_expected": "stories260K",
+      "served_model_ok": true,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=matched)",
+      "error": null,
+      "passed": true,
+      "port": 46535
+    },
+    {
+      "name": "RouterStatus.loading-class-reason-order",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "RULE GAP: with downloading listed before loading the rule says only 'any loading/downloading -> MODEL_LOADING reason router-<value>' and does not say WHICH value names the reason; the encoded expectation is the implementation's first-in-entry-order pick, so this cell documents determinism, not a frozen requirement.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_LOADING",
+        "reason": "router-downloading",
+        "exit": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 2,
+      "verdict": "MODEL_LOADING",
+      "reason": "router-downloading",
+      "drift": true,
+      "served_model": "stories260K",
+      "served_model_expected": "-",
+      "served_model_ok": false,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=router-downloading)",
+      "error": null,
+      "passed": false,
+      "port": 42887
+    },
+    {
+      "name": "RouterStatus.empty-string-status-value",
+      "family": "RouterStatus",
+      "source": "RouterStatus.json",
+      "why": "SPEC BOUNDARY: an empty string IS a string value, so the literal rule refines it as 'any other value' with reason router-<value> = 'router-'. Divergence probe; the implementation's sentinel turns it into router-?.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_UNLOADED",
+        "reason": "router-",
+        "exit": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 2,
+      "verdict": "MODEL_UNLOADED",
+      "reason": "router-?",
+      "drift": true,
+      "served_model": "stories260K",
+      "served_model_expected": "-",
+      "served_model_ok": false,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=router-?)",
+      "error": null,
+      "passed": false,
+      "port": 38649
+    }
+  ]
+}
