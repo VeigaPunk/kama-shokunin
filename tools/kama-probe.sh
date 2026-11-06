@@ -475,19 +475,20 @@ sys.exit(1)
 PY
 }
 
-# Router mode: one line per data[] (else models[]) entry with a string id:
-# "<id>\t<status.value or ->\t<1 if status.failed is true else 0>\t<file state>". A status
-# object without a string value prints value `?` (unknown, never ready). The file state
-# (round 89) is computed only for `unloaded`, not-failed entries: `missing` or `invalid`
-# when an absolute --model/-m, --mmproj/-mm or --model-draft/-md path in status.args is
-# absent or cannot pass the GGUF loader's header checks (S584 ggml/src/gguf.cpp @ b12177;
-# type sizes S585 gguf-py GGML_QUANT_SIZES); `-` when nothing can be decided (no path, a
-# relative path, status.args[0] not a local file, unreadable file, unknown tensor type,
-# parse budget exceeded). Reads headers only, never a non-regular file.
-router_entries() { # $1 body file
-  [ "$HAVE_PY" -eq 1 ] || return 0
-  python3 - "$1" <<'PY' 2>/dev/null || true
-import json, os, stat, struct, sys
+# Router mode: `router_entries` prints one line per data[] (else models[]) entry with a
+# string id: "<id>\t<status.value or ->\t<1 if status.failed is true else 0>\t<index>". A
+# status object without a string value prints value `?` (unknown, never ready).
+# `router_file_states BODY IDX...` (round 89) prints "<index>\t<state>" for the given
+# entries only; the caller asks only for matching `unloaded`, not-failed entries on an
+# autoload router. State: `missing` or `invalid` when an absolute --model/-m, --mmproj/-mm
+# or --model-draft/-md path in status.args is absent or cannot pass the GGUF loader's
+# header checks (S584 ggml/src/gguf.cpp @ b12177; type sizes S585 gguf-py
+# GGML_QUANT_SIZES); `-` when nothing can be decided (no path, a relative path,
+# status.args[0] not a local file, unreadable file, unknown tensor type, parse budget or
+# deadline exceeded). Reads headers only; opens regular files only (O_NONBLOCK + fstat),
+# never under /proc, /sys or /dev.
+ROUTER_PY=$(cat <<'PY'
+import json, os, stat, struct, sys, time
 
 QSIZES = {0: (1, 4), 1: (1, 2), 2: (32, 18), 3: (32, 20), 6: (32, 22), 7: (32, 24), 8: (32, 34),
           9: (32, 36), 10: (256, 84), 11: (256, 110), 12: (256, 144), 13: (256, 176),
@@ -498,7 +499,11 @@ QSIZES = {0: (1, 4), 1: (1, 2), 2: (32, 18), 3: (32, 20), 6: (32, 22), 7: (32, 2
           41: (128, 18), 42: (64, 18), 43: (1, 1)}
 SCALAR = {0: 1, 1: 1, 2: 2, 3: 2, 4: 4, 5: 4, 6: 4, 7: 1, 10: 8, 11: 8, 12: 8}
 MAX_KV, MAX_ARR, MAX_TENSORS, MAX_META = 100_000, 50_000_000, 1_000_000, 512 * 1024 ** 2
+# read/seek budget per file and a wall-clock deadline for the whole call: a hostile or
+# odd header becomes "undecidable" (no verdict change), never a stall (r89 SN01 F1)
+MAX_STEPS, DEADLINE = 4_000_000, time.monotonic() + 4.0
 PATH_FLAGS = ("-m", "--model", "-mm", "--mmproj", "-md", "--model-draft")
+NO_OPEN = ("/proc/", "/sys/", "/dev/")
 
 
 class Bad(Exception):
@@ -516,15 +521,28 @@ def gguf_state(path):
         return "missing"
     except OSError:
         return "-"
-    if not stat.S_ISREG(st.st_mode):
+    if not stat.S_ISREG(st.st_mode) or os.path.realpath(path).startswith(NO_OPEN):
         return "invalid"
-    size = st.st_size
     try:
-        f = open(path, "rb")
+        fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
     except OSError:
         return "-"
+    try:
+        fst = os.fstat(fd)
+    except OSError:
+        os.close(fd)
+        return "-"
+    if not stat.S_ISREG(fst.st_mode):
+        os.close(fd)
+        return "invalid"
+    size = fst.st_size
+    f = os.fdopen(fd, "rb")
+    steps = [0]
     with f:
         def need(n):
+            steps[0] += 1
+            if steps[0] > MAX_STEPS or (steps[0] & 0xFFF) == 0 and time.monotonic() > DEADLINE:
+                raise Unknown()
             pos = f.tell()
             if pos > MAX_META:
                 raise Unknown()
@@ -557,11 +575,37 @@ def gguf_state(path):
                     raise Unknown()
                 if et in SCALAR:
                     skip(SCALAR[et] * n)
+                elif et == 8:
+                    skip_strings(n)
                 else:
                     for _ in range(n):
                         skip_value(et, depth + 1)
             else:
                 raise Bad()
+
+        def skip_strings(n):
+            # n length-prefixed strings, parsed from 1 MiB chunks (a tokenizer vocab holds
+            # 10^5 entries; per-element reads made a live check 4x slower, r89 EX02)
+            base, buf, off = f.tell(), b"", 0
+            if base + 8 * n > size:
+                raise Bad()
+            unpack = struct.Struct("<Q").unpack_from
+            for _ in range(n):
+                if off + 8 > len(buf):
+                    if time.monotonic() > DEADLINE:
+                        raise Unknown()
+                    base += off
+                    f.seek(base)
+                    buf, off = f.read(1 << 20), 0
+                    if len(buf) < 8:
+                        raise Bad()
+                off += 8 + unpack(buf, off)[0]
+                if base + off > size:
+                    raise Bad()
+                if base + off > MAX_META:
+                    raise Unknown()
+            steps[0] += n // 64
+            f.seek(base + off)
         try:
             if rd(4) != b"GGUF":
                 return "invalid"
@@ -644,25 +688,43 @@ except Exception:
 if not isinstance(doc, dict):
     sys.exit(0)
 seq = doc.get("data") if isinstance(doc.get("data"), list) else doc.get("models")
-for e in seq if isinstance(seq, list) else []:
+seq = seq if isinstance(seq, list) else []
+if sys.argv[2] == "files":
+    for idx in sys.argv[3:]:
+        try:
+            fs = file_state(seq[int(idx)]["status"].get("args"))
+        except Exception:
+            fs = "-"
+        print(f"{idx}\t{fs}")
+    sys.exit(0)
+for n, e in enumerate(seq):
     if not isinstance(e, dict) or not isinstance(e.get("id"), str) or not e["id"] \
             or any(c in e["id"] for c in "\t\r\n"):
         continue
     st = e.get("status")
-    fstate = "-"
     if not isinstance(st, dict):
         val, failed = "-", 0
     else:
         v = st.get("value")
         val = v if isinstance(v, str) and v and "\t" not in v and "\n" not in v else "?"
         failed = 1 if st.get("failed") is True else 0
-        if val == "unloaded" and not failed:
-            try:
-                fstate = file_state(st.get("args"))
-            except Exception:
-                fstate = "-"
-    print(f"{e['id']}\t{val}\t{failed}\t{fstate}")
+    print(f"{e['id']}\t{val}\t{failed}\t{n}")
 PY
+)
+
+router_entries() { # $1 body file
+  [ "$HAVE_PY" -eq 1 ] || return 0
+  python3 -c "$ROUTER_PY" "$1" entries 2>/dev/null || true
+}
+
+router_file_states() { # $1 body file, $2... entry indexes -> "<index>\t<state>" lines
+  [ "$HAVE_PY" -eq 1 ] || return 0
+  local body=$1; shift
+  if command -v timeout >/dev/null 2>&1; then
+    timeout 8 python3 -c "$ROUTER_PY" "$body" files "$@" 2>/dev/null || true
+  else
+    python3 -c "$ROUTER_PY" "$body" files "$@" 2>/dev/null || true
+  fi
 }
 
 # $1 port -> 0 when the bare GET /props body is {"role":"router",...,"models_autoload":true}
@@ -685,11 +747,11 @@ PY
 # $1 body file, $2 expected, $3 port -> sets RT_VERDICT/RT_REASON when the router `status`
 # of the matching entries refines a MODEL_OK; leaves both empty otherwise (see header).
 router_refine() {
-  local body=$1 expected=$2 port=$3 id val failed fstate wild=0 any_status=0 ok=0 loading='' down=''
-  local sleeping=0 unloaded=0 unloadable='' autoload=0
+  local body=$1 expected=$2 port=$3 id val failed idx wild=0 any_status=0 ok=0 loading='' down=''
+  local sleeping=0 cand='' unloaded=0 unloadable='' autoload=0 fidx fstate nbad=0 ncand=0
   RT_VERDICT='' RT_REASON=''
   case "$expected" in ''|'*'|'-') wild=1 ;; esac
-  while IFS=$'\t' read -r id val failed fstate; do
+  while IFS=$'\t' read -r id val failed idx; do
     [ -n "$id" ] || continue
     if [ "$wild" -eq 0 ]; then
       model_matches "$id" "$expected" || continue
@@ -699,22 +761,26 @@ router_refine() {
       -|loaded) ok=1 ;;
       sleeping) sleeping=1 ;;
       loading|downloading) [ -n "$loading" ] || loading=$val ;;
-      *) if [ "$val" = unloaded ] && [ "$failed" != 1 ]; then
-           case "$fstate" in
-             missing|invalid) [ -n "$unloadable" ] || unloadable="router-model-$fstate" ;;
-             *) unloaded=1 ;;
-           esac
-         fi
+      *) if [ "$val" = unloaded ] && [ "$failed" != 1 ]; then cand="$cand $idx"; ncand=$((ncand + 1)); fi
          if [ -z "$down" ]; then down="router-$val"; [ "$failed" = 1 ] && down="$down-failed"; fi ;;
     esac
   done < <(router_entries "$body")
   [ "$any_status" -eq 1 ] || return 0
   [ "$ok" -eq 1 ] && return 0
   if [ "$sleeping" -eq 1 ]; then RT_VERDICT=MODEL_OK; RT_REASON=router-sleeping; return 0; fi
-  if [ "$unloaded" -eq 1 ] || [ -n "$unloadable" ]; then
-    router_autoload "$port" && autoload=1
+  if [ "$ncand" -gt 0 ] && router_autoload "$port"; then
+    autoload=1
+    # Round 89: only the matching autoload candidates' model files are checked; an entry the
+    # check cannot decide (or a check that fails or times out) stays loadable.
+    # shellcheck disable=SC2086
+    while IFS=$'\t' read -r fidx fstate; do
+      case "$fstate" in
+        missing|invalid) nbad=$((nbad + 1)); [ -n "$unloadable" ] || unloadable="router-model-$fstate" ;;
+      esac
+    done < <(router_file_states "$body" $cand)
+    if [ "$nbad" -lt "$ncand" ]; then unloaded=1; fi
   fi
-  if [ "$unloaded" -eq 1 ] && [ "$autoload" -eq 1 ]; then
+  if [ "$unloaded" -eq 1 ]; then
     RT_VERDICT=MODEL_OK; RT_REASON=router-unloaded-autoload; return 0
   fi
   if [ -n "$loading" ]; then RT_VERDICT=MODEL_LOADING; RT_REASON="router-$loading"
