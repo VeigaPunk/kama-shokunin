@@ -3676,3 +3676,10 @@ L01/L03; read-only operator router `controls/pilot-live-1234.out`); the round-42
   `round78-live-reconcile --selftest` 0/4 → 4/4 (`controls/r78-selftest-*.out`).
 - Knowledge `corpus/knowledge/router-mode-readiness.md`; SOURCES S581 (admit), S582 (reject); SKILL.md
   §Round-88; lesson `corpus/lessons/round-88.md` (M1–M3, r87 routed-defect dispositions).
+- Wave 1 (12 seats, `.ufo/waves/round-88/w1/`): CR01 reproduced false drift for `sleeping` and
+  autoload-`unloaded` router models against the round's own completion oracle (base correct, measured
+  commit wrong: `repair/oracle-cells-{B,M}.out`); repaired at `8b5bb69d` (`router-sleeping`,
+  `router-unloaded-autoload` via bare `/props`; `repair/oracle-cells-repair.out` 0/3 mismatches). The frozen
+  counter is not edited and reads `mismatches=2` at the tip (`repair/c1-frozen-at-repair.out`). Also fixed:
+  newline-in-id false drift (RV01), fetcher symlink/TOCTOU (SN01; `repair/fetch-hardening.out`). Corrected:
+  knowledge admission reason (CN01 prior art, M4). QUALITY KQ141–KQ143; README round-88 coverage/frontier.

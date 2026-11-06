@@ -23,7 +23,7 @@ Protocol re-read this round (r87 R9): `MISSION.md`, `AXES.md`, `LEARNING.md`, `C
 |---|---|---|---|---|
 | S581 llama.cpp server README @ 704366d (b11755) | **admit** (A, mined) | https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/README.md — 2026-11-06, sha256 `714c067bdbc49bde2735810fbff83eb2933b12c57d50f0012b61fcecb75a6a37` | "`llama-server` can be launched in a **router mode** that exposes an API for dynamically loading and unloading models." — line 1849, section "Using multiple models" | Primary docs at the exact commit of the pinned binary the counter runs; the status list (lines 2059-2121) grounds the verdict map; the live router child reproduced `unloaded`/`loaded` and the 400. |
 | S582 llama.cpp server README @ master 954de24 | **reject** | https://raw.githubusercontent.com/ggml-org/llama.cpp/954de248ac6907dd05dc19f0f511ab18f2807a54/tools/server/README.md — 2026-11-06, sha256 `eafc1b53abd787613d13d1fb9a86a1fc9f90b59f1240b3eeb88c85ea08d9a137` | "The `status` object can be:" — line 2265 | Same status list as S581 but at a revision newer than the binary the lane runs; citing it would bind the verdict to text the pinned build was not compiled from. Flip: the pinned build moves past b11755. |
-| `corpus/knowledge/router-mode-readiness.md` | **admit** | cites S581 + own-work receipts | — | New coverage ground (router mode was not on the coverage map); every row of its observation table is a committed receipt. |
+| `corpus/knowledge/router-mode-readiness.md` | **admit** | cites S581 + own-work receipts | — | **Reason corrected after wave-1 CN01:** not new ground — the router `status` vocabulary was already held (`served-identity-crosswalk.md:28`, S001; `unregistered-listener-census.md`, S553). Admitted for what is new: the probe's verdict rule checked against real completions on lane-owned children, and the `400 model is not loaded` signature. Every observation-table row now points at a committed receipt (`measured/router-lifecycle.out`, `repair/oracle-cells-*.out`, `repair/pilot-live-1234-after.out`); the earlier text claimed that before the receipts existed (RV02 finding 2). |
 | Round-87 C1 successor selector (`.ufo/waves/round-87/w1/out/EX01SelectorRepair/round87-rendered-cells.py`) | **reject** (not re-frozen) | — | — | Five consecutive rejected closures (r83–r87) on lane-authored prose selectors; each successor was falsified by the next round's probes. Flip: an operator ruling that a rendered-cell instrument is wanted, with an outside reference implementation (`cmark -t xml`) as the oracle rather than a lane selector. |
 
 `status` / `recheck` / `used-by` changes this round: none on existing rows (S581, S582 are new).
@@ -53,6 +53,43 @@ different file — `controls/fetch-refuse-control.out`); after it, `pass=4 fail=
 read as a readiness endpoint. Evidence: `controls/pilot-live-1234.out`, `controls/c1-base.out` L01/L03.
 Captured-by: none — `corpus/QUALITY.md` and the probe's v3 rule ("a model array must be present") treat
 a listed id as served. Fix: C1 verdict rule; the decision row in `SKILL.md` §Round-88.
+
+**M4 — "new coverage ground" asserted without sweeping the lane's own corpus.** Class: admission reason
+not checked against held knowledge. Evidence: lesson Gate row 3 as first committed at `138a7543`;
+`.ufo/waves/round-88/w1/CN01SiblingOverlap.md` F1 (`unregistered-listener-census.md` lines 28-36 at base;
+`served-identity-crosswalk.md:28`). Captured-by: none in the lane (the census gate checks rows, not
+admission reasons); caught by the connector seat. Fix: Gate reason corrected; criterion KQ143 (a "new
+ground" admission carries the own-corpus sweep). Able to fail: `grep -ril "router" corpus/knowledge` at base
+prints both prior entries.
+
+**M5 — frozen verdict rule mapped two serving states against its own oracle (harm, repaired in-round).**
+Class: readiness rule derived from the status word, with oracle cells only in the configuration where it
+agreed. Evidence: `.ufo/waves/round-88/w1/CR01ClaimC1.md` BLOCKER; `repair/oracle-cells-B.out` (base: sleeping
+and autoload-unloaded `MODEL_OK`, oracle 200 — correct), `repair/oracle-cells-M.out` (measured commit: both
+`MODEL_UNLOADED`, oracle 200 — false drift, `mismatches=2`). Captured-by: none — the frozen counter pinned
+`--no-models-autoload` and authored C05 `sleeping → MODEL_UNLOADED` against S581 line 2337 ("Any new
+incoming task will automatically trigger the model to reload"). Fix: repair commit `8b5bb69d`
+(`router-sleeping`, `router-unloaded-autoload` via bare `/props`), `repair/oracle-cells-repair.out`
+`mismatches=0`; criterion KQ141. The frozen counter is not edited: at the tip it prints `mismatches=2`
+(C05, C12), recorded in `repair/c1-frozen-at-repair.out`.
+
+## Wave-1 findings — disposition
+
+| Seat | Finding | Disposition |
+|---|---|---|
+| CR01ClaimC1 | sleeping / autoload-unloaded false drift (BLOCKER) | Repaired at `8b5bb69d`; M5; KQ141. |
+| CR01ClaimC1 | 17/0 overfittable by an expect-keyed body-hash table | Carried: round-89 held-out cells. |
+| MT01RouterMutants | 6 escaped mutants (reason text, loading/unloaded and status-less precedence, data/models order, empty wildcard) | Carried: proposed cells in `w1/out/MT01RouterMutants/`, round 89. |
+| RV01ProbeDiff | newline in an entry id flips a loaded model to drift | Fixed (ids with TAB/CR/LF skipped in `router_entries`). |
+| RV01 / EX02 | `tests/probe-verdicts/check.py` cannot grade `MODEL_UNLOADED` rows; `?` sentinel for non-string values | Carried (harness edit changes the harm-suite bytes; round 89). |
+| SN01FixtureSafety | fetcher `.part` symlink clobber; digest→rename TOCTOU | Fixed (`O_EXCL|O_NOFOLLOW`, symlink refusal, post-rename re-digest; `repair/fetch-hardening.out`). |
+| SN01FixtureSafety | counter oracle shares the socket (squatter), SIGTERM child leak, env faults as exit 1 | Carried: frozen counter not edited. |
+| RV02SourcesGate | operator-router flags and after-cell unreceipted; oracle 400 never printed; `/health` sentence | Receipts added (`repair/pilot-live-1234-after.out`, `measured/router-lifecycle.out`); entry rewritten. |
+| CN01SiblingOverlap | prior art in own corpus; kengaku:57 / kagi:43 corroborate | M4; prior art cited; no contested scope. |
+| CR02ClaimC2 | counters alone cannot tell a move from a destructive deletion | The verbatim-row conjunct carries it (`measured/c2.out`); noted. |
+| SB01QualityCriterion | SCORECARD:6 forward reference; round79 registered command not re-run | Measured subsection appended; `repair/round79-census-B-vs-tip.out` identical B vs tip. |
+| EX01HarmSweep | 20 checks identical B/M/T | Harm conjunct corroborated. |
+| RV03CounterReview | counter faithful to predicate | — |
 
 ## Round-87 routed defects — disposition
 

@@ -1801,3 +1801,18 @@ Frontier retained: live SGLang behavior, registered-consumer recovery, other eng
 ## Round-85 frontier disposition
 
 `lessons/round-85.md` records the two actual authority-cell repairs, three delivered debt-selftest controls, and the frozen selector's fenced/comment false greens. S576 grounds only0–3-space ATX heading exclusions; S577 preserves the rejected alternate b7200 README path. No new knowledge entry or serving-runtime capability is admitted, so coverage does not expand. Rendered-cell identity, coupled measurement provenance, ownership-aware mutant transcript grading and independently corroborated source origin remain frontier. Round85 is an honest stop under its frozen C1 kill rule, not a retroactive repair of round84.
+
+## Coverage and frontier — round 88 (appended)
+
+| Entry | Holds | Round |
+|---|---|---|
+| `knowledge/router-mode-readiness.md` | The probe's verdict rule for llama.cpp router `status` values (S581, b11755), checked against real completions on lane-owned router children with autoload on and off and in the sleeping state; error signature `400 model is not loaded`. Extends, does not replace, the router vocabulary already held in `knowledge/served-identity-crosswalk.md:28` (S001) and `knowledge/unregistered-listener-census.md` (S553). | 88 |
+
+Frontier after round 88:
+
+- Per-request `?autoload=false` consumers and `--models-memory-margin` LRU unloads (a listed `loaded` model
+  can be evicted between probe and request); not modelled.
+- Multi-model readiness on other engines (vLLM, SGLang, Ollama `/api/ps` expiry) under the same oracle
+  discipline (KQ141).
+- `tests/probe-verdicts/check.py` cannot grade `MODEL_UNLOADED` rows (its served-model contract predates the
+  verdict; wave-1 RV01/EX02) — harness repair is round-89 work.

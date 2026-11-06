@@ -482,7 +482,8 @@ if not isinstance(doc, dict):
     sys.exit(0)
 seq = doc.get("data") if isinstance(doc.get("data"), list) else doc.get("models")
 for e in seq if isinstance(seq, list) else []:
-    if not isinstance(e, dict) or not isinstance(e.get("id"), str) or not e["id"]:
+    if not isinstance(e, dict) or not isinstance(e.get("id"), str) or not e["id"] \
+            or any(c in e["id"] for c in "\t\r\n"):
         continue
     st = e.get("status")
     if not isinstance(st, dict):

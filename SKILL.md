@@ -1767,12 +1767,21 @@ the served-id match, before `MODEL_OK` is final):
 | Situation | Verdict | Action |
 |---|---|---|
 | matching `/v1/models` entry has `status.value` `loaded`, or no `status` object | `MODEL_OK` / `matched` (unchanged) | Ready. |
+| matching entry `sleeping` | `MODEL_OK` / `router-sleeping` | Serves; the next request wakes it (cold start). |
+| matching entry `unloaded` (not failed) and bare `GET /props` says `"role":"router","models_autoload":true` | `MODEL_OK` / `router-unloaded-autoload` | Serves; the next request loads it (cold start). |
 | matching entry `status.value` `loading` or `downloading` | `MODEL_LOADING` / `router-<value>`, drift, exit 2 | Not ready; re-probe later. |
-| matching entry `status.value` `unloaded`, `sleeping`, `incomplete` or unknown; `failed: true` appends `-failed` | `MODEL_UNLOADED` / `router-<value>`, drift, exit 2 | Listed, not resident. `POST /models/load {"model":"<id>"}` or accept a cold start (autoload on); with `--no-models-autoload` a completion answers 400 `model is not loaded`. |
+| matching entry `unloaded` without autoload, `failed: true` (reason gains `-failed`), `incomplete` or unknown | `MODEL_UNLOADED` / `router-<value>`, drift, exit 2 | A request fails until loaded: `POST /models/load {"model":"<id>"}`. |
+
+The sleeping and autoload rows are the round-88 repair: the frozen claim rule graded them `MODEL_UNLOADED`,
+and the completion oracle answered 200 for both (`.ufo/waves/round-88/repair/oracle-cells-M.out`). Read
+`/props` bare only; `/props?model=<id>` routes to an instance.
 
 Error signature (llama.cpp b11755 router, `--no-models-autoload`, unloaded model): `POST
 /v1/chat/completions` → `400` `{"error":{"code":400,"message":"model is not loaded","type":"invalid_request_error"}}`.
 Never send a completion to an operator's router to test readiness: with autoload on it loads the model.
 Gate: `python3 tools/round88-router-cells.py --repo . --rev master --work <scratch>` (17 cells: 14 stub,
-3 live on a pinned b11755 router child; 0 all verdicts match, 1 mismatch, 2 could-not-evaluate).
+3 live on a pinned b11755 router child; 0 all verdicts match, 1 mismatch, 2 could-not-evaluate). Its
+frozen C05/C12 expectations predate the repair and read red at the tip (2 mismatches, by design); the
+oracle check for the repaired rows is `python3 .ufo/waves/round-88/repair/oracle-cells.py --repo .
+--rev master --work <scratch>` (3 live cells: sleeping, autoload-unloaded, no-autoload-unloaded).
 Prerequisite restore: `python3 tools/fetch-pinned-model.py` (sha256-verified, refuses a different file).

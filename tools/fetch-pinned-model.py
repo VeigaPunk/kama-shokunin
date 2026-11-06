@@ -38,6 +38,10 @@ def main() -> int:
     ap.add_argument("--dest", type=Path, default=DEST)
     ap.add_argument("--url", default=URL)
     a = ap.parse_args()
+    part = a.dest.with_name(a.dest.name + ".part")
+    if a.dest.is_symlink() or part.is_symlink():
+        print(f"FETCH_PINNED_FINDING symlink at {a.dest} or {part} (refused)")
+        return 1
     if a.dest.exists():
         got = digest(a.dest)
         if got != PIN:
@@ -46,21 +50,33 @@ def main() -> int:
         print(f"FETCH_PINNED model={a.dest} sha256={got} action=present")
         return 0
     a.dest.parent.mkdir(parents=True, exist_ok=True)
-    part = a.dest.with_name(a.dest.name + ".part")
     try:
-        with urllib.request.urlopen(a.url, timeout=60) as r, part.open("wb") as out:
+        # O_EXCL|O_NOFOLLOW: never write through a pre-existing .part or a symlink planted there.
+        fd = os.open(part, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644)
+    except OSError as e:
+        print(f"FETCH_PINNED_FINDING cannot create {part} exclusively: {e} (refused)")
+        return 1
+    h = hashlib.sha256()
+    try:
+        with urllib.request.urlopen(a.url, timeout=60) as r, os.fdopen(fd, "wb") as out:
             while chunk := r.read(1 << 16):
                 out.write(chunk)
+                h.update(chunk)
     except OSError as e:
         part.unlink(missing_ok=True)
         print(f"FETCH_PINNED could-not-fetch: {e}")
         return 2
-    got = digest(part)
+    got = h.hexdigest()
     if got != PIN:
         part.unlink(missing_ok=True)
         print(f"FETCH_PINNED_FINDING downloaded digest {got} != pin {PIN} (discarded)")
         return 1
     os.replace(part, a.dest)
+    # Re-verify the installed object, not the bytes we streamed (closes the digest->rename window).
+    got = digest(a.dest)
+    if a.dest.is_symlink() or got != PIN:
+        print(f"FETCH_PINNED_FINDING installed object changed after rename: {a.dest} sha256={got}")
+        return 1
     print(f"FETCH_PINNED model={a.dest} sha256={got} action=fetched")
     return 0
 
