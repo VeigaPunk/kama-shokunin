@@ -1827,3 +1827,41 @@ exact `error.message` (`<id>` is the requested model). Two traps: `POST /models/
 | `POST /models/load` | 400 | `model is already running` | load of a model that is loaded | not a fault; the model serves | `.ufo/waves/round-89/measured/router-signatures.jsonl` |
 
 Never send these calls to an operator's router: load, unload and an autoload completion change its state.
+
+## Probe reason codes
+
+What `tools/kama-probe.sh` prints in the `reason` column, why, and what to do. Every row was produced by the
+probe itself against a lane-owned stub on a free loopback port: `python3 tools/round90-reason-capture.py --repo .
+--rev <rev> --work <scratch> --out <receipt>` writes one line per cell (receipt
+`.ufo/waves/round-90/measured/reason-cells.jsonl`, bound to the probe's sha256), and
+`python3 tools/round90-reason-rows.py --repo . --rev <rev>` fails when a row and its receipt line disagree. The
+probe only ever asks `127.0.0.1`, so curl's DNS failure (`dns-failure`, rc 6) has a code but no reachable trigger.
+Only `MODEL_OK` rows exit 0. Read the reason before the verdict: two `MODEL_OK` reasons are cold starts, and
+four `MODEL_UNLOADED`/`MODEL_LOADING` reasons come from the router `status` object, not from a request.
+
+| reason | verdict | trigger | cell |
+|---|---|---|---|
+| `connection-refused` | `DEAD` | nothing listens on the port (curl rc 7); start the server or fix the consumer's port | `R-connection-refused` |
+| `timeout` | `DEAD` | the port accepts but no answer arrives within `--timeout` (curl rc 28); a hung or overloaded server, or a long model load holding the socket | `R-timeout` |
+| `empty-reply` | `NOT_HTTP` | the port accepts and closes without a byte (curl rc 52); a non-HTTP service or a crashed worker | `R-empty-reply` |
+| `connection-reset` | `NOT_HTTP` | the peer resets the connection (curl rc 56); a TLS-only or crashing listener | `R-connection-reset` |
+| `no-http-response` | `NOT_HTTP` | bytes arrive but are not HTTP (here an SSH banner; any other curl failure lands here too); the port belongs to another protocol | `R-no-http-response` |
+| `http-401` | `UNAUTHORIZED_SERVICE` | `GET /v1/models` answers 401; the server wants an API key the consumer must send, the model is not judged | `R-http-401` |
+| `http-403` | `UNAUTHORIZED_SERVICE` | `GET /v1/models` answers 403; key present but refused, or an access rule blocks loopback | `R-http-403` |
+| `llamacpp-loading` | `MODEL_LOADING` | 503 with the exact llama.cpp envelope `Loading model` / `unavailable_error` / 503; single-model server still loading, retry later | `R-llamacpp-loading` |
+| `expected-wildcard` | `MODEL_OK` | a model array is served and no model was expected (`--expect '*'`); liveness only, identity unchecked | `R-expected-wildcard` |
+| `matched` | `MODEL_OK` | a served id equals the expected one after basename and one trailing `.gguf` are dropped | `R-matched` |
+| `unresolvable-id` | `MODEL_MISMATCH` | a model array is present but no entry carries a usable id, or the expected id normalizes to nothing | `R-unresolvable-id` |
+| `served-id-mismatch` | `MODEL_MISMATCH` | ids are served but none equals the expected one; fix the consumer's model pin or load the right model | `R-served-id-mismatch` |
+| `html-non-model` | `FOREIGN_SERVICE` | the answer is HTML (header or body sniff) at any status; a web app holds the port | `R-html-non-model` |
+| `schema-unrecognized` | `FOREIGN_SERVICE` | 2xx JSON without a `data` or `models` array; an API that is not a model server | `R-schema-unrecognized` |
+| `non-model-2xx` | `FOREIGN_SERVICE` | 2xx with a non-JSON, non-HTML body; a status-only check would have false-passed it | `R-non-model-2xx` |
+| `non-2xx-non-model-http` | `FOREIGN_SERVICE` | a non-2xx answer that is neither 401/403 nor the llama.cpp loading envelope (here 404 JSON) | `R-non-2xx-non-model-http` |
+| `router-sleeping` | `MODEL_OK` | router `status.value` is `sleeping`; the next request reloads it (cold start, not a fault) | `R-router-sleeping` |
+| `router-unloaded-autoload` | `MODEL_OK` | router entry `unloaded` and `GET /props` says `models_autoload: true`; the first request loads it | `R-router-unloaded-autoload` |
+| `router-loading` | `MODEL_LOADING` | router `status.value` is `loading`; wait, then re-probe | `R-router-loading` |
+| `router-downloading` | `MODEL_LOADING` | router `status.value` is `downloading`; the file is still being fetched | `R-router-downloading` |
+| `router-model-missing` | `MODEL_UNLOADED` | autoload router, entry `unloaded`, and an absolute `--model`/`-m` path in `status.args` does not exist; the first request would answer 500 `failed to load` | `R-router-model-missing` |
+| `router-model-invalid` | `MODEL_UNLOADED` | as above but the file exists and fails a GGUF loader header check; replace the file | `R-router-model-invalid` |
+| `router-unloaded` | `MODEL_UNLOADED` | entry `unloaded` and the router does not autoload (`models_autoload` not true, or `/props` unusable); load it with `POST /models/load` | `R-router-unloaded` |
+| `body-too-large` | `FOREIGN_SERVICE` | the `/v1/models` answer exceeds the probe's 4 MiB cap (curl `--max-filesize`, rc 63); nothing was parsed, so no model verdict is possible (round 90) | `R-body-too-large` |

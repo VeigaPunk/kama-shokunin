@@ -1,0 +1,24 @@
+# harm at M f968fb19bb2a0c2afe271bfe606f11b52d10823f
+## tests/probe-verdicts/check.py
+tests=77 passes=77 failures=0
+exit=0
+## tools/test-snapshot.sh
+RESULT pass=30 fail=0
+exit=0
+## round89-unloadable-cells
+ROUTER_UNLOADABLE_CELL U1-missing-preset oracle=MODEL_UNLOADED http=500 probe=MODEL_UNLOADED reason=router-model-missing ok=1
+ROUTER_UNLOADABLE_CELL U2-not-gguf oracle=MODEL_UNLOADED http=500 probe=MODEL_UNLOADED reason=router-model-invalid ok=1
+ROUTER_UNLOADABLE_CELL U3-bad-header oracle=MODEL_UNLOADED http=500 probe=MODEL_UNLOADED reason=router-model-invalid ok=1
+ROUTER_UNLOADABLE_CELL U4-truncated-half oracle=MODEL_UNLOADED http=500 probe=MODEL_UNLOADED reason=router-model-invalid ok=1
+ROUTER_UNLOADABLE_CELL U5-deleted-after-list oracle=MODEL_UNLOADED http=500 probe=MODEL_UNLOADED reason=router-model-missing ok=1
+ROUTER_UNLOADABLE_CELL P1-valid-unloaded oracle=MODEL_OK http=200 probe=MODEL_OK reason=router-unloaded-autoload ok=1
+ROUTER_UNLOADABLE_CELL P2-valid-loaded oracle=MODEL_OK http=200 probe=MODEL_OK reason=matched ok=1
+ROUTER_UNLOADABLE_CELL N1-valid-unloaded-noautoload oracle=MODEL_UNLOADED http=400 probe=MODEL_UNLOADED reason=router-unloaded ok=1
+ROUTER_UNLOADABLE_CELL N2-bad-header-noautoload oracle=MODEL_UNLOADED http=400 probe=MODEL_UNLOADED reason=router-unloaded ok=1
+ROUTER_UNLOADABLE_CELL P3-valid-sleeping oracle=MODEL_OK http=200 probe=MODEL_OK reason=router-sleeping ok=1
+ROUTER_UNLOADABLE_CELL P4-relative-unloaded oracle=MODEL_OK http=200 probe=MODEL_OK reason=router-unloaded-autoload ok=1
+ROUTER_UNLOADABLE cells=11 mismatches=0 positive_mismatches=0 probe=rev probe_sha256=c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97 server_sha256=ba272ee3446d9b98c9150c79667e6a8b217f25ee58ce0c6156cc96d2b5b362b0 rev=f968fb19bb2a0c2afe271bfe606f11b52d10823f
+exit=0
+## operator router 127.0.0.1:1234 GET only
+      "verdict": "MODEL_OK",
+      "reason": "router-unloaded-autoload",
