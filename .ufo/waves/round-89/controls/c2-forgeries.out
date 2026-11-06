@@ -1,0 +1,23 @@
+# C2 forgery battery (scratch fixture repo, rows: 1 true, 1 duplicate, 1 fabricated, 1 wrong code, 1 source-not-wire text, 1 wrong build, 1 missing receipt, 1 outside section); counter_sha256=30f3af7fb9778024748df46b975da16ab9be654ba0bafc8476e04be134d7f935
+# fixture: # fixture
+# fixture: ## Router error signatures (llama.cpp router mode)
+# fixture: | Endpoint | HTTP | Message | Trigger | Action | Receipt |
+# fixture: |---|---|---|---|---|---|
+# fixture: | `POST /v1/chat/completions` | 400 | `model is not loaded` | t | a | `.ufo/waves/round-89/measured/router-signatures.jsonl` |
+# fixture: | `POST /v1/chat/completions` | 400 | `model is not loaded` | dup | a | `.ufo/waves/round-89/measured/router-signatures.jsonl` |
+# fixture: | `POST /v1/chat/completions` | 503 | `model is loading` | fabricated | a | `.ufo/waves/round-89/measured/router-signatures.jsonl` |
+# fixture: | `POST /v1/chat/completions` | 404 | `model '<id>' not found` | wrong code | a | `.ufo/waves/round-89/measured/router-signatures.jsonl` |
+# fixture: | `POST /models/load` | 404 | `model is not found` | source text not wire text | a | `.ufo/waves/round-89/measured/router-signatures.jsonl` |
+# fixture: | `POST /models/unload` | 400 | `model is not running` | wrong build | a | `other-build.jsonl` |
+# fixture: | `POST /models/unload` | 400 | `model is not found` | missing receipt | a | `nope.jsonl` |
+# fixture: ## next
+# fixture: | `POST /v1/chat/completions` | 500 | `model name=<id> failed to load` | outside section | a | `.ufo/waves/round-89/measured/router-signatures.jsonl` |
+SIGNATURE_ROW bound POST /v1/chat/completions 400 'model is not loaded' receipt=.ufo/waves/round-89/measured/router-signatures.jsonl
+SIGNATURE_ROW duplicate POST /v1/chat/completions 400 'model is not loaded'
+SIGNATURE_ROW unbound POST /v1/chat/completions 503 'model is loading' receipt=.ufo/waves/round-89/measured/router-signatures.jsonl
+SIGNATURE_ROW unbound POST /v1/chat/completions 404 "model '<id>' not found" receipt=.ufo/waves/round-89/measured/router-signatures.jsonl
+SIGNATURE_ROW unbound POST /models/load 404 'model is not found' receipt=.ufo/waves/round-89/measured/router-signatures.jsonl
+SIGNATURE_ROW unbound POST /models/unload 400 'model is not running' receipt=other-build.jsonl
+SIGNATURE_ROW unbound POST /models/unload 400 'model is not found' receipt=nope.jsonl
+SIGNATURE_ROWS rows=7 bound=1 unbound=5 duplicates=1 rev=0c09884dad924640b92135209b9fc7e361f991ee
+exit=1
