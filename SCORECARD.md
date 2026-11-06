@@ -63,9 +63,9 @@ The live plan follows; historical plans remain as filed (round 78's in `plans/ro
 
 ### Planned (round 90)
 
-1. Operability: the probe's two pre-existing answer-handling defects wave-1 SN01 found — no `--max-filesize` on the `/v1/models` and `/props` fetch (F3: 52 MiB written in 5 s) and unsanitised ids/C0 bytes reaching table and JSON output (F4) — each with a failing-before control. (R5, `MODEL_UNLOADED` rows in `tests/probe-verdicts/check.py`, was integrated in round 89: `measured/harness-r5.out`.)
+1. Operability: the probe's two pre-existing answer-handling defects wave-1 SN01 found — no `--max-filesize` on the `/v1/models` and `/props` fetch (F3: 52 MiB written in 5 s) and unsanitised ids/C0 bytes reaching table and JSON output (F4) — each with a failing-before control. (R5, `MODEL_UNLOADED` rows in `tests/probe-verdicts/check.py`, was integrated in round 89: `.ufo/waves/round-89/measured/harness-r5.out`.)
 2. Operability (carried r87 R4): the `round75-instruments` cause is recorded (`corpus/lessons/round-89.md` dispositions, wave-1 EX04: the audit's exempt-head eligibility is monotone in `<to>`); its register-only fix deletes 19 late rows and waits for the operator's L0 ruling. Router aliases (wave-1 SC01: a false `MODEL_MISMATCH` for an alias pin, present at base) are the next frontier claim candidate.
-3. Operability: the three held-out LIMIT cells (`measured/heldout-Mprime.out`: chmod-000 file, split model with a
+3. Operability: the three held-out LIMIT cells (`.ufo/waves/round-89/measured/heldout-Mprime.out`: chmod-000 file, split model with a
    missing shard, relative missing path) — each only from committed receipts that also record the base verdict for
    the same cell, and none at the cost of a false red on the operator's router.
 4. Freshness: re-run `tools/round89-router-signatures.py` at the next pinned llama.cpp release and re-grade
