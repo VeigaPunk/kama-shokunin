@@ -1837,7 +1837,8 @@ probe itself against a lane-owned stub on a free loopback port: `python3 tools/r
 `python3 tools/round90-reason-rows.py --repo . --rev <rev>` fails when a row and its receipt line disagree. The
 probe only ever asks `127.0.0.1`, so curl's DNS failure (`dns-failure`, rc 6) has a code but no reachable trigger.
 Only `MODEL_OK` rows exit 0. Read the reason before the verdict: two `MODEL_OK` reasons are cold starts, and
-four `MODEL_UNLOADED`/`MODEL_LOADING` reasons come from the router `status` object, not from a request.
+five `MODEL_UNLOADED`/`MODEL_LOADING` reasons (`router-loading`, `router-downloading`, `router-model-missing`,
+`router-model-invalid`, `router-unloaded`) come from the router `status` object, not from a request.
 
 | reason | verdict | trigger | cell |
 |---|---|---|---|
@@ -1854,14 +1855,14 @@ four `MODEL_UNLOADED`/`MODEL_LOADING` reasons come from the router `status` obje
 | `unresolvable-id` | `MODEL_MISMATCH` | a model array is present but no entry carries a usable id, or the expected id normalizes to nothing | `R-unresolvable-id` |
 | `served-id-mismatch` | `MODEL_MISMATCH` | ids are served but none equals the expected one; fix the consumer's model pin or load the right model | `R-served-id-mismatch` |
 | `html-non-model` | `FOREIGN_SERVICE` | the answer is HTML (header or body sniff) at any status; a web app holds the port | `R-html-non-model` |
-| `schema-unrecognized` | `FOREIGN_SERVICE` | 2xx JSON without a `data` or `models` array; an API that is not a model server | `R-schema-unrecognized` |
-| `non-model-2xx` | `FOREIGN_SERVICE` | 2xx with a non-JSON, non-HTML body; a status-only check would have false-passed it | `R-non-model-2xx` |
+| `schema-unrecognized` | `FOREIGN_SERVICE` | 2xx with a JSON `Content-Type` but no `data` or `models` array in the body; the split from `non-model-2xx` reads the header only; an API that is not a model server | `R-schema-unrecognized` |
+| `non-model-2xx` | `FOREIGN_SERVICE` | 2xx without a model array whose `Content-Type` is not JSON (and the body is not HTML); a status-only check would have false-passed it | `R-non-model-2xx` |
 | `non-2xx-non-model-http` | `FOREIGN_SERVICE` | a non-2xx answer that is neither 401/403 nor the llama.cpp loading envelope (here 404 JSON) | `R-non-2xx-non-model-http` |
 | `router-sleeping` | `MODEL_OK` | router `status.value` is `sleeping`; the next request reloads it (cold start, not a fault) | `R-router-sleeping` |
 | `router-unloaded-autoload` | `MODEL_OK` | router entry `unloaded` and `GET /props` says `models_autoload: true`; the first request loads it | `R-router-unloaded-autoload` |
 | `router-loading` | `MODEL_LOADING` | router `status.value` is `loading`; wait, then re-probe | `R-router-loading` |
 | `router-downloading` | `MODEL_LOADING` | router `status.value` is `downloading`; the file is still being fetched | `R-router-downloading` |
-| `router-model-missing` | `MODEL_UNLOADED` | autoload router, entry `unloaded`, and an absolute `--model`/`-m` path in `status.args` does not exist; the first request would answer 500 `failed to load` | `R-router-model-missing` |
+| `router-model-missing` | `MODEL_UNLOADED` | autoload router, entry `unloaded`, and an absolute `--model`/`-m`, `--mmproj`/`-mm` or `--model-draft`/`-md` path in `status.args` does not exist; the first request would answer 500 `failed to load` | `R-router-model-missing` |
 | `router-model-invalid` | `MODEL_UNLOADED` | as above but the file exists and fails a GGUF loader header check; replace the file | `R-router-model-invalid` |
-| `router-unloaded` | `MODEL_UNLOADED` | entry `unloaded` and the router does not autoload (`models_autoload` not true, or `/props` unusable); load it with `POST /models/load` | `R-router-unloaded` |
+| `router-unloaded` | `MODEL_UNLOADED` | entry `unloaded` and the probe could not confirm autoload: `GET /props` did not answer `role: router` with `models_autoload: true` (a no-autoload router, or a `/props` that failed, was over the 4 MiB cap, or was not JSON); check `/props` before sending `POST /models/load` | `R-router-unloaded` |
 | `body-too-large` | `FOREIGN_SERVICE` | the `/v1/models` answer exceeds the probe's 4 MiB cap (curl `--max-filesize`, rc 63); nothing was parsed, so no model verdict is possible (round 90) | `R-body-too-large` |
