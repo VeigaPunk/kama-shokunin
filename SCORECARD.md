@@ -116,7 +116,7 @@ The live plan follows; historical plans remain as filed (round 78's in `plans/ro
 
 ## Retired
 
-None. 6 axes and 57 capabilities remain active. Neither assigned axis is retired: the registered consumers still sample DEAD (`registry/history/latest.tsv`; restoring a serving runtime is operator-owned), while the lane-owned llama.cpp fixture reaches `MODEL_OK` on an unregistered loopback port (`.ufo/waves/round-78/measured/after/c3-live.json`), so the surface is not permanently gone. Retirement would need evidence of permanent absence or of saturation, and neither is observed.
+None. 6 axes and 59 capabilities remain active. Neither assigned axis is retired: the registered consumers still sample DEAD (`registry/history/latest.tsv`; restoring a serving runtime is operator-owned), while the lane-owned llama.cpp fixture reaches `MODEL_OK` on an unregistered loopback port (`.ufo/waves/round-78/measured/after/c3-live.json`), so the surface is not permanently gone. Retirement would need evidence of permanent absence or of saturation, and neither is observed.
 
 ## Move log
 
@@ -242,7 +242,7 @@ Mirror of the round-90 canonical capability list that §Round 90 carries (a mirr
 
 ## Saturation
 
-Saturation line **8/10**; stagnation window **N = 4** rounds. Score vector operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7; capability first-working rounds 10, 14, 16, 20, 25, 30, 41, 42, 43, 46, 47, 61, 67, 68, 69, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 86, 87, 88, 89 (highest canonical list, §Round89). Assigned axes operability + calibration; calibration7 is below saturation, nudge inactive. Latest repertoire entries are round89 router-unloadable-file-verdict and router-error-signature-table, after round88 router-mode-readiness and pinned-fixture-restore.
+Saturation line **8/10**; stagnation window **N = 4** rounds. Score vector operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7; capability first-working rounds 10, 14, 16, 20, 25, 30, 41, 42, 43, 46, 47, 61, 67, 68, 69, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 86, 87, 88, 89, 90 (highest canonical list, §Round90). Assigned axes operability + calibration; calibration7 is below saturation, nudge inactive. Latest repertoire entries are round90 hostile-answer-bounds and probe-reason-table, after round89 router-unloadable-file-verdict and router-error-signature-table.
 
 ## Historical head sections (superseded in round 42)
 
