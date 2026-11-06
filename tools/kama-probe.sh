@@ -223,7 +223,9 @@ jstr() { # $1 -> JSON string literal
 
 # Round 90 (C1): listener-supplied header/status text loses every control byte before it reaches
 # table or JSON output (a tab would forge a table column, ESC drives the operator's terminal).
-strip_ctl() { LC_ALL=C tr -d '\000-\037\177'; }
+# Bytes 0x80-0xFF go too (wave-1 RV01 DEFECT-2): a non-UTF-8 header byte made --json unparseable,
+# and header evidence needs no non-ASCII text.
+strip_ctl() { LC_ALL=C tr -d '\000-\037\177-\377'; }
 
 emit_json() { # $1 = JSON text; validated/normalised when python3 is present
   if [ "$HAVE_PY" -eq 1 ]; then
@@ -422,12 +424,14 @@ for g in groups:
 PY
     return 0
   fi
-  # grep fallback: approximate the same precedence ("id" before "model"/"name")
+  # grep fallback: approximate the same precedence ("id" before "model"/"name"). Round 90
+  # (wave-1 EX03 F1): raw control bytes in the answer are dropped here too (tab, ESC, U+0001,
+  # DEL), so the python-free path cannot forge table columns or reach the terminal either.
   local out
-  out=$({ grep -oE '"id"[[:space:]]*:[[:space:]]*"[^"]*"' "$body" 2>/dev/null || true; } | sed -E 's/.*:[[:space:]]*"//; s/"$//' || true)
+  out=$({ grep -aoE '"id"[[:space:]]*:[[:space:]]*"[^"]*"' "$body" 2>/dev/null || true; } | sed -E 's/.*:[[:space:]]*"//; s/"$//' | LC_ALL=C tr -d '\000-\011\013-\037\177' || true)
   [ -n "$out" ] && { printf '%s\n' "$out"; return 0; }
-  { grep -oE '"model"[[:space:]]*:[[:space:]]*"[^"]*"' "$body" 2>/dev/null || true; } |
-    sed -E 's/.*:[[:space:]]*"//; s/"$//' || true
+  { grep -aoE '"model"[[:space:]]*:[[:space:]]*"[^"]*"' "$body" 2>/dev/null || true; } |
+    sed -E 's/.*:[[:space:]]*"//; s/"$//' | LC_ALL=C tr -d '\000-\011\013-\037\177' || true
 }
 
 # drop directory, strip ONE trailing .gguf
@@ -725,9 +729,12 @@ if sys.argv[2] == "files":
         print(f"{idx}\t{fs}")
     sys.exit(0)
 for n, e in enumerate(seq):
-    if not isinstance(e, dict) or not isinstance(e.get("id"), str) or not e["id"] \
-            or any(ord(c) < 0x20 or 0x7F <= ord(c) <= 0x9F for c in e["id"]):
+    if not isinstance(e, dict) or not isinstance(e.get("id"), str) or not e["id"]:
         continue
+    # Round 90 (wave-1 RV01 BLOCKER-1): an id with control characters is kept and printed as
+    # \uXXXX text (as served_ids does), never dropped: a dropped entry would hide its status and
+    # turn a loading/unloaded router into MODEL_OK for a wildcard consumer.
+    rid = "".join("\\u%04x" % ord(c) if ord(c) < 0x20 or 0x7F <= ord(c) <= 0x9F else c for c in e["id"])
     st = e.get("status")
     if not isinstance(st, dict):
         val, failed = "-", 0
@@ -735,7 +742,7 @@ for n, e in enumerate(seq):
         v = st.get("value")
         val = v if isinstance(v, str) and v and not any(ord(c) < 0x20 or 0x7F <= ord(c) <= 0x9F for c in v) else "?"
         failed = 1 if st.get("failed") is True else 0
-    print(f"{e['id']}\t{val}\t{failed}\t{n}")
+    print(f"{rid}\t{val}\t{failed}\t{n}")
 PY
 )
 
@@ -841,6 +848,13 @@ classify() { # $1 port, $2 expected -> sets C_VERDICT C_SERVED C_EVIDENCE C_REAS
       C_EVIDENCE="rc=28 timeout (connect=${CONNECT_TIMEOUT}s max=${TIMEOUT}s); $base"
       return 0 ;;
     63)
+      # an auth refusal keeps its verdict whatever its body size (wave-1 RV01 DEFECT-3)
+      case "$F_CODE" in
+        401|403)
+          C_VERDICT=UNAUTHORIZED_SERVICE; C_REASON=http-$F_CODE
+          C_EVIDENCE="$base (body over $MAX_BODY bytes, not read); $(probe_short "$port" "/") @ /"
+          return 0 ;;
+      esac
       C_VERDICT=FOREIGN_SERVICE
       C_REASON=body-too-large
       C_EVIDENCE="rc=63 answer body larger than $MAX_BODY bytes (transfer aborted, nothing parsed); $base"
