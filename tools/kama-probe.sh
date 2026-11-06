@@ -437,21 +437,37 @@ PY
 # drop directory, strip ONE trailing .gguf
 normalize_id() { local s=${1-}; s=${s##*/}; s=${s%.gguf}; printf '%s' "$s"; }
 
+# Round 91 (C1; S592 POSIX awk): the same rule as normalize_id, applied to every served id in ONE
+# awk pass (no per-id fork, no count cap, no quadratic `${s##*/}` on a multi-MB id), so a large
+# answer under the 4 MiB cap is graded in linear time. The expected id reaches awk through the
+# environment (ENVIRON keeps the value verbatim; a -v assignment would process its backslashes),
+# and ids compare as strings (`x ""`): ENVIRON values and fields can be numeric strings.
+AWK_NORM='function norm(s,  p, n, L) {
+  n = split(s, p, "/"); s = p[n]; L = length(s)
+  if (L >= 5 && substr(s, L - 4) == ".gguf") s = substr(s, 1, L - 5)
+  return s ""
+}'
+
 # $1 newline-joined served ids, $2 expected id -> 0 match, 1 mismatch, 2 unresolvable
 model_matches() {
   local served=$1 expected=$2
   local exp_n; exp_n=$(normalize_id "$expected")
   [ -n "$exp_n" ] || return 2
-  local s sn found=0
-  while IFS= read -r s; do
-    [ -n "$s" ] || continue
-    sn=$(normalize_id "$s")
-    [ -n "$sn" ] || continue
-    found=1
-    [ "$sn" = "$exp_n" ] && return 0
-  done <<< "$served"
-  [ "$found" -eq 0 ] && return 2
-  return 1
+  local rc=0
+  printf '%s\n' "$served" | KAMA_EXP=$exp_n LC_ALL=C awk "$AWK_NORM"'
+    BEGIN { e = ENVIRON["KAMA_EXP"] ""; found = 0; hit = 0 }
+    hit { next }
+    { s = norm($0); if (s == "") next; found = 1; if (s == e) hit = 1 }
+    END { exit (hit ? 0 : (found ? 1 : 2)) }' || rc=$?
+  return "$rc"
+}
+
+# Round 91 (C1): stdin router_entries lines, $1 normalized expected id -> the lines whose id field
+# matches it under normalize_id's rule, in one pass (router_refine no longer forks per entry).
+router_match() {
+  KAMA_EXP=$1 LC_ALL=C awk -F '\t' "$AWK_NORM"'
+    BEGIN { e = ENVIRON["KAMA_EXP"] "" }
+    { s = norm($1); if (s != "" && s == e) print }'
 }
 
 # A model array must be PRESENT for MODEL_OK. v3: a status code or a `Server: llama.cpp`
@@ -786,11 +802,13 @@ router_refine() {
   local sleeping=0 cand='' unloaded=0 unloadable='' autoload=0 fidx fstate nbad=0 ncand=0
   RT_VERDICT='' RT_REASON=''
   case "$expected" in ''|'*'|'-') wild=1 ;; esac
+  local exp_n=''
+  if [ "$wild" -eq 0 ]; then
+    exp_n=$(normalize_id "$expected")
+    [ -n "$exp_n" ] || return 0
+  fi
   while IFS=$'\t' read -r id val failed idx; do
     [ -n "$id" ] || continue
-    if [ "$wild" -eq 0 ]; then
-      model_matches "$id" "$expected" || continue
-    fi
     [ "$val" = "-" ] || any_status=1
     case "$val" in
       -|loaded) ok=1 ;;
@@ -799,7 +817,7 @@ router_refine() {
       *) if [ "$val" = unloaded ] && [ "$failed" != 1 ]; then cand="$cand $idx"; ncand=$((ncand + 1)); fi
          if [ -z "$down" ]; then down="router-$val"; [ "$failed" = 1 ] && down="$down-failed"; fi ;;
     esac
-  done < <(router_entries "$body")
+  done < <(if [ "$wild" -eq 1 ]; then router_entries "$body"; else router_entries "$body" | router_match "$exp_n"; fi)
   [ "$any_status" -eq 1 ] || return 0
   [ "$ok" -eq 1 ] && return 0
   if [ "$sleeping" -eq 1 ]; then RT_VERDICT=MODEL_OK; RT_REASON=router-sleeping; return 0; fi
@@ -912,8 +930,9 @@ classify() { # $1 port, $2 expected -> sets C_VERDICT C_SERVED C_EVIDENCE C_REAS
   if [ "$is2" -eq 1 ] && [ "$has_models" -eq 1 ]; then
     local ids
     ids=$(served_ids "$FBODY")
-    C_SERVED=$(printf '%s' "$ids" | tr '\n' ',')
-    C_SERVED=${C_SERVED%,}
+    # Round 91 (C1): `paste -sd,` joins without a trailing comma; the earlier `${C_SERVED%,}` took
+    # 38 s on a 1.6 MB list in a UTF-8 locale (bash suffix removal is quadratic there).
+    C_SERVED=$(printf '%s\n' "$ids" | paste -sd, -)
     [ -n "$C_SERVED" ] || C_SERVED='-'
     local runtime="other"
     [ "$F_SERVER" = "llama.cpp" ] && runtime="llama.cpp"
