@@ -1816,3 +1816,16 @@ Frontier after round 88:
   discipline (KQ141).
 - `tests/probe-verdicts/check.py` cannot grade `MODEL_UNLOADED` rows (its served-model contract predates the
   verdict; wave-1 RV01/EX02) — harness repair is round-89 work.
+
+## Coverage and frontier — round 89 (appended)
+
+- **Core (moved from frontier):** llama.cpp router entries whose model file cannot load — the listing hides it
+  until a load is attempted; the probe now decides missing / invalid-header files before any request
+  (`corpus/knowledge/router-unloadable-model.md`, S583–S585; receipts `.ufo/waves/round-89/`). Router API error
+  answers for completion, load and unload are a SKILL decision table bound to captured b12177 wire answers.
+- **Current release observed:** llama.cpp b12177 (2026-11-06) installed beside the pinned b11755
+  (`~/.local/opt/llama-b12177`, release asset sha256 `5d936162…`); the round-88 status vocabulary is unchanged
+  (README status block byte-identical; S582 bytes = b12177 README).
+- **Frontier (not held):** router model **aliases** (`router_validate_model` resolves an alias to the canonical
+  name, S583:1960; the probe matches ids only); `--models-memory-margin` LRU eviction (new in b12177 README);
+  corrupt tensor bytes behind an intact header; split-model shards; per-request `?autoload`.

@@ -1785,3 +1785,44 @@ frozen C05/C12 expectations predate the repair and read red at the tip (2 mismat
 oracle check for the repaired rows is `python3 .ufo/waves/round-88/repair/oracle-cells.py --repo .
 --rev master --work <scratch>` (3 live cells: sleeping, autoload-unloaded, no-autoload-unloaded).
 Prerequisite restore: `python3 tools/fetch-pinned-model.py` (sha256-verified, refuses a different file).
+
+## Round-89 unloadable router models (owner: kama)
+
+A router lists every model its sources name, whether or not the file can load. On both b11755 and the current
+release b12177 an entry whose `--model` file is missing, is not GGUF, or carries a header the loader rejects is
+listed `unloaded` (not failed) until something tries to load it; on an autoload router a real request then answers
+`500 model name=<id> failed to load` and the entry turns `unloaded` + `failed: true`
+(`.ufo/waves/round-89/controls/c1-base.out`; S583 `server-models.cpp:1641`). Decision-table addition (applies
+before the round-88 `router-unloaded-autoload` row):
+
+| Situation | Verdict | Action |
+|---|---|---|
+| matching entry `unloaded` (not failed), autoload on, an absolute `--model`/`-m`, `--mmproj`/`-mm` or `--model-draft`/`-md` path in `status.args` absent, and `status.args[0]` is a local file | `MODEL_UNLOADED` / `router-model-missing`, drift | Restore the file or fix the preset `model =` path; the request would fail with 500. |
+| same, but the path is not a regular file, or its GGUF header fails a loader check (magic, version 1 or above 3, alignment not a power of two, more than 4 dims, ne[0] not a multiple of the block size, non-contiguous offsets, tensor data past end of file) | `MODEL_UNLOADED` / `router-model-invalid`, drift | Re-download and compare the sha256; S584 `gguf.cpp` names the failing check in the router child's log. |
+| path relative, file unreadable to the prober, router binary not local (container, remote), unknown tensor type, parse budget exceeded | unchanged (`router-unloaded-autoload`) | Undecidable from here; a false red would be worse than the known false green. |
+
+Gate: `python3 tools/round89-unloadable-cells.py --repo . --rev master --work <scratch>` (11 live cells on
+lane-owned b12177 children, oracle = a real completion; 0 all agree, 1 mismatch, 2 could-not-evaluate). Header
+checks only; the probe never opens a non-regular file and reads no tensor data. Known limit: a file whose header
+is intact but whose tensor bytes are corrupt still grades `MODEL_OK` (only a load can tell).
+
+## Router error signatures (llama.cpp router mode)
+
+Wire answers of a b12177 router (`--models-dir`, `--models-max 1`), captured on lane-owned children by
+`python3 tools/round89-router-signatures.py --out <receipt> --work <scratch>`. The `message` column is the
+exact `error.message` (`<id>` is the requested model). Two traps: `POST /models/load` for an unknown id answers
+`404 File Not Found` although the source text says `model is not found` (the HTTP layer replaces 404 bodies);
+`POST /models/unload` for an unknown id answers 400, not 404.
+
+| Endpoint | HTTP | Message | Trigger | Probe verdict / action | Receipt |
+|---|---|---|---|---|---|
+| `POST /v1/chat/completions` | 400 | `model is not loaded` | listed model not running, router started with `--no-models-autoload` | `MODEL_UNLOADED` / `router-unloaded`; load it with `POST /models/load` | `.ufo/waves/round-89/measured/router-signatures.jsonl` |
+| `POST /v1/chat/completions` | 500 | `model name=<id> failed to load` | autoload tried to start a model whose file cannot load (missing, not GGUF, bad header) | `MODEL_UNLOADED` / `router-model-missing` or `router-model-invalid`; afterwards the entry is `unloaded` + `failed: true` | `.ufo/waves/round-89/measured/router-signatures.jsonl` |
+| `POST /v1/chat/completions` | 400 | `model '<id>' not found` | requested id is not listed by any source | `MODEL_MISMATCH`; fix the consumer's model pin, not the server | `.ufo/waves/round-89/measured/router-signatures.jsonl` |
+| `POST /v1/chat/completions` | 400 | `model name is missing from the request` | router request without a `model` field (a single-model server accepts it) | consumer bug: a router needs the model in every request | `.ufo/waves/round-89/measured/router-signatures.jsonl` |
+| `POST /models/unload` | 400 | `model is not running` | unload of a listed model that is not loaded | nothing to do; not a fault | `.ufo/waves/round-89/measured/router-signatures.jsonl` |
+| `POST /models/unload` | 400 | `model is not found` | unload of an id no source lists | check the id against `GET /v1/models` | `.ufo/waves/round-89/measured/router-signatures.jsonl` |
+| `POST /models/load` | 404 | `File Not Found` | load of an id no source lists | same 404 body as an unknown route: check the id before blaming the URL | `.ufo/waves/round-89/measured/router-signatures.jsonl` |
+| `POST /models/load` | 400 | `model is already running` | load of a model that is loaded | not a fault; the model serves | `.ufo/waves/round-89/measured/router-signatures.jsonl` |
+
+Never send these calls to an operator's router: load, unload and an autoload completion change its state.

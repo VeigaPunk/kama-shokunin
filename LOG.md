@@ -3683,3 +3683,25 @@ L01/L03; read-only operator router `controls/pilot-live-1234.out`); the round-42
   counter is not edited and reads `mismatches=2` at the tip (`repair/c1-frozen-at-repair.out`). Also fixed:
   newline-in-id false drift (RV01), fetcher symlink/TOCTOU (SN01; `repair/fetch-hardening.out`). Corrected:
   knowledge admission reason (CN01 prior art, M4). QUALITY KQ141–KQ143; README round-88 coverage/frontier.
+
+## Round 89 — 2026-11-06 (unloadable router models; router error signatures)
+
+Frozen plan `plans/round-89-claims.md` (freeze `4eb75c62`; base `56174a1f`). Motivating evidence: on lane-owned
+router children of both the pinned b11755 and the current release b12177, a listed entry whose `--model` file
+is missing, not GGUF, bad-headered, truncated or deleted reads `unloaded` like a healthy one; the round-88 probe
+graded all five `MODEL_OK router-unloaded-autoload` while a real completion answered `500 model name=<id> failed
+to load` (`.ufo/waves/round-89/controls/c1-base.out`, `mismatches=5`).
+
+- Tool install: llama.cpp b12177 official release asset `llama-b12177-bin-ubuntu-x64.tar.gz` (sha256
+  `5d936162de06187654d1353fe94d65390904f1c67cd1a887023dbc9b0b207284`, GitHub release digest verified) into
+  `~/.local/opt/llama-b12177/` (reason: re-verify router behaviour on the current release).
+- **C1 operability (sourced S583/S584/S585):** `tools/kama-probe.sh` checks the absolute model/mmproj/draft
+  paths in `status.args` of a matching autoload `unloaded` entry against the b12177 loader's header checks
+  (`router-model-missing`, `router-model-invalid`); implementation `4f9eacf7`; counter
+  `tools/round89-unloadable-cells.py` `mismatches=5 → 0`, positive cells 0 → 0 (`measured/c1.out`); harm suites
+  unchanged (`measured/harm-M.out`); 36 host GGUF files all graded loadable (`measured/host-gguf-sweep.out`).
+- **C2 depth:** SKILL §"Router error signatures (llama.cpp router mode)" — eight wire answers captured by
+  `tools/round89-router-signatures.py` (`measured/router-signatures.jsonl`); counter
+  `tools/round89-signature-rows.py`.
+- Knowledge `corpus/knowledge/router-unloadable-model.md`; SOURCES S583–S585 (admit), S586 (reject); QUALITY
+  KQ144; README round-89 coverage/frontier; lesson `corpus/lessons/round-89.md` (M1, M2).
