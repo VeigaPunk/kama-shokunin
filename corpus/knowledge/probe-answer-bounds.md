@@ -62,3 +62,24 @@ local files the probe opens (F2) are not changed here. `listeners` and `snapshot
 python-free fallback (grep ids) drops control bytes since the round-90 repair but still compares
 JSON-escaped text, so a non-ASCII or quote-bearing id grades `MODEL_MISMATCH` without python3 (wave-1
 EX03 F2, present at base).
+
+## Round 91 correction (2026-11-06) — verified-at re-pointed
+
+The `verified-at:` line above names the round-90 C1 measured probe `f968fb19…` (sha256 `c197912f…`). That
+probe carried held-out harm the round-90 wave found (r90 lesson M4/M5); the shipped probe is M′
+`a09effae1f3780797a4d706f469a1d2b33361aa4` (sha256 `b71c309ad849c25db9c33a2e1bde4c691c766d68073ed0378b5fc96f1e4b48d7`),
+re-measured by the round-90 closure (`round90-hostile-answers.py` cells=13 mismatches=0 at M′ and tip).
+Read the entry as verified at M′. The original line is kept (append-only); round-90 closure routed defect R2.
+
+## Round 91 addition — the time bound (S592)
+
+The round-90 cap bounds bytes, not time: a 4 MiB answer of 200 000 ids took 207 s (r89 SN01) and one 3.9 MB
+id froze the probe in bash pattern expansion. Two causes, both measured on the base probe
+(`.ufo/waves/round-91/controls/c1-base.out`): a `$(normalize_id …)` fork per served id (twice per router
+entry), and `${C_SERVED%,}` on a 1.6 MB list, which alone took 38 s in a UTF-8 locale. The probe now applies
+`normalize_id`'s rule to every id in one awk pass and joins the served list with `paste -sd,`; the
+200 000-id, 80 000-entry router, 3.9 MB-id and 3.8 MB-slash cells finish in about 1-2 s
+(`.ufo/waves/round-91/measured/c1.out`). The expected id reaches awk through `ENVIRON`, because a `-v`
+assignment is read as an awk STRING token and its backslashes would be processed (S592, POSIX awk lines
+107-108); ids compare as strings (`x ""`), because an ENVIRON element may be a numeric string (lines
+796-797) and `1.0` would otherwise equal `1`.

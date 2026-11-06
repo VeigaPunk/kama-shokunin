@@ -1840,3 +1840,16 @@ Frontier after round 88:
 - **Frontier (not held):** the CPU cost of router GGUF header checks on crafted files (r89 SN01 F1); the
   listener's choice of which local files the probe opens (F2); router model aliases; held-out LIMIT cells
   from round 89 (chmod-000, missing split shard, relative missing path).
+
+## Coverage and frontier — round 91 (appended)
+
+- **Core (moved from frontier):** the other side's clock — fourteen default timeouts and limits of the
+  pinned engines (llama.cpp b12177 port 9931, 3600 s HTTP timeout, 30 s SSE ping, 8192 MiB prompt cache,
+  sleep off, one sequence, 4 router models; Ollama v0.40.11 port 11434, 5 min keep-alive and load stall, one
+  parallel request, 512-request queue; vLLM v0.32.0 600 s engine-ready wait, 5 s keep-alive), each bound to
+  its upstream line (`corpus/knowledge/serving-thresholds.md`, S593–S595; SKILL §Serving timeout and limit
+  thresholds). Ollama `/api/ps` expiry, listed as frontier in round 88, is now a held reading rule (T09).
+- **Core (probe):** a large answer under the 4 MiB cap is graded in linear time (200 000 ids or one 3.9 MB id
+  in about 1-2 s, base killed at 120 s); one awk pass, the expected id passed through `ENVIRON` (S592).
+- **Frontier (not held):** SGLang defaults (moved to `sglang/srt/arg_groups/` at v0.5.22); live measurement of
+  any threshold (rows are source defaults); the python-free fallback's JSON-escaped id compare (r90 EX03 F2).

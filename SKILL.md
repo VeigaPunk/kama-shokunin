@@ -1866,3 +1866,30 @@ five `MODEL_UNLOADED`/`MODEL_LOADING` reasons (`router-loading`, `router-downloa
 | `router-model-invalid` | `MODEL_UNLOADED` | as above but the file exists and fails a GGUF loader header check; replace the file | `R-router-model-invalid` |
 | `router-unloaded` | `MODEL_UNLOADED` | entry `unloaded` and the probe could not confirm autoload: `GET /props` did not answer `role: router` with `models_autoload: true` (a no-autoload router, or a `/props` that failed, was over the 4 MiB cap, or was not JSON); check `/props` before sending `POST /models/load` | `R-router-unloaded` |
 | `body-too-large` | `FOREIGN_SERVICE` | the `/v1/models` answer exceeds the probe's 4 MiB cap (curl `--max-filesize`, rc 63); nothing was parsed, so no model verdict is possible (round 90) | `R-body-too-large` |
+
+## Serving timeout and limit thresholds
+
+Default limits of the pinned serving engines that decide how kama reads a slow, idle, busy or
+absent endpoint (round 91, C2). Each row is bound to its line in the pinned upstream file: the
+`source` row in `corpus/SOURCES.md` records the URL, its sha256 and a located quote, and
+`python3 tools/round91-threshold-rows.py --repo . --rev <rev>` re-fetches every URL, checks the
+digest and finds the literal on the stated line. A different pin can change any value (b12177 moved
+the default port to 9931 and the HTTP timeout to 3600 s): re-run the counter after a pin bump.
+Context, reading rules and the Gate: `corpus/knowledge/serving-thresholds.md`.
+
+| id | engine pin | threshold | value | source | line | literal | probe decision |
+|---|---|---|---|---|---|---|---|
+| T01 | llama.cpp b12177 | default listen `port` of `llama-server` (`--port`, env `LLAMA_ARG_PORT`) | 9931 | S593 | 632 | `int32_t port                = 9931;` | a unit started without `--port` listens on 9931, not 8080: a registry row pinning 8080 for such a unit is port drift (`DEAD` on 8080), not a model fault; read the port from the unit argv |
+| T02 | llama.cpp b12177 | HTTP read timeout `timeout_read` (`-to`/`--timeout` sets read and write) | 3600 s | S593 | 634 | `int32_t timeout_read        = 3600;` | the server keeps a slow request open up to an hour; the probe's own `--timeout` (default 5 s) bounds the probe, so a probe timeout is the probe giving up, never proof the server did |
+| T03 | llama.cpp b12177 | streaming keep-alive `sse_ping_interval` (`--sse-ping-interval`, -1 disables) | 30 s | S593 | 636 | `int32_t sse_ping_interval   = 30;` | a streaming consumer receives a ping at least every 30 s by default; a stream silent for well over 30 s is a stall to report, a shorter pause is not |
+| T04 | llama.cpp b12177 | host-RAM prompt cache `cache_ram_mib` (`--cache-ram`, -1 no limit, 0 off) | 8192 MiB | S593 | 644 | `int32_t cache_ram_mib       = 8192;` | resident memory growing toward 8 GiB over many prompts is the prompt cache by default, not a leak; kama reports it and never tunes it (operator-owned) |
+| T05 | llama.cpp b12177 | idle sleep `sleep_idle_seconds` (`--sleep-idle-seconds`) | -1 (off) | S593 | 669 | `int sleep_idle_seconds = -1;` | sleeping is off unless the operator passed a value > 0; a `sleeping` router entry therefore follows an explicit setting, and the probe grades it `MODEL_OK` / `router-sleeping` |
+| T06 | llama.cpp b12177 | router concurrent-model limit `models_max` (`--models-max`, 0 unlimited) | 4 | S593 | 703 | `int models_max = 4;` | a router holds at most 4 loaded models by default: with more than 4 models pinned on one router not all can read `loaded`; read `unloaded` entries through the autoload rule (`router-unloaded-autoload`), not as drift |
+| T07 | llama.cpp b12177 | parallel sequences `n_parallel` (`-np`/`--parallel`) | 1 | S593 | 464 | `int32_t n_parallel            =     1;` | one sequence decodes at a time by default: concurrent completions queue, so latency under concurrent use is queueing that kama reports; scheduling is out of province |
+| T08 | ollama v0.40.11 | default listen port `defaultPort` (`OLLAMA_HOST`) | 11434 | S594 | 23 | `defaultPort := "11434"` | Ollama without `OLLAMA_HOST` listens on 127.0.0.1:11434; a registry row for Ollama on any other port must cite the `OLLAMA_HOST` it was started with |
+| T09 | ollama v0.40.11 | idle unload `keepAlive` (`OLLAMA_KEEP_ALIVE`, negative = forever, 0 = none) | 5 min | S594 | 130 | `keepAlive = 5 * time.Minute` | a model idle for 5 minutes leaves `/api/ps` by default; absence from `/api/ps` after idling is expected and is not a missing model (`/api/tags` still lists it) |
+| T10 | ollama v0.40.11 | load stall limit `loadTimeout` (`OLLAMA_LOAD_TIMEOUT`, 0 or negative = forever) | 5 min | S594 | 150 | `loadTimeout = 5 * time.Minute` | a first request may wait while a load makes progress; only a load stalled for 5 minutes is abandoned by Ollama, so a slow first answer inside that window is loading, not dead |
+| T11 | ollama v0.40.11 | parallel requests per model `OLLAMA_NUM_PARALLEL` | 1 | S594 | 277 | `NumParallel = Uint("OLLAMA_NUM_PARALLEL", 1)` | one request per model at a time by default: concurrent requests queue (see T12); report the latency, do not tune it |
+| T12 | ollama v0.40.11 | request queue limit `OLLAMA_MAX_QUEUE` | 512 | S594 | 281 | `MaxQueue = Uint("OLLAMA_MAX_QUEUE", 512)` | at most 512 requests wait by default; an error a consumer gets only under heavy concurrent load is queue overflow to report, not an endpoint identity fault |
+| T13 | vllm v0.32.0 | engine-ready startup wait `VLLM_ENGINE_READY_TIMEOUT_S` | 600 s | S595 | 26 | `VLLM_ENGINE_READY_TIMEOUT_S: int = 600` | the API server waits up to 10 minutes for its engine cores at startup; a vLLM listener not ready inside that window has failed startup, inside it read it as loading |
+| T14 | vllm v0.32.0 | idle HTTP keep-alive `VLLM_HTTP_TIMEOUT_KEEP_ALIVE` | 5 s | S595 | 111 | `VLLM_HTTP_TIMEOUT_KEEP_ALIVE: int = 5` | the server closes an idle kept-alive connection after 5 s; a client that reuses one later gets a reset and must reconnect, which is not a server fault |
