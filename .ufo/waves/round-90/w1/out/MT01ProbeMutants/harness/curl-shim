@@ -1,0 +1,11 @@
+#!/bin/bash
+# AUXILIARY shim: make --max-filesize inert (stronger than curl < 8.4.0, which still enforces it
+# for answers carrying Content-Length). Used only for the extra run; NOT the frozen counter.
+args=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --max-filesize) shift 2 ;;
+    *) args+=("$1"); shift ;;
+  esac
+done
+exec /usr/bin/curl "${args[@]}"

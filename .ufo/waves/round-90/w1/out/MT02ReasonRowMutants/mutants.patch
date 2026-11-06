@@ -1,0 +1,298 @@
+commit 73e47b91c48e36637badb424a6b9b5e065f4a81a
+parent 2ee0b55f4d3fd0cb3157d26b03280c1d21e27b2d
+subject mut1: swap verdicts of matched and served-id-mismatch rows
+
+
+diff --git a/SKILL.md b/SKILL.md
+index 0494be40..2808e6a5 100644
+--- a/SKILL.md
++++ b/SKILL.md
+@@ -1850,9 +1850,9 @@ four `MODEL_UNLOADED`/`MODEL_LOADING` reasons come from the router `status` obje
+ | `http-403` | `UNAUTHORIZED_SERVICE` | `GET /v1/models` answers 403; key present but refused, or an access rule blocks loopback | `R-http-403` |
+ | `llamacpp-loading` | `MODEL_LOADING` | 503 with the exact llama.cpp envelope `Loading model` / `unavailable_error` / 503; single-model server still loading, retry later | `R-llamacpp-loading` |
+ | `expected-wildcard` | `MODEL_OK` | a model array is served and no model was expected (`--expect '*'`); liveness only, identity unchecked | `R-expected-wildcard` |
+-| `matched` | `MODEL_OK` | a served id equals the expected one after basename and one trailing `.gguf` are dropped | `R-matched` |
++| `matched` | `MODEL_MISMATCH` | a served id equals the expected one after basename and one trailing `.gguf` are dropped | `R-matched` |
+ | `unresolvable-id` | `MODEL_MISMATCH` | a model array is present but no entry carries a usable id, or the expected id normalizes to nothing | `R-unresolvable-id` |
+-| `served-id-mismatch` | `MODEL_MISMATCH` | ids are served but none equals the expected one; fix the consumer's model pin or load the right model | `R-served-id-mismatch` |
++| `served-id-mismatch` | `MODEL_OK` | ids are served but none equals the expected one; fix the consumer's model pin or load the right model | `R-served-id-mismatch` |
+ | `html-non-model` | `FOREIGN_SERVICE` | the answer is HTML (header or body sniff) at any status; a web app holds the port | `R-html-non-model` |
+ | `schema-unrecognized` | `FOREIGN_SERVICE` | 2xx JSON without a `data` or `models` array; an API that is not a model server | `R-schema-unrecognized` |
+ | `non-model-2xx` | `FOREIGN_SERVICE` | 2xx with a non-JSON, non-HTML body; a status-only check would have false-passed it | `R-non-model-2xx` |
+commit fd9246916ef87126009ee06058648621577fcbd1
+parent 2ee0b55f4d3fd0cb3157d26b03280c1d21e27b2d
+subject mut2: rename matched row cell to R-matched-renamed
+
+
+diff --git a/SKILL.md b/SKILL.md
+index 0494be40..3fc0cefc 100644
+--- a/SKILL.md
++++ b/SKILL.md
+@@ -1850,7 +1850,7 @@ four `MODEL_UNLOADED`/`MODEL_LOADING` reasons come from the router `status` obje
+ | `http-403` | `UNAUTHORIZED_SERVICE` | `GET /v1/models` answers 403; key present but refused, or an access rule blocks loopback | `R-http-403` |
+ | `llamacpp-loading` | `MODEL_LOADING` | 503 with the exact llama.cpp envelope `Loading model` / `unavailable_error` / 503; single-model server still loading, retry later | `R-llamacpp-loading` |
+ | `expected-wildcard` | `MODEL_OK` | a model array is served and no model was expected (`--expect '*'`); liveness only, identity unchecked | `R-expected-wildcard` |
+-| `matched` | `MODEL_OK` | a served id equals the expected one after basename and one trailing `.gguf` are dropped | `R-matched` |
++| `matched` | `MODEL_OK` | a served id equals the expected one after basename and one trailing `.gguf` are dropped | `R-matched-renamed` |
+ | `unresolvable-id` | `MODEL_MISMATCH` | a model array is present but no entry carries a usable id, or the expected id normalizes to nothing | `R-unresolvable-id` |
+ | `served-id-mismatch` | `MODEL_MISMATCH` | ids are served but none equals the expected one; fix the consumer's model pin or load the right model | `R-served-id-mismatch` |
+ | `html-non-model` | `FOREIGN_SERVICE` | the answer is HTML (header or body sniff) at any status; a web app holds the port | `R-html-non-model` |
+commit 3bb575a6e4fc670695ea5c5ecd9ce9b94b063c07
+parent 2ee0b55f4d3fd0cb3157d26b03280c1d21e27b2d
+subject mut3: delete matched row
+
+
+diff --git a/SKILL.md b/SKILL.md
+index 0494be40..1a95bcc6 100644
+--- a/SKILL.md
++++ b/SKILL.md
+@@ -1850,7 +1850,6 @@ four `MODEL_UNLOADED`/`MODEL_LOADING` reasons come from the router `status` obje
+ | `http-403` | `UNAUTHORIZED_SERVICE` | `GET /v1/models` answers 403; key present but refused, or an access rule blocks loopback | `R-http-403` |
+ | `llamacpp-loading` | `MODEL_LOADING` | 503 with the exact llama.cpp envelope `Loading model` / `unavailable_error` / 503; single-model server still loading, retry later | `R-llamacpp-loading` |
+ | `expected-wildcard` | `MODEL_OK` | a model array is served and no model was expected (`--expect '*'`); liveness only, identity unchecked | `R-expected-wildcard` |
+-| `matched` | `MODEL_OK` | a served id equals the expected one after basename and one trailing `.gguf` are dropped | `R-matched` |
+ | `unresolvable-id` | `MODEL_MISMATCH` | a model array is present but no entry carries a usable id, or the expected id normalizes to nothing | `R-unresolvable-id` |
+ | `served-id-mismatch` | `MODEL_MISMATCH` | ids are served but none equals the expected one; fix the consumer's model pin or load the right model | `R-served-id-mismatch` |
+ | `html-non-model` | `FOREIGN_SERVICE` | the answer is HTML (header or body sniff) at any status; a web app holds the port | `R-html-non-model` |
+commit 64ba0bd22d13acea976deb215bf341400ea2d241
+parent 2ee0b55f4d3fd0cb3157d26b03280c1d21e27b2d
+subject mut4: duplicate matched row verbatim
+
+
+diff --git a/SKILL.md b/SKILL.md
+index 0494be40..5414ad68 100644
+--- a/SKILL.md
++++ b/SKILL.md
+@@ -1851,6 +1851,7 @@ four `MODEL_UNLOADED`/`MODEL_LOADING` reasons come from the router `status` obje
+ | `llamacpp-loading` | `MODEL_LOADING` | 503 with the exact llama.cpp envelope `Loading model` / `unavailable_error` / 503; single-model server still loading, retry later | `R-llamacpp-loading` |
+ | `expected-wildcard` | `MODEL_OK` | a model array is served and no model was expected (`--expect '*'`); liveness only, identity unchecked | `R-expected-wildcard` |
+ | `matched` | `MODEL_OK` | a served id equals the expected one after basename and one trailing `.gguf` are dropped | `R-matched` |
++| `matched` | `MODEL_OK` | a served id equals the expected one after basename and one trailing `.gguf` are dropped | `R-matched` |
+ | `unresolvable-id` | `MODEL_MISMATCH` | a model array is present but no entry carries a usable id, or the expected id normalizes to nothing | `R-unresolvable-id` |
+ | `served-id-mismatch` | `MODEL_MISMATCH` | ids are served but none equals the expected one; fix the consumer's model pin or load the right model | `R-served-id-mismatch` |
+ | `html-non-model` | `FOREIGN_SERVICE` | the answer is HTML (header or body sniff) at any status; a web app holds the port | `R-html-non-model` |
+commit 85d53886a8c6a4b7c3936b6b54374892790b28e4
+parent 2ee0b55f4d3fd0cb3157d26b03280c1d21e27b2d
+subject mut5: move matched row below a following ## heading
+
+
+diff --git a/SKILL.md b/SKILL.md
+index 0494be40..50799572 100644
+--- a/SKILL.md
++++ b/SKILL.md
+@@ -1850,7 +1850,6 @@ four `MODEL_UNLOADED`/`MODEL_LOADING` reasons come from the router `status` obje
+ | `http-403` | `UNAUTHORIZED_SERVICE` | `GET /v1/models` answers 403; key present but refused, or an access rule blocks loopback | `R-http-403` |
+ | `llamacpp-loading` | `MODEL_LOADING` | 503 with the exact llama.cpp envelope `Loading model` / `unavailable_error` / 503; single-model server still loading, retry later | `R-llamacpp-loading` |
+ | `expected-wildcard` | `MODEL_OK` | a model array is served and no model was expected (`--expect '*'`); liveness only, identity unchecked | `R-expected-wildcard` |
+-| `matched` | `MODEL_OK` | a served id equals the expected one after basename and one trailing `.gguf` are dropped | `R-matched` |
+ | `unresolvable-id` | `MODEL_MISMATCH` | a model array is present but no entry carries a usable id, or the expected id normalizes to nothing | `R-unresolvable-id` |
+ | `served-id-mismatch` | `MODEL_MISMATCH` | ids are served but none equals the expected one; fix the consumer's model pin or load the right model | `R-served-id-mismatch` |
+ | `html-non-model` | `FOREIGN_SERVICE` | the answer is HTML (header or body sniff) at any status; a web app holds the port | `R-html-non-model` |
+@@ -1865,3 +1864,7 @@ four `MODEL_UNLOADED`/`MODEL_LOADING` reasons come from the router `status` obje
+ | `router-model-invalid` | `MODEL_UNLOADED` | as above but the file exists and fails a GGUF loader header check; replace the file | `R-router-model-invalid` |
+ | `router-unloaded` | `MODEL_UNLOADED` | entry `unloaded` and the router does not autoload (`models_autoload` not true, or `/props` unusable); load it with `POST /models/load` | `R-router-unloaded` |
+ | `body-too-large` | `FOREIGN_SERVICE` | the `/v1/models` answer exceeds the probe's 4 MiB cap (curl `--max-filesize`, rc 63); nothing was parsed, so no model verdict is possible (round 90) | `R-body-too-large` |
++
++## Post-table mutation heading
++
++| `matched` | `MODEL_OK` | a served id equals the expected one after basename and one trailing `.gguf` are dropped | `R-matched` |
+commit bbe0e15aa19ab4a0f6b7d805422dbd2aceaaf130
+parent 2ee0b55f4d3fd0cb3157d26b03280c1d21e27b2d
+subject mut6: edit R-matched receipt line verdict to MODEL_LOADING
+
+
+diff --git a/.ufo/waves/round-90/measured/reason-cells.jsonl b/.ufo/waves/round-90/measured/reason-cells.jsonl
+index f297a239..1481b389 100644
+--- a/.ufo/waves/round-90/measured/reason-cells.jsonl
++++ b/.ufo/waves/round-90/measured/reason-cells.jsonl
+@@ -7,7 +7,7 @@
+ {"cell": "R-http-401", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "http-401", "verdict": "UNAUTHORIZED_SERVICE"}
+ {"cell": "R-http-403", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "http-403", "verdict": "UNAUTHORIZED_SERVICE"}
+ {"cell": "R-llamacpp-loading", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "llamacpp-loading", "verdict": "MODEL_LOADING"}
+-{"cell": "R-matched", "exit": 0, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "matched", "verdict": "MODEL_OK"}
++{"cell": "R-matched", "exit": 0, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "matched", "verdict": "MODEL_LOADING"}
+ {"cell": "R-no-http-response", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "no-http-response", "verdict": "NOT_HTTP"}
+ {"cell": "R-non-2xx-non-model-http", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "non-2xx-non-model-http", "verdict": "FOREIGN_SERVICE"}
+ {"cell": "R-non-model-2xx", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "non-model-2xx", "verdict": "FOREIGN_SERVICE"}
+commit 2758511dfae0c2e80651741e6b58e2f188c6ddb9
+parent 2ee0b55f4d3fd0cb3157d26b03280c1d21e27b2d
+subject mut7: change one probe comment byte (Round->round)
+
+
+diff --git a/tools/kama-probe.sh b/tools/kama-probe.sh
+index 64078d59..19e27e41 100755
+--- a/tools/kama-probe.sh
++++ b/tools/kama-probe.sh
+@@ -96,7 +96,7 @@ REGISTRY_DEFAULT="$REPO_ROOT/registry/endpoint-consumers.tsv"
+ 
+ TIMEOUT=5
+ CONNECT_TIMEOUT=2
+-# Round 90 (C1; S587 curl max-filesize, S588 RFC 8259 section 7): a listener's answer body is
++# round 90 (C1; S587 curl max-filesize, S588 RFC 8259 section 7): a listener's answer body is
+ # capped at MAX_BODY bytes. curl aborts at the cap (exit 63; since curl 8.4.0 also for a body of
+ # unknown length) and the written size is re-checked for older curl. An oversize /v1/models
+ # answer is FOREIGN_SERVICE body-too-large, never MODEL_OK; an oversize /props is "not autoload".
+commit 6cd4cd5cf806864605bfcf18ef210e27e72a9c36
+parent 2ee0b55f4d3fd0cb3157d26b03280c1d21e27b2d
+subject mut8: delete the measured receipt
+
+
+diff --git a/.ufo/waves/round-90/measured/reason-cells.jsonl b/.ufo/waves/round-90/measured/reason-cells.jsonl
+deleted file mode 100644
+index f297a239..00000000
+--- a/.ufo/waves/round-90/measured/reason-cells.jsonl
++++ /dev/null
+@@ -1,24 +0,0 @@
+-{"cell": "R-body-too-large", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "body-too-large", "verdict": "FOREIGN_SERVICE"}
+-{"cell": "R-connection-refused", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "connection-refused", "verdict": "DEAD"}
+-{"cell": "R-connection-reset", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "connection-reset", "verdict": "NOT_HTTP"}
+-{"cell": "R-empty-reply", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "empty-reply", "verdict": "NOT_HTTP"}
+-{"cell": "R-expected-wildcard", "exit": 0, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "expected-wildcard", "verdict": "MODEL_OK"}
+-{"cell": "R-html-non-model", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "html-non-model", "verdict": "FOREIGN_SERVICE"}
+-{"cell": "R-http-401", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "http-401", "verdict": "UNAUTHORIZED_SERVICE"}
+-{"cell": "R-http-403", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "http-403", "verdict": "UNAUTHORIZED_SERVICE"}
+-{"cell": "R-llamacpp-loading", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "llamacpp-loading", "verdict": "MODEL_LOADING"}
+-{"cell": "R-matched", "exit": 0, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "matched", "verdict": "MODEL_OK"}
+-{"cell": "R-no-http-response", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "no-http-response", "verdict": "NOT_HTTP"}
+-{"cell": "R-non-2xx-non-model-http", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "non-2xx-non-model-http", "verdict": "FOREIGN_SERVICE"}
+-{"cell": "R-non-model-2xx", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "non-model-2xx", "verdict": "FOREIGN_SERVICE"}
+-{"cell": "R-router-downloading", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "router-downloading", "verdict": "MODEL_LOADING"}
+-{"cell": "R-router-loading", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "router-loading", "verdict": "MODEL_LOADING"}
+-{"cell": "R-router-model-invalid", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "router-model-invalid", "verdict": "MODEL_UNLOADED"}
+-{"cell": "R-router-model-missing", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "router-model-missing", "verdict": "MODEL_UNLOADED"}
+-{"cell": "R-router-sleeping", "exit": 0, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "router-sleeping", "verdict": "MODEL_OK"}
+-{"cell": "R-router-unloaded", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "router-unloaded", "verdict": "MODEL_UNLOADED"}
+-{"cell": "R-router-unloaded-autoload", "exit": 0, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "router-unloaded-autoload", "verdict": "MODEL_OK"}
+-{"cell": "R-schema-unrecognized", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "schema-unrecognized", "verdict": "FOREIGN_SERVICE"}
+-{"cell": "R-served-id-mismatch", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "served-id-mismatch", "verdict": "MODEL_MISMATCH"}
+-{"cell": "R-timeout", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "timeout", "verdict": "DEAD"}
+-{"cell": "R-unresolvable-id", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "unresolvable-id", "verdict": "MODEL_MISMATCH"}
+commit a012e123bb9aa3a359197bfbb10d8d2a9ac4a8af
+parent 2ee0b55f4d3fd0cb3157d26b03280c1d21e27b2d
+subject mut9: map curl rc 63 to no-http-response and re-capture the receipt
+
+
+diff --git a/.ufo/waves/round-90/measured/reason-cells.jsonl b/.ufo/waves/round-90/measured/reason-cells.jsonl
+index f297a239..e7268c14 100644
+--- a/.ufo/waves/round-90/measured/reason-cells.jsonl
++++ b/.ufo/waves/round-90/measured/reason-cells.jsonl
+@@ -1,24 +1,24 @@
+-{"cell": "R-body-too-large", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "body-too-large", "verdict": "FOREIGN_SERVICE"}
+-{"cell": "R-connection-refused", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "connection-refused", "verdict": "DEAD"}
+-{"cell": "R-connection-reset", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "connection-reset", "verdict": "NOT_HTTP"}
+-{"cell": "R-empty-reply", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "empty-reply", "verdict": "NOT_HTTP"}
+-{"cell": "R-expected-wildcard", "exit": 0, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "expected-wildcard", "verdict": "MODEL_OK"}
+-{"cell": "R-html-non-model", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "html-non-model", "verdict": "FOREIGN_SERVICE"}
+-{"cell": "R-http-401", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "http-401", "verdict": "UNAUTHORIZED_SERVICE"}
+-{"cell": "R-http-403", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "http-403", "verdict": "UNAUTHORIZED_SERVICE"}
+-{"cell": "R-llamacpp-loading", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "llamacpp-loading", "verdict": "MODEL_LOADING"}
+-{"cell": "R-matched", "exit": 0, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "matched", "verdict": "MODEL_OK"}
+-{"cell": "R-no-http-response", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "no-http-response", "verdict": "NOT_HTTP"}
+-{"cell": "R-non-2xx-non-model-http", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "non-2xx-non-model-http", "verdict": "FOREIGN_SERVICE"}
+-{"cell": "R-non-model-2xx", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "non-model-2xx", "verdict": "FOREIGN_SERVICE"}
+-{"cell": "R-router-downloading", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "router-downloading", "verdict": "MODEL_LOADING"}
+-{"cell": "R-router-loading", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "router-loading", "verdict": "MODEL_LOADING"}
+-{"cell": "R-router-model-invalid", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "router-model-invalid", "verdict": "MODEL_UNLOADED"}
+-{"cell": "R-router-model-missing", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "router-model-missing", "verdict": "MODEL_UNLOADED"}
+-{"cell": "R-router-sleeping", "exit": 0, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "router-sleeping", "verdict": "MODEL_OK"}
+-{"cell": "R-router-unloaded", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "router-unloaded", "verdict": "MODEL_UNLOADED"}
+-{"cell": "R-router-unloaded-autoload", "exit": 0, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "router-unloaded-autoload", "verdict": "MODEL_OK"}
+-{"cell": "R-schema-unrecognized", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "schema-unrecognized", "verdict": "FOREIGN_SERVICE"}
+-{"cell": "R-served-id-mismatch", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "served-id-mismatch", "verdict": "MODEL_MISMATCH"}
+-{"cell": "R-timeout", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "timeout", "verdict": "DEAD"}
+-{"cell": "R-unresolvable-id", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "unresolvable-id", "verdict": "MODEL_MISMATCH"}
++{"cell": "R-body-too-large", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "no-http-response", "verdict": "NOT_HTTP"}
++{"cell": "R-connection-refused", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "connection-refused", "verdict": "DEAD"}
++{"cell": "R-connection-reset", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "connection-reset", "verdict": "NOT_HTTP"}
++{"cell": "R-empty-reply", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "empty-reply", "verdict": "NOT_HTTP"}
++{"cell": "R-expected-wildcard", "exit": 0, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "expected-wildcard", "verdict": "MODEL_OK"}
++{"cell": "R-html-non-model", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "html-non-model", "verdict": "FOREIGN_SERVICE"}
++{"cell": "R-http-401", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "http-401", "verdict": "UNAUTHORIZED_SERVICE"}
++{"cell": "R-http-403", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "http-403", "verdict": "UNAUTHORIZED_SERVICE"}
++{"cell": "R-llamacpp-loading", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "llamacpp-loading", "verdict": "MODEL_LOADING"}
++{"cell": "R-matched", "exit": 0, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "matched", "verdict": "MODEL_OK"}
++{"cell": "R-no-http-response", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "no-http-response", "verdict": "NOT_HTTP"}
++{"cell": "R-non-2xx-non-model-http", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "non-2xx-non-model-http", "verdict": "FOREIGN_SERVICE"}
++{"cell": "R-non-model-2xx", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "non-model-2xx", "verdict": "FOREIGN_SERVICE"}
++{"cell": "R-router-downloading", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "router-downloading", "verdict": "MODEL_LOADING"}
++{"cell": "R-router-loading", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "router-loading", "verdict": "MODEL_LOADING"}
++{"cell": "R-router-model-invalid", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "router-model-invalid", "verdict": "MODEL_UNLOADED"}
++{"cell": "R-router-model-missing", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "router-model-missing", "verdict": "MODEL_UNLOADED"}
++{"cell": "R-router-sleeping", "exit": 0, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "router-sleeping", "verdict": "MODEL_OK"}
++{"cell": "R-router-unloaded", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "router-unloaded", "verdict": "MODEL_UNLOADED"}
++{"cell": "R-router-unloaded-autoload", "exit": 0, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "router-unloaded-autoload", "verdict": "MODEL_OK"}
++{"cell": "R-schema-unrecognized", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "schema-unrecognized", "verdict": "FOREIGN_SERVICE"}
++{"cell": "R-served-id-mismatch", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "served-id-mismatch", "verdict": "MODEL_MISMATCH"}
++{"cell": "R-timeout", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "timeout", "verdict": "DEAD"}
++{"cell": "R-unresolvable-id", "exit": 2, "probe_sha256": "a948ed515bce3d07cc1bbdff616ef137586844aafe3f53dea527c96664a9e9b2", "reason": "unresolvable-id", "verdict": "MODEL_MISMATCH"}
+diff --git a/tools/kama-probe.sh b/tools/kama-probe.sh
+index 64078d59..4c4085d0 100755
+--- a/tools/kama-probe.sh
++++ b/tools/kama-probe.sh
+@@ -841,9 +841,9 @@ classify() { # $1 port, $2 expected -> sets C_VERDICT C_SERVED C_EVIDENCE C_REAS
+       C_EVIDENCE="rc=28 timeout (connect=${CONNECT_TIMEOUT}s max=${TIMEOUT}s); $base"
+       return 0 ;;
+     63)
+-      C_VERDICT=FOREIGN_SERVICE
+-      C_REASON=body-too-large
+-      C_EVIDENCE="rc=63 answer body larger than $MAX_BODY bytes (transfer aborted, nothing parsed); $base"
++      C_VERDICT=NOT_HTTP
++      C_REASON=no-http-response
++      C_EVIDENCE="rc=63 ${F_ERRMSG:-no usable HTTP response}; $base"
+       return 0 ;;
+     52)
+       C_VERDICT=NOT_HTTP
+commit 1bff3acde405b0de000de960c8761e50ce589c20
+parent 2ee0b55f4d3fd0cb3157d26b03280c1d21e27b2d
+subject extraA: matched trigger prose contradicts its receipt cell
+
+
+diff --git a/SKILL.md b/SKILL.md
+index 0494be40..9cfd8ea4 100644
+--- a/SKILL.md
++++ b/SKILL.md
+@@ -1850,7 +1850,7 @@ four `MODEL_UNLOADED`/`MODEL_LOADING` reasons come from the router `status` obje
+ | `http-403` | `UNAUTHORIZED_SERVICE` | `GET /v1/models` answers 403; key present but refused, or an access rule blocks loopback | `R-http-403` |
+ | `llamacpp-loading` | `MODEL_LOADING` | 503 with the exact llama.cpp envelope `Loading model` / `unavailable_error` / 503; single-model server still loading, retry later | `R-llamacpp-loading` |
+ | `expected-wildcard` | `MODEL_OK` | a model array is served and no model was expected (`--expect '*'`); liveness only, identity unchecked | `R-expected-wildcard` |
+-| `matched` | `MODEL_OK` | a served id equals the expected one after basename and one trailing `.gguf` are dropped | `R-matched` |
++| `matched` | `MODEL_OK` | nothing listens on the port (curl rc 7); this trigger deliberately contradicts the row's receipt cell | `R-matched` |
+ | `unresolvable-id` | `MODEL_MISMATCH` | a model array is present but no entry carries a usable id, or the expected id normalizes to nothing | `R-unresolvable-id` |
+ | `served-id-mismatch` | `MODEL_MISMATCH` | ids are served but none equals the expected one; fix the consumer's model pin or load the right model | `R-served-id-mismatch` |
+ | `html-non-model` | `FOREIGN_SERVICE` | the answer is HTML (header or body sniff) at any status; a web app holds the port | `R-html-non-model` |
+commit 807562cba1403a618605a78fbf68c808073301e4
+parent 2ee0b55f4d3fd0cb3157d26b03280c1d21e27b2d
+subject extraB: R-matched receipt exit 0 contradicts MODEL_OK
+
+
+diff --git a/.ufo/waves/round-90/measured/reason-cells.jsonl b/.ufo/waves/round-90/measured/reason-cells.jsonl
+index f297a239..876abb3d 100644
+--- a/.ufo/waves/round-90/measured/reason-cells.jsonl
++++ b/.ufo/waves/round-90/measured/reason-cells.jsonl
+@@ -7,7 +7,7 @@
+ {"cell": "R-http-401", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "http-401", "verdict": "UNAUTHORIZED_SERVICE"}
+ {"cell": "R-http-403", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "http-403", "verdict": "UNAUTHORIZED_SERVICE"}
+ {"cell": "R-llamacpp-loading", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "llamacpp-loading", "verdict": "MODEL_LOADING"}
+-{"cell": "R-matched", "exit": 0, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "matched", "verdict": "MODEL_OK"}
++{"cell": "R-matched", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "matched", "verdict": "MODEL_OK"}
+ {"cell": "R-no-http-response", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "no-http-response", "verdict": "NOT_HTTP"}
+ {"cell": "R-non-2xx-non-model-http", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "non-2xx-non-model-http", "verdict": "FOREIGN_SERVICE"}
+ {"cell": "R-non-model-2xx", "exit": 2, "probe_sha256": "c197912f8b3b5567e3ffd38178cb3a6e87187d7fb13136308c9a461ba8d2ef97", "reason": "non-model-2xx", "verdict": "FOREIGN_SERVICE"}
+commit c1215efecf697eb3e0cdbfbc15d5c7971768fb03
+parent 2ee0b55f4d3fd0cb3157d26b03280c1d21e27b2d
+subject extraC: matched row gains a fifth column
+
+
+diff --git a/SKILL.md b/SKILL.md
+index 0494be40..b2d1a106 100644
+--- a/SKILL.md
++++ b/SKILL.md
+@@ -1850,7 +1850,7 @@ four `MODEL_UNLOADED`/`MODEL_LOADING` reasons come from the router `status` obje
+ | `http-403` | `UNAUTHORIZED_SERVICE` | `GET /v1/models` answers 403; key present but refused, or an access rule blocks loopback | `R-http-403` |
+ | `llamacpp-loading` | `MODEL_LOADING` | 503 with the exact llama.cpp envelope `Loading model` / `unavailable_error` / 503; single-model server still loading, retry later | `R-llamacpp-loading` |
+ | `expected-wildcard` | `MODEL_OK` | a model array is served and no model was expected (`--expect '*'`); liveness only, identity unchecked | `R-expected-wildcard` |
+-| `matched` | `MODEL_OK` | a served id equals the expected one after basename and one trailing `.gguf` are dropped | `R-matched` |
++| `matched` | `MODEL_OK` | a served id equals the expected one after basename and one trailing `.gguf` are dropped | `R-matched` | `extra-column` |
+ | `unresolvable-id` | `MODEL_MISMATCH` | a model array is present but no entry carries a usable id, or the expected id normalizes to nothing | `R-unresolvable-id` |
+ | `served-id-mismatch` | `MODEL_MISMATCH` | ids are served but none equals the expected one; fix the consumer's model pin or load the right model | `R-served-id-mismatch` |
+ | `html-non-model` | `FOREIGN_SERVICE` | the answer is HTML (header or body sniff) at any status; a web app holds the port | `R-html-non-model` |

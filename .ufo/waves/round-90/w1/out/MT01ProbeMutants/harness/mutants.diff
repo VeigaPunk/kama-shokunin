@@ -1,0 +1,142 @@
+### M1
+@@ -338,7 +338,7 @@
+   FERR="$TMP_ROOT/$tag.err"
+   local w rc=0
+   w=$(curl -sS --noproxy '*' --connect-timeout "$CONNECT_TIMEOUT" --max-time "$TIMEOUT" \
+-        --max-filesize "$MAX_BODY" -o "$FBODY" -D "$FHDR" \
++        -o "$FBODY" -D "$FHDR" \
+         -w '%{http_code}|%{content_type}|%{size_download}' \
+         "http://127.0.0.1:$port$path" 2>"$FERR") || rc=$?
+   F_RC=$rc
+### M2
+@@ -342,8 +342,6 @@
+         -w '%{http_code}|%{content_type}|%{size_download}' \
+         "http://127.0.0.1:$port$path" 2>"$FERR") || rc=$?
+   F_RC=$rc
+-  # older curl ignores --max-filesize for a body of unknown length: re-check what was written
+-  if [ "$rc" -eq 0 ] && [ -f "$FBODY" ] && [ "$(wc -c < "$FBODY")" -gt "$MAX_BODY" ]; then F_RC=63; fi
+   [ "$F_RC" -eq 63 ] && : > "$FBODY"
+   F_CODE=${w%%|*}
+   w=${w#*|}
+### M3
+@@ -338,12 +338,10 @@
+   FERR="$TMP_ROOT/$tag.err"
+   local w rc=0
+   w=$(curl -sS --noproxy '*' --connect-timeout "$CONNECT_TIMEOUT" --max-time "$TIMEOUT" \
+-        --max-filesize "$MAX_BODY" -o "$FBODY" -D "$FHDR" \
++        -o "$FBODY" -D "$FHDR" \
+         -w '%{http_code}|%{content_type}|%{size_download}' \
+         "http://127.0.0.1:$port$path" 2>"$FERR") || rc=$?
+   F_RC=$rc
+-  # older curl ignores --max-filesize for a body of unknown length: re-check what was written
+-  if [ "$rc" -eq 0 ] && [ -f "$FBODY" ] && [ "$(wc -c < "$FBODY")" -gt "$MAX_BODY" ]; then F_RC=63; fi
+   [ "$F_RC" -eq 63 ] && : > "$FBODY"
+   F_CODE=${w%%|*}
+   w=${w#*|}
+### M4
+@@ -759,7 +759,7 @@
+   [ "$HAVE_PY" -eq 1 ] || return 1
+   local port=$1 pbody="$TMP_ROOT/props$1.body"
+   curl -sS --noproxy '*' --connect-timeout "$CONNECT_TIMEOUT" --max-time "$TIMEOUT" \
+-    --max-filesize "$MAX_BODY" -o "$pbody" "http://127.0.0.1:$port/props" 2>/dev/null || return 1
++    -o "$pbody" "http://127.0.0.1:$port/props" 2>/dev/null || return 1
+   [ "$(wc -c < "$pbody")" -le "$MAX_BODY" ] || return 1
+   python3 - "$pbody" <<'PY' 2>/dev/null
+ import json, sys
+### M5
+@@ -760,7 +760,6 @@
+   local port=$1 pbody="$TMP_ROOT/props$1.body"
+   curl -sS --noproxy '*' --connect-timeout "$CONNECT_TIMEOUT" --max-time "$TIMEOUT" \
+     --max-filesize "$MAX_BODY" -o "$pbody" "http://127.0.0.1:$port/props" 2>/dev/null || return 1
+-  [ "$(wc -c < "$pbody")" -le "$MAX_BODY" ] || return 1
+   python3 - "$pbody" <<'PY' 2>/dev/null
+ import json, sys
+ try:
+### M6
+@@ -351,7 +351,7 @@
+   F_SIZE=${w##*|}
+   F_SERVER=""
+   if [ -f "$FHDR" ]; then
+-    F_SERVER=$(grep -a -i '^server:' "$FHDR" 2>/dev/null | head -n1 | sed -E 's/^[Ss]erver:[[:space:]]*//; s/\r$//' | strip_ctl || true)
++    F_SERVER=$(grep -a -i '^server:' "$FHDR" 2>/dev/null | head -n1 | sed -E 's/^[Ss]erver:[[:space:]]*//; s/\r$//' || true)
+   fi
+   F_ERRMSG=""
+   if [ -s "$FERR" ]; then
+### M7
+@@ -347,7 +347,7 @@
+   [ "$F_RC" -eq 63 ] && : > "$FBODY"
+   F_CODE=${w%%|*}
+   w=${w#*|}
+-  F_CT=$(printf '%s' "${w%%|*}" | strip_ctl)
++  F_CT=${w%%|*}
+   F_SIZE=${w##*|}
+   F_SERVER=""
+   if [ -f "$FHDR" ]; then
+### M8
+@@ -417,7 +417,7 @@
+ 
+ for g in groups:
+     if g:
+-        print("\n".join(dict.fromkeys(clean(v) for v in g)))
++        print("\n".join(dict.fromkeys(g)))
+         break
+ PY
+     return 0
+### M9
+@@ -726,7 +726,7 @@
+     sys.exit(0)
+ for n, e in enumerate(seq):
+     if not isinstance(e, dict) or not isinstance(e.get("id"), str) or not e["id"] \
+-            or any(ord(c) < 0x20 or 0x7F <= ord(c) <= 0x9F for c in e["id"]):
++            or any(c in e["id"] for c in "\t\r\n"):
+         continue
+     st = e.get("status")
+     if not isinstance(st, dict):
+### M10
+@@ -733,7 +733,7 @@
+         val, failed = "-", 0
+     else:
+         v = st.get("value")
+-        val = v if isinstance(v, str) and v and not any(ord(c) < 0x20 or 0x7F <= ord(c) <= 0x9F for c in v) else "?"
++        val = v if isinstance(v, str) and v and "\t" not in v and "\n" not in v else "?"
+         failed = 1 if st.get("failed") is True else 0
+     print(f"{e['id']}\t{val}\t{failed}\t{n}")
+ PY
+### M11
+@@ -208,16 +208,6 @@
+   s=${s//$'\t'/\\t}
+   s=${s//$'\n'/\\n}
+   s=${s//$'\r'/\\r}
+-  # Round 90 (S588 RFC 8259 section 7): every other control character U+0001-U+001F and DEL is
+-  # escaped too, so a listener-supplied byte can never make the generated JSON unparseable.
+-  local i c
+-  if [[ $s == *[$'\x01'-$'\x1f'$'\x7f']* ]]; then
+-    for i in {1..31} 127; do
+-      printf -v c "\\x$(printf '%02x' "$i")"
+-      printf -v c "$c"
+-      s=${s//"$c"/$(printf '\\u%04x' "$i")}
+-    done
+-  fi
+   printf '"%s"' "$s"
+ }
+ 
+### M12
+@@ -100,7 +100,7 @@
+ # capped at MAX_BODY bytes. curl aborts at the cap (exit 63; since curl 8.4.0 also for a body of
+ # unknown length) and the written size is re-checked for older curl. An oversize /v1/models
+ # answer is FOREIGN_SERVICE body-too-large, never MODEL_OK; an oversize /props is "not autoload".
+-MAX_BODY=4194304
++MAX_BODY=67108864
+ JSON_OUT=0
+ OPT_PORT=""
+ OPT_EXPECT=""
+### M13
+@@ -841,7 +841,7 @@
+       C_EVIDENCE="rc=28 timeout (connect=${CONNECT_TIMEOUT}s max=${TIMEOUT}s); $base"
+       return 0 ;;
+     63)
+-      C_VERDICT=FOREIGN_SERVICE
++      C_VERDICT=MODEL_OK
+       C_REASON=body-too-large
+       C_EVIDENCE="rc=63 answer body larger than $MAX_BODY bytes (transfer aborted, nothing parsed); $base"
+       return 0 ;;

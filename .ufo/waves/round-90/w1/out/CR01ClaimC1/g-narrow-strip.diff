@@ -1,0 +1,73 @@
+--- base-probe.sh	2026-11-06 18:04:48.428404650 -0300
++++ g-narrow-strip.sh	2026-11-06 18:15:46.349801645 -0300
+@@ -206,6 +206,14 @@
+   printf '"%s"' "$s"
+ }
+ 
++# cheap C1 variant: strip control bytes from every listener-derived field at the boundary
++sanitize_c() {
++  C_VERDICT=$(printf '%s' "$C_VERDICT" | LC_ALL=C tr -d '\012\011\001\033\177')
++  C_REASON=$(printf '%s' "$C_REASON" | LC_ALL=C tr -d '\012\011\001\033\177')
++  C_SERVED=$(printf '%s' "$C_SERVED" | LC_ALL=C tr -d '\012\011\001\033\177')
++  C_EVIDENCE=$(printf '%s' "$C_EVIDENCE" | LC_ALL=C tr -d '\012\011\001\033\177')
++}
++
+ emit_json() { # $1 = JSON text; validated/normalised when python3 is present
+   if [ "$HAVE_PY" -eq 1 ]; then
+     if ! printf '%s\n' "$1" | python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin), indent=2))'; then
+@@ -319,10 +327,11 @@
+   FERR="$TMP_ROOT/$tag.err"
+   local w rc=0
+   w=$(curl -sS --noproxy '*' --connect-timeout "$CONNECT_TIMEOUT" --max-time "$TIMEOUT" \
+-        -o "$FBODY" -D "$FHDR" \
++        --max-filesize 1048576 -o "$FBODY" -D "$FHDR" \
+         -w '%{http_code}|%{content_type}|%{size_download}' \
+         "http://127.0.0.1:$port$path" 2>"$FERR") || rc=$?
+   F_RC=$rc
++  if [ "$rc" -eq 0 ] && [ -f "$FBODY" ] && [ "$(wc -c < "$FBODY")" -gt 1048576 ]; then F_RC=63; : > "$FBODY"; fi
+   F_CODE=${w%%|*}
+   w=${w#*|}
+   F_CT=${w%%|*}
+@@ -351,7 +360,7 @@
+ probe_short() { # $1 port, $2 path -> "code|ct" or "err-<rc>"
+   local port=$1 path=$2 rc=0 w
+   w=$(curl -sS --noproxy '*' --connect-timeout "$CONNECT_TIMEOUT" --max-time "$TIMEOUT" \
+-        -o /dev/null -w '%{http_code}|%{content_type}' \
++        --max-filesize 1048576 -o /dev/null -w '%{http_code}|%{content_type}' \
+         "http://127.0.0.1:$port$path" 2>/dev/null) || rc=$?
+   if [ "$rc" -eq 0 ]; then printf '%s' "$w"; else printf 'err-%s' "$rc"; fi
+ }
+@@ -732,7 +741,8 @@
+   [ "$HAVE_PY" -eq 1 ] || return 1
+   local port=$1 pbody="$TMP_ROOT/props$1.body"
+   curl -sS --noproxy '*' --connect-timeout "$CONNECT_TIMEOUT" --max-time "$TIMEOUT" \
+-    -o "$pbody" "http://127.0.0.1:$port/props" 2>/dev/null || return 1
++    --max-filesize 1048576 -o "$pbody" "http://127.0.0.1:$port/props" 2>/dev/null || return 1
++  [ ! -f "$pbody" ] || [ "$(wc -c < "$pbody")" -le 1048576 ] || return 1
+   python3 - "$pbody" <<'PY' 2>/dev/null
+ import json, sys
+ try:
+@@ -1116,6 +1126,7 @@
+   for ((i=0; i<${#ports[@]}; i++)); do
+     port=${ports[i]}
+     classify "$port" "${OPT_EXPECT:-}"
++    sanitize_c
+     case "$C_VERDICT" in
+       MODEL_OK|MODEL_MISMATCH|MODEL_UNLOADED) n_model=$((n_model+1)) ;;
+       DEAD) n_dead=$((n_dead+1)) ;;
+@@ -1237,6 +1248,7 @@
+     local v_id="${OPT_ID:-cli-override}"
+     local declared="http://127.0.0.1:$OPT_PORT/v1"
+     classify "$OPT_PORT" "${OPT_EXPECT:-}"
++    sanitize_c
+     EV_IDS=("$v_id"); EV_PATHS=("-"); EV_DECLARED=("$declared"); EV_RESOLVED=("-")
+     EV_FMATCH=("cli-override"); EV_RKIND=("cli-override"); EV_ENDPOINT=("$declared")
+     EV_PORT=("$OPT_PORT"); EV_EXPECT=("${OPT_EXPECT:--}"); EV_VERDICT=("$C_VERDICT")
+@@ -1256,6 +1268,7 @@
+       resolve_row "${REG_PATHS[i]}" "${REG_SPECS[i]}" "$declared"
+       pnum=$(url_port "$R_ENDPOINT")
+       classify "$pnum" "$expected"
++      sanitize_c
+       verdict=$C_VERDICT
+       drift=false
+       if [ "$verdict" != "MODEL_OK" ]; then drift=true; fi

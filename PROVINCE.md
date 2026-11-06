@@ -433,3 +433,9 @@ children. The current llama.cpp release (b12177) runs beside the pinned b11755 u
 load/unload/completion error answers are captured on lane-owned children only
 (`tools/round89-router-signatures.py`) and bound to the SKILL error table by `tools/round89-signature-rows.py`. Model files, presets and the operator's router stay operator-owned:
 the lane reads them, never repairs, moves or loads them.
+
+Round 90: the **probe's own answer boundary** is part of the surface. Every loopback listener writes the
+`/v1/models` and `/props` answer the probe reads, so the probe caps it at 4 MiB on the wire and keeps control
+characters out of its table and JSON output; graded on lane-owned stub listeners by
+`tools/round90-hostile-answers.py`. The probe's reason codes are a SKILL decision table whose rows bind to probe
+answers captured on stub cells by `tools/round90-reason-capture.py`, checked by `tools/round90-reason-rows.py`.
