@@ -1,0 +1,59 @@
+# SB01ScorecardDraft — lane counters on the DRAFTED record
+# draft tip: e2e9399c7d8353b0747a0f40de694d3ab558aad2 ; baseline (lane master): c8db858691e883955f10cf9d7e1dec8f8d732bc8
+# clone: /fast/scratch/hyaku/kama-r89/SB01ScorecardDraft/wt (shared clone of the lane)
+# NOTE: round74-selfdesc-canon.py reads <repo>/SCORECARD.md (the worktree), never --rev; both runs
+# below therefore print the DRAFT's 89/57. The committed baseline blob's canon is recorded by the
+# round-88 gate receipt .ufo/waves/round-88/measured/gate-final.out line 8:
+#   SELFDESC_CANON_V2 canon_round=88 canon_rows=55 demonstrated=0 total=55 invisible=0
+
+== baseline tip=c8db858691e883955f10cf9d7e1dec8f8d732bc8
+$ python3 tools/round42-selfdesc-reconcile.py --repo . --tip c8db858691e883955f10cf9d7e1dec8f8d732bc8
+tip=c8db858691e883955f10cf9d7e1dec8f8d732bc8
+r41=4 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 closure_ptr=0 mismatches=5 maxN=88 met=False
+detail: r41 depth sha256 SKILL.md cited 1c6c2973b59b750cc3d1993e4a6a9ae2d90e8d9475dc6c180cef970d0294ea81 observed e332a3b077c1bddbca1e65f7550b6e7bcc7d998076ffee44cb153fed292c86b8
+detail: r41 depth lines SKILL.md cited 1787 observed 1828
+detail: r41 depth run `grep -c '^## ' SKILL.md` no stdout line == '51' (exit 0)
+detail: r41 coverage run `python3 -c "import glob;print(len([f for f in glob.glob('corpus/knowledge/*.md') if 'engine-sides' not in f and 'processes' not in f]))"` no stdout line == '58' (exit 0)
+detail: closure_ptr: calibration row latest outside closure is round-87; newest at tip is round-88
+exit=1
+$ python3 tools/round74-selfdesc-canon.py --repo .
+SELFDESC_CANON_V2 canon_round=89 canon_rows=57 demonstrated=0 total=57 invisible=0
+exit=0
+$ python3 tools/round86-rendered-cells.py --repo . --rev c8db858691e883955f10cf9d7e1dec8f8d732bc8
+RENDERED_CELLS facts=3 mismatches=3 gate=0 closure=0 disposition=0 newest_gate=88 newest_closure=88
+RENDERED_CELLS_FINDING gate declared round=86 newest terminal receipt round=88 (.ufo/waves/round-88/measured/gate-final.out)
+RENDERED_CELLS_FINDING closure row names round-87 newest committed closure is round-88 (corpus/lessons/round-88-verifier-spotcheck.md)
+RENDERED_CELLS_FINDING disposition row does not name `round88 rejected-honest-stop`
+exit=1
+$ python3 tools/round68-receipt-pointer-audit.py --repo . --rev c8db858691e883955f10cf9d7e1dec8f8d732bc8
+RECEIPT_POINTER_AUDIT files=2 cited=303 resolved=285 expanded=4 corrected=14 unresolved=0
+exit=0
+$ python3 tools/round72-receipt-tip-binding.py --repo . --round 89 --tip c8db858691e883955f10cf9d7e1dec8f8d732bc8
+RECEIPT_TIP_BINDING_UNREADABLE SCORECARD.md at c8db858691e883955f10cf9d7e1dec8f8d732bc8 carries no '## Round 89' section; the round's self-record cannot be read
+exit=2
+$ python3 tools/round69-newest-closure-counter.py --repo . --rev c8db858691e883955f10cf9d7e1dec8f8d732bc8 --since-round 63
+NEWEST_CLOSURE newest=corpus/lessons/round-88-verifier-spotcheck.md date=2026-11-06 round=88 row_names=corpus/lessons/round-87-verifier-spotcheck.md row_current=false
+STALE_CALIBRATION row_names=corpus/lessons/round-87-verifier-spotcheck.md newest=corpus/lessons/round-88-verifier-spotcheck.md newest_date=2026-11-06
+exit=1
+
+== draft tip=e2e9399c7d8353b0747a0f40de694d3ab558aad2
+$ python3 tools/round42-selfdesc-reconcile.py --repo . --tip e2e9399c7d8353b0747a0f40de694d3ab558aad2
+tip=e2e9399c7d8353b0747a0f40de694d3ab558aad2
+r41=0 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 closure_ptr=1 mismatches=0 maxN=89 met=True
+exit=0
+$ python3 tools/round74-selfdesc-canon.py --repo .
+SELFDESC_CANON_V2 canon_round=89 canon_rows=57 demonstrated=0 total=57 invisible=0
+exit=0
+$ python3 tools/round86-rendered-cells.py --repo . --rev e2e9399c7d8353b0747a0f40de694d3ab558aad2
+RENDERED_CELLS facts=3 mismatches=0 gate=1 closure=1 disposition=1 newest_gate=88 newest_closure=88
+exit=0
+$ python3 tools/round68-receipt-pointer-audit.py --repo . --rev e2e9399c7d8353b0747a0f40de694d3ab558aad2
+RECEIPT_POINTER_AUDIT files=2 cited=312 resolved=294 expanded=4 corrected=14 unresolved=0
+exit=0
+$ python3 tools/round72-receipt-tip-binding.py --repo . --round 89 --tip e2e9399c7d8353b0747a0f40de694d3ab558aad2
+RECEIPT_TIP_BINDING_UNREADABLE cited path is not a receipt file (.jsonl): .ufo/waves/round-89/measured/router-signatures.jsonl (corpus/lessons/round-89.md:24)
+exit=2
+$ python3 tools/round69-newest-closure-counter.py --repo . --rev e2e9399c7d8353b0747a0f40de694d3ab558aad2 --since-round 63
+SCOPE population=rounds>=63 members=26
+NEWEST_CLOSURE newest=corpus/lessons/round-88-verifier-spotcheck.md date=2026-11-06 round=88 row_names=corpus/lessons/round-88-verifier-spotcheck.md row_current=true
+exit=0

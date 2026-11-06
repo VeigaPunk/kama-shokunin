@@ -19,6 +19,15 @@ Matrix schema (shared contract): each sibling JSON file is an array of tests::
 with ``default_route`` null answers 404 with an empty body. ``closed`` mode
 binds then closes a socket and probes the dead port.
 
+A test may carry an optional ``"files"`` object, mapping a relative name to
+``{"text": str}`` or ``{"hex": hexstr}``. Those files are written under a
+per-row temporary directory (inside ``$TMPDIR`` when it is a real directory)
+before the stub is served, and every string in the test has the token
+``{tmp}`` replaced with that directory's absolute path — so a row can point
+``status.args`` at real files (an absent path, a crafted header) without
+hardcoding a host path. Paths may not escape the directory; ``{tmp}`` without
+``files`` is a schema error. Files are removed with the row.
+
 Probe invocation per test (exact)::
 
     bash PROBE check --port P --expect E --json --timeout 2 --connect-timeout 1
@@ -26,7 +35,7 @@ Probe invocation per test (exact)::
 Exit 0 iff every record passes, 1 on any test failure (including a probe
 timeout or malformed probe output), 2 on a harness/schema error. ``--json``
 puts the machine document on stdout; without it a human summary is printed.
-``--selftest`` additionally feeds 4 embedded malformed tests through the
+``--selftest`` additionally feeds the embedded malformed tests through the
 schema validator, checks the duplicate-name guard across two files, and
 fails if any of these is accepted.
 """
@@ -59,10 +68,21 @@ STUB_SERVER_HEADER = "kama-stub"
 
 TEST_KEYS = {"name", "family", "why", "port_mode", "routes",
              "default_route", "expect", "expected"}
+OPTIONAL_TEST_KEYS = {"files"}
 EXPECTED_KEYS = {"verdict", "reason", "exit"}
 ROUTE_BODY_KEYS = ("body_json", "body_text")
+FIXTURE_BODY_KEYS = ("text", "hex")
 VALID_PORT_MODES = ("stub", "closed")
 VALID_EXITS = (0, 2)
+TMP_TOKEN = "{tmp}"
+
+# The served_model a row owes depends on the classify() arm it came from, not on
+# the verdict vocabulary: tools/kama-probe.sh classify() derives C_SERVED only in
+# its `is2 && has_models` arm, and router_refine() may rewrite that arm's
+# MODEL_OK into MODEL_UNLOADED / MODEL_LOADING afterwards. So all four verdicts
+# can carry ids; DEAD / NOT_HTTP / FOREIGN_SERVICE / UNAUTHORIZED_SERVICE cannot.
+MODEL_ARRAY_VERDICTS = frozenset({
+    "MODEL_OK", "MODEL_MISMATCH", "MODEL_LOADING", "MODEL_UNLOADED"})
 
 PROBE_ARGV_TAIL = ("check", "--json", "--timeout", "2", "--connect-timeout", "1")
 
@@ -107,11 +127,38 @@ def validate_route(route, where):
     return route
 
 
+def validate_files(files, where):
+    """Validate the optional fixture-file map; returns it unchanged."""
+    if not isinstance(files, dict) or not files:
+        fail(where, "test.files must be a non-empty object")
+    for rel, spec in files.items():
+        fwhere = f"{where} files[{rel!r}]"
+        if not isinstance(rel, str) or not rel:
+            fail(where, "test.files keys must be non-empty strings")
+        parts = Path(rel).parts
+        if Path(rel).is_absolute() or ".." in parts or rel.startswith("~"):
+            fail(fwhere, "fixture file must stay inside the per-row directory")
+        if not isinstance(spec, dict):
+            fail(fwhere, "file spec must be an object")
+        unknown = set(spec) - set(FIXTURE_BODY_KEYS)
+        if unknown:
+            fail(fwhere, f"unknown file keys: {sorted(unknown)}")
+        if len([k for k in FIXTURE_BODY_KEYS if k in spec]) != 1:
+            fail(fwhere, "file spec must carry exactly one of text/hex")
+        if "text" in spec and not isinstance(spec["text"], str):
+            fail(fwhere, "file.text must be a string")
+        if "hex" in spec and (
+                not isinstance(spec["hex"], str) or len(spec["hex"]) % 2
+                or any(c not in "0123456789abcdefABCDEF" for c in spec["hex"])):
+            fail(fwhere, "file.hex must be an even-length hex string")
+    return files
+
+
 def validate_test(test, source, index):
     where = f"{source}[{index}]"
     if not isinstance(test, dict):
         fail(where, "test must be an object")
-    unknown = set(test) - TEST_KEYS
+    unknown = set(test) - TEST_KEYS - OPTIONAL_TEST_KEYS
     if unknown:
         fail(where, f"unknown test keys: {sorted(unknown)}")
     missing = TEST_KEYS - set(test)
@@ -150,6 +197,10 @@ def validate_test(test, source, index):
     if expected["exit"] != want:
         fail(where, f"expected.exit {expected['exit']} inconsistent with "
                     f"verdict {expected['verdict']} (probe exits {want})")
+    if "files" in test:
+        validate_files(test["files"], where)
+    if TMP_TOKEN in json.dumps(test) and "files" not in test:
+        fail(where, f"{TMP_TOKEN} used without test.files")
     return test
 
 
@@ -354,27 +405,58 @@ def models_route(test):
     return route
 
 
+def has_model_array(body):
+    """Mirror tools/kama-probe.sh body_has_model_array(): data[] or models[].
+
+    The probe requires this before it enters the `is2 && has_models` arm, so it
+    gates whether C_SERVED is derived at all.
+    """
+    if isinstance(body, dict):
+        doc = body
+    else:
+        try:
+            doc = json.loads(body) if isinstance(body, str) else None
+        except json.JSONDecodeError:
+            return False
+    if not isinstance(doc, dict):
+        return False
+    return any(isinstance(doc.get(key), list) for key in ("data", "models"))
+
+
 def expected_served_model(test, verdict):
     """The served_model value the probe contract REQUIRES for this row.
 
-    classify() (tools/kama-probe.sh:455) starts every call with C_SERVED='-'
-    and only ever rewrites it inside the `is2 && has_models` arm (lines
-    524-529), the arm whose verdicts are MODEL_OK / MODEL_MISMATCH: there
-    C_SERVED becomes the comma-joined ids parsed from the /v1/models body
-    ('-' when the winning group is empty). Every other verdict — DEAD,
-    NOT_HTTP, FOREIGN_SERVICE, UNAUTHORIZED_SERVICE, MODEL_LOADING —
+    classify() (tools/kama-probe.sh:728) starts every call with C_SERVED='-'
+    and only ever rewrites it inside the `is2 && has_models` arm
+    (tools/kama-probe.sh:799), where it becomes the comma-joined ids parsed
+    from the /v1/models body ('-' when the winning group is empty). Every
+    other verdict — DEAD, NOT_HTTP, FOREIGN_SERVICE, UNAUTHORIZED_SERVICE —
     returns with C_SERVED still '-'.
 
-    So, keyed on the OBSERVED verdict: MODEL_OK / MODEL_MISMATCH must carry
-    exactly the ids this row's own stub /v1/models body yields via
-    served_ids() precedence; every other verdict must carry '-'.
+    The arm's verdict is not fixed, though: router_refine() is called at
+    tools/kama-probe.sh:820, AFTER C_SERVED is set, and rewrites MODEL_OK into
+    MODEL_LOADING (router-loading) or MODEL_UNLOADED (router-*). Those rows
+    still carry the ids. Round 89 defect R5: grading every non-MODEL_OK
+    verdict as '-' failed every correctly graded router-unloaded row whose
+    body lists its model.
+
+    So, keyed on the OBSERVED verdict: MODEL_OK / MODEL_MISMATCH /
+    MODEL_LOADING / MODEL_UNLOADED must carry exactly the ids this row's own
+    2xx /v1/models body yields via served_ids() precedence; every other
+    verdict must carry '-'.
     """
-    if verdict not in ("MODEL_OK", "MODEL_MISMATCH"):
+    if verdict not in MODEL_ARRAY_VERDICTS:
         return "-"
     route = models_route(test)
     if route is None:
         return "-"
+    status = route.get("status")
+    if not isinstance(status, int) or isinstance(status, bool) \
+            or not 200 <= status <= 299:
+        return "-"                      # non-2xx: the arm is never entered
     body = route.get("body_json", route.get("body_text"))
+    if not has_model_array(body):
+        return "-"
     ids = served_ids_of(body)
     return ",".join(ids) if ids else "-"
 
@@ -422,6 +504,38 @@ def probe_output_row(stdout):
         return None, "rows[0].drift is not a bool"
     return row, None
 
+def fixture_parent():
+    """$TMPDIR when it names a real directory; else tempfile's own default."""
+    tmpdir = os.environ.get("TMPDIR")
+    return tmpdir if tmpdir and Path(tmpdir).is_dir() else None
+
+
+def substitute_tmp(value, tmpdir):
+    """Return *value* with every TMP_TOKEN inside its strings replaced."""
+    if isinstance(value, str):
+        return value.replace(TMP_TOKEN, tmpdir)
+    if isinstance(value, list):
+        return [substitute_tmp(item, tmpdir) for item in value]
+    if isinstance(value, dict):
+        return {key: substitute_tmp(item, tmpdir)
+                for key, item in value.items()}
+    return value
+
+
+def materialize_files(files, tmpdir):
+    """Write a row's fixture files under *tmpdir*; returns the resolved root."""
+    root = Path(tmpdir).resolve()
+    for rel, spec in files.items():
+        target = (root / rel).resolve()
+        if target != root and root not in target.parents:
+            raise HarnessError(f"fixture file escapes its directory: {rel!r}")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        data = (spec["text"].encode("utf-8") if "text" in spec
+                else bytes.fromhex(spec["hex"]))
+        target.write_bytes(data)
+    return root
+
+
 def grade(entry, probe, timeout=PROBE_TIMEOUT):
     """Serve one test's stub (or closed port), run the probe, record the row."""
     test, source = entry["test"], entry["source"]
@@ -447,7 +561,14 @@ def grade(entry, probe, timeout=PROBE_TIMEOUT):
         "passed": False,
     }
     server = None
+    fixture = None
     try:
+        files = test.get("files") or {}
+        if files:
+            fixture = tempfile.TemporaryDirectory(
+                prefix="kama-check-fixture-", dir=fixture_parent())
+            test = substitute_tmp(test, fixture.name)
+            materialize_files(files, fixture.name)
         if test["port_mode"] == "closed":
             port = bind_closed_port()
         else:
@@ -507,6 +628,8 @@ def grade(entry, probe, timeout=PROBE_TIMEOUT):
         if server is not None:
             server.shutdown()
             server.server_close()
+        if fixture is not None:
+            fixture.cleanup()
 
 
 # ---------------------------------------------------------------- selftest
@@ -531,6 +654,18 @@ SELFTEST_MALFORMED = [
       "expect": "*",
       "expected": {"verdict": "MODEL_OK", "reason": "matched", "exit": 2}},
      "MODEL_OK paired with exit 2"),
+    ({"name": "selftest-files-escape", "family": "Selftest", "why": "x",
+      "port_mode": "stub", "routes": {}, "default_route": None,
+      "expect": "*", "expected": {"verdict": "DEAD", "reason": "x", "exit": 2},
+      "files": {"../escape.bin": {"text": "x"}}},
+     "fixture path outside the row directory"),
+    ({"name": "selftest-tmp-without-files", "family": "Selftest", "why": "x",
+      "port_mode": "stub",
+      "routes": {"/v1/models": {"status": 200, "headers": {},
+                                "body_json": {"data": [{"id": "{tmp}/x"}]}}},
+      "default_route": None, "expect": "*",
+      "expected": {"verdict": "DEAD", "reason": "x", "exit": 2}},
+     "{tmp} without files"),
 ]
 
 SELFTEST_MALFORMED_OUTPUTS = [
@@ -729,7 +864,7 @@ def build_parser():
                         help="emit the machine document on stdout "
                              "(human summary moves to stderr)")
     parser.add_argument("--selftest", action="store_true",
-                        help="also assert the validator rejects 4 embedded "
+                        help="also assert the validator rejects the embedded "
                              "malformed tests and a duplicate name")
     return parser
 

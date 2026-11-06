@@ -112,9 +112,9 @@ HUGE_DIGITS = 5_000          # F16: past sys.int_info.default_max_str_digits
 # Pinned round-16 facts (.ufo/waves/round-16/measure.py:281-290): the staged
 # matrix set must reproduce this name+content digest and breadth before the
 # controls mean anything.
-EXPECTED_MATRIX_SHA256 = ("bf9068d89e4cb8a080167cb32cc818943d717a65fcbd21ed"
-                          "b2b8256e22771f32")
-EXPECTED_MATRIX_TESTS = 72
+EXPECTED_MATRIX_SHA256 = ("380c470440504083cec3b243876afc49e51537c5158a3ea91d22"
+                          "c66c20bab1d2")
+EXPECTED_MATRIX_TESTS = 77
 
 # Round-17 check.py mutants that survived F0-F8; each must be named by the
 # "kills" of at least one fault (--selftest enforces it).

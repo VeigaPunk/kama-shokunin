@@ -1,0 +1,372 @@
+{
+  "schema": "kama-fault-controls/v1",
+  "check": "/fast/scratch/hyaku/kama-r89/EX03CheckPyUnloaded/rig/tests/probe-verdicts/check.py",
+  "check_sha256": "d4f73f1bb0a7f9042ec6b897c49efc4caa40c1ce40f1fc26cd86bdd8726afc75",
+  "probe_sha256": "a4f496bb0ed931792641171a1269a91a8307dce5d534d5f4ee03daba01a7ddaf",
+  "matrix": {
+    "files": 10,
+    "tests": 77,
+    "sha256": "380c470440504083cec3b243876afc49e51537c5158a3ea91d22c66c20bab1d2"
+  },
+  "positive_control": {
+    "id": "F0",
+    "title": "positive control (identity pass-through)",
+    "target": null,
+    "rows": [
+      "ReadyControls.expect-exact-id",
+      "ReadyControls.expect-different-id",
+      "LoadingEnvelope.canonical-alias",
+      "ForeignControls.openmetrics-text",
+      "AuthAndDead.closed-port-connection-refused"
+    ],
+    "runs": 1,
+    "check_exit": 0,
+    "detected": true,
+    "why": "check exited 0 with JSON; all 5 rows passed (positive control healthy)",
+    "kills": [],
+    "debt": null,
+    "slow": false,
+    "escaped_pids": []
+  },
+  "seconds": 56.6,
+  "faults": [
+    {
+      "id": "F1",
+      "title": "reason forged",
+      "target": "reason",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "LoadingEnvelope.canonical-alias"
+      ],
+      "runs": 1,
+      "check_exit": 1,
+      "detected": true,
+      "why": "check exited 1 with JSON; all 3 faulted rows failed the 'reason' conjunct (expect-exact-id:reason expect-different-id:reason canonical-alias:reason)",
+      "kills": [],
+      "debt": null,
+      "slow": false,
+      "escaped_pids": []
+    },
+    {
+      "id": "F2",
+      "title": "exit flipped",
+      "target": "exit",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "LoadingEnvelope.canonical-alias"
+      ],
+      "runs": 1,
+      "check_exit": 1,
+      "detected": true,
+      "why": "check exited 1 with JSON; all 3 faulted rows failed the 'exit' conjunct (expect-exact-id:exit expect-different-id:exit canonical-alias:exit)",
+      "kills": [],
+      "debt": null,
+      "slow": false,
+      "escaped_pids": []
+    },
+    {
+      "id": "F3",
+      "title": "drift negated",
+      "target": "drift",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "LoadingEnvelope.canonical-alias"
+      ],
+      "runs": 1,
+      "check_exit": 1,
+      "detected": true,
+      "why": "check exited 1 with JSON; all 3 faulted rows failed the 'drift' conjunct (expect-exact-id:drift expect-different-id:drift canonical-alias:drift)",
+      "kills": [],
+      "debt": null,
+      "slow": false,
+      "escaped_pids": []
+    },
+    {
+      "id": "F4",
+      "title": "verdict lower-cased",
+      "target": "verdict",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "LoadingEnvelope.canonical-alias"
+      ],
+      "runs": 1,
+      "check_exit": 1,
+      "detected": true,
+      "why": "check exited 1 with JSON; all 3 faulted rows failed the 'verdict' conjunct (expect-exact-id:drift,verdict expect-different-id:verdict canonical-alias:verdict)",
+      "kills": [],
+      "debt": null,
+      "slow": false,
+      "escaped_pids": []
+    },
+    {
+      "id": "F5",
+      "title": "served_model forged (incl. non-empty on DEAD)",
+      "target": "served_model",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "AuthAndDead.closed-port-connection-refused"
+      ],
+      "runs": 1,
+      "check_exit": 1,
+      "detected": true,
+      "why": "check exited 1 with JSON; all 3 faulted rows failed the 'served_model' conjunct (expect-exact-id:served_model expect-different-id:served_model closed-port-connection-refused:served_model)",
+      "kills": [],
+      "debt": null,
+      "slow": false,
+      "escaped_pids": []
+    },
+    {
+      "id": "F6",
+      "title": "route skip (no GET /v1/models; cached replay)",
+      "target": "route",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "LoadingEnvelope.canonical-alias",
+        "ForeignControls.openmetrics-text"
+      ],
+      "runs": 4,
+      "check_exit": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "detected": true,
+      "why": "check exited 1 with JSON; all 1 faulted rows failed the 'route' conjunct (expect-exact-id:route) | check exited 1 with JSON; all 1 faulted rows failed the 'route' conjunct (expect-different-id:route) | check exited 1 with JSON; all 1 faulted rows failed the 'route' conjunct (canonical-alias:route) | check exited 1 with JSON; all 1 faulted rows failed the 'route' conjunct (openmetrics-text:route)",
+      "kills": [],
+      "debt": null,
+      "slow": false,
+      "escaped_pids": []
+    },
+    {
+      "id": "F8",
+      "title": "malformed stdout",
+      "target": "error",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "LoadingEnvelope.canonical-alias",
+        "ForeignControls.openmetrics-text",
+        "AuthAndDead.closed-port-connection-refused"
+      ],
+      "runs": 6,
+      "check_exit": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "detected": true,
+      "why": "[empty-array] check exited 1 with JSON; all 5 faulted rows failed the 'error' conjunct (expect-exact-id:drift,error,reason,served_model,verdict expect-different-id:drift,error,reason,served_model,verdict canonical-alias:drift,error,reason,served_model,verdict openmetrics-text:drift,error,reason,served_model,verdict closed-port-connection-refused:drift,error,reason,served_model,verdict) | [rows-empty] check exited 1 with JSON; all 5 faulted rows failed the 'error' conjunct (expect-exact-id:drift,error,reason,served_model,verdict expect-different-id:drift,error,reason,served_model,verdict canonical-alias:drift,error,reason,served_model,verdict openmetrics-text:drift,error,reason,served_model,verdict closed-port-connection-refused:drift,error,reason,served_model,verdict) | [row-not-object] check exited 1 with JSON; all 5 faulted rows failed the 'error' conjunct (expect-exact-id:drift,error,reason,served_model,verdict expect-different-id:drift,error,reason,served_model,verdict canonical-alias:drift,error,reason,served_model,verdict openmetrics-text:drift,error,reason,served_model,verdict closed-port-connection-refused:drift,error,reason,served_model,verdict) | [row-null] check exited 1 with JSON; all 5 faulted rows failed the 'error' conjunct (expect-exact-id:drift,error,reason,served_model,verdict expect-different-id:drift,error,reason,served_model,verdict canonical-alias:drift,error,reason,served_model,verdict openmetrics-text:drift,error,reason,served_model,verdict closed-port-connection-refused:drift,error,reason,served_model,verdict) | [non-json] check exited 1 with JSON; all 5 faulted rows failed the 'error' conjunct (expect-exact-id:drift,error,reason,served_model,verdict expect-different-id:drift,error,reason,served_model,verdict canonical-alias:drift,error,reason,served_model,verdict openmetrics-text:drift,error,reason,served_model,verdict closed-port-connection-refused:drift,error,reason,served_model,verdict) | [non-utf8] check exited 1 with JSON; all 5 faulted rows failed the 'error' conjunct (expect-exact-id:drift,error,reason,served_model,verdict expect-different-id:drift,error,reason,served_model,verdict canonical-alias:drift,error,reason,served_model,verdict openmetrics-text:drift,error,reason,served_model,verdict closed-port-connection-refused:drift,error,reason,served_model,verdict)",
+      "kills": [],
+      "debt": null,
+      "slow": false,
+      "escaped_pids": []
+    },
+    {
+      "id": "F9",
+      "title": "reason case-swapped",
+      "target": "reason",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "LoadingEnvelope.canonical-alias",
+        "ForeignControls.openmetrics-text",
+        "AuthAndDead.closed-port-connection-refused"
+      ],
+      "runs": 1,
+      "check_exit": 1,
+      "detected": true,
+      "why": "check exited 1 with JSON; all 5 faulted rows failed the 'reason' conjunct (expect-exact-id:reason expect-different-id:reason canonical-alias:reason openmetrics-text:reason closed-port-connection-refused:reason)",
+      "kills": [
+        "H1"
+      ],
+      "debt": null,
+      "slow": false,
+      "escaped_pids": []
+    },
+    {
+      "id": "F10",
+      "title": "verdict whitespace-padded",
+      "target": "verdict",
+      "rows": [
+        "LoadingEnvelope.canonical-alias",
+        "ForeignControls.openmetrics-text",
+        "AuthAndDead.closed-port-connection-refused"
+      ],
+      "runs": 3,
+      "check_exit": [
+        1,
+        1,
+        1
+      ],
+      "detected": true,
+      "why": "[leading-space] check exited 1 with JSON; all 3 faulted rows failed the 'verdict' conjunct (canonical-alias:verdict openmetrics-text:verdict closed-port-connection-refused:verdict) | [trailing-space] check exited 1 with JSON; all 3 faulted rows failed the 'verdict' conjunct (canonical-alias:verdict openmetrics-text:verdict closed-port-connection-refused:verdict) | [trailing-newline] check exited 1 with JSON; all 3 faulted rows failed the 'verdict' conjunct (canonical-alias:verdict openmetrics-text:verdict closed-port-connection-refused:verdict)",
+      "kills": [
+        "H2"
+      ],
+      "debt": null,
+      "slow": false,
+      "escaped_pids": []
+    },
+    {
+      "id": "F11",
+      "title": "/v1/models reached by non-GET methods only (cached replay)",
+      "target": "route",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "LoadingEnvelope.canonical-alias",
+        "ForeignControls.openmetrics-text"
+      ],
+      "runs": 4,
+      "check_exit": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "detected": true,
+      "why": "check exited 1 with JSON; all 1 faulted rows failed the 'route' conjunct (expect-exact-id:route) | check exited 1 with JSON; all 1 faulted rows failed the 'route' conjunct (expect-different-id:route) | check exited 1 with JSON; all 1 faulted rows failed the 'route' conjunct (canonical-alias:route) | check exited 1 with JSON; all 1 faulted rows failed the 'route' conjunct (openmetrics-text:route)",
+      "kills": [
+        "H3"
+      ],
+      "debt": null,
+      "slow": false,
+      "escaped_pids": []
+    },
+    {
+      "id": "F12",
+      "title": "served_model equal only after normalisation",
+      "target": "served_model",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id"
+      ],
+      "runs": 4,
+      "check_exit": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "detected": true,
+      "why": "[case] check exited 1 with JSON; all 2 faulted rows failed the 'served_model' conjunct (expect-exact-id:served_model expect-different-id:served_model) | [gguf-suffix] check exited 1 with JSON; all 2 faulted rows failed the 'served_model' conjunct (expect-exact-id:served_model expect-different-id:served_model) | [whitespace] check exited 1 with JSON; all 2 faulted rows failed the 'served_model' conjunct (expect-exact-id:served_model expect-different-id:served_model) | [fullwidth] check exited 1 with JSON; all 2 faulted rows failed the 'served_model' conjunct (expect-exact-id:served_model expect-different-id:served_model)",
+      "kills": [
+        "H5"
+      ],
+      "debt": null,
+      "slow": false,
+      "escaped_pids": []
+    },
+    {
+      "id": "F13",
+      "title": "no stub request at all (cached replay)",
+      "target": "route",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "LoadingEnvelope.canonical-alias",
+        "ForeignControls.openmetrics-text"
+      ],
+      "runs": 4,
+      "check_exit": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "detected": true,
+      "why": "check exited 1 with JSON; all 1 faulted rows failed the 'route' conjunct (expect-exact-id:drift,error,reason,route,served_model,verdict) | check exited 1 with JSON; all 1 faulted rows failed the 'route' conjunct (expect-different-id:drift,error,reason,route,served_model,verdict) | check exited 1 with JSON; all 1 faulted rows failed the 'route' conjunct (canonical-alias:drift,error,reason,route,served_model,verdict) | check exited 1 with JSON; all 1 faulted rows failed the 'route' conjunct (openmetrics-text:drift,error,reason,route,served_model,verdict)",
+      "kills": [
+        "H6"
+      ],
+      "debt": null,
+      "slow": false,
+      "escaped_pids": []
+    },
+    {
+      "id": "F14",
+      "title": "corruption confined to rows[0] of a two-row output",
+      "target": "reason",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "LoadingEnvelope.canonical-alias",
+        "ForeignControls.openmetrics-text",
+        "AuthAndDead.closed-port-connection-refused"
+      ],
+      "runs": 1,
+      "check_exit": 1,
+      "detected": true,
+      "why": "check exited 1 with JSON; all 5 faulted rows failed the 'reason' conjunct (expect-exact-id:reason expect-different-id:reason canonical-alias:reason openmetrics-text:reason closed-port-connection-refused:reason)",
+      "kills": [
+        "H7"
+      ],
+      "debt": null,
+      "slow": false,
+      "escaped_pids": []
+    },
+    {
+      "id": "F15",
+      "title": "nested-JSON depth bomb in stdout",
+      "target": "error",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "LoadingEnvelope.canonical-alias",
+        "ForeignControls.openmetrics-text",
+        "AuthAndDead.closed-port-connection-refused"
+      ],
+      "runs": 1,
+      "check_exit": 1,
+      "detected": true,
+      "why": "[nested-100000] check exited 1 with JSON; all 5 faulted rows failed the 'error' conjunct (expect-exact-id:drift,error,reason,served_model,verdict expect-different-id:drift,error,reason,served_model,verdict canonical-alias:drift,error,reason,served_model,verdict openmetrics-text:drift,error,reason,served_model,verdict closed-port-connection-refused:drift,error,reason,served_model,verdict)",
+      "kills": [],
+      "debt": "MalformedNonUtf8.md: deep nesting raised RecursionError out of check.py",
+      "slow": false,
+      "escaped_pids": []
+    },
+    {
+      "id": "F16",
+      "title": "5000-digit integer in stdout",
+      "target": "error",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "LoadingEnvelope.canonical-alias",
+        "ForeignControls.openmetrics-text",
+        "AuthAndDead.closed-port-connection-refused"
+      ],
+      "runs": 1,
+      "check_exit": 1,
+      "detected": true,
+      "why": "[int-5000-digits] check exited 1 with JSON; all 5 faulted rows failed the 'error' conjunct (expect-exact-id:drift,error,reason,served_model,verdict expect-different-id:drift,error,reason,served_model,verdict canonical-alias:drift,error,reason,served_model,verdict openmetrics-text:drift,error,reason,served_model,verdict closed-port-connection-refused:drift,error,reason,served_model,verdict)",
+      "kills": [],
+      "debt": "MalformedNonUtf8.md: int-string limit raised ValueError out of check.py",
+      "slow": false,
+      "escaped_pids": []
+    }
+  ],
+  "detected": 15,
+  "accepted": 0,
+  "fault_controls_sha256": "a6d6f1ea63a63cf196209bf57117bd9ce83f744430ee6679c2d1fcfc71f02542",
+  "prepass_rows": [
+    "ForeignControls.openmetrics-text",
+    "LoadingEnvelope.canonical-alias",
+    "ReadyControls.expect-different-id",
+    "ReadyControls.expect-exact-id"
+  ],
+  "skipped": [
+    "F7",
+    "F17"
+  ]
+}

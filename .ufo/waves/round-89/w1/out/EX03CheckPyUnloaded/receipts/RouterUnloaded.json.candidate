@@ -1,0 +1,118 @@
+[
+  {
+    "name": "RouterUnloaded.router-unloaded-no-autoload",
+    "family": "RouterUnloaded",
+    "why": "A matching entry is listed unloaded without a failed flag and the router's bare /props does not assert models_autoload, so a request answers 400 'model is not loaded': MODEL_UNLOADED router-unloaded with the listed id still as served_model (classify() sets C_SERVED before router_refine rewrites the verdict).",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"data": [{"id": "stories260K", "status": {"value": "unloaded", "args": ["{tmp}/router-bin"]}}]}
+      },
+      "/props": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"role": "router", "models_autoload": false}
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "MODEL_UNLOADED", "reason": "router-unloaded", "exit": 2},
+    "files": {"router-bin": {"text": "#!/bin/sh\nexit 0\n"}}
+  },
+  {
+    "name": "RouterUnloaded.router-unloaded-failed",
+    "family": "RouterUnloaded",
+    "why": "status.failed=true marks a load that already failed: the reason carries the -failed suffix. The rule reads bare /props only for a NON-failed unloaded entry, so this row never consults it (the autoload route is deliberately present and inert), and a real request answers 500 'failed to load'.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"data": [{"id": "stories260K", "status": {"value": "unloaded", "failed": true, "args": ["{tmp}/router-bin"]}}]}
+      },
+      "/props": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"role": "router", "models_autoload": true}
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "MODEL_UNLOADED", "reason": "router-unloaded-failed", "exit": 2},
+    "files": {"router-bin": {"text": "#!/bin/sh\nexit 0\n"}}
+  },
+  {
+    "name": "RouterUnloaded.router-model-missing-autoload",
+    "family": "RouterUnloaded",
+    "why": "Autoload router, unloaded not-failed entry whose absolute -m path does not exist: a real request answers 500 'failed to load', so the round-89 rule grades router-model-missing instead of MODEL_OK router-unloaded-autoload.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"data": [{"id": "stories260K", "status": {"value": "unloaded", "args": ["{tmp}/router-bin", "-m", "{tmp}/absent-model.gguf"]}}]}
+      },
+      "/props": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"role": "router", "models_autoload": true}
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "MODEL_UNLOADED", "reason": "router-model-missing", "exit": 2},
+    "files": {"router-bin": {"text": "#!/bin/sh\nexit 0\n"}}
+  },
+  {
+    "name": "RouterUnloaded.router-model-invalid-non-gguf",
+    "family": "RouterUnloaded",
+    "why": "Autoload router, unloaded not-failed entry whose -m path is a real file the harness creates without GGUF magic: the loader rejects it, so the round-89 rule grades router-model-invalid.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"data": [{"id": "stories260K", "status": {"value": "unloaded", "args": ["{tmp}/router-bin", "-m", "{tmp}/not-a-model.gguf"]}}]}
+      },
+      "/props": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"role": "router", "models_autoload": true}
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "MODEL_UNLOADED", "reason": "router-model-invalid", "exit": 2},
+    "files": {
+      "router-bin": {"text": "#!/bin/sh\nexit 0\n"},
+      "not-a-model.gguf": {"hex": "4e4f5420412047475546204d4f44454c0a"}
+    }
+  },
+  {
+    "name": "RouterUnloaded.router-model-invalid-gguf-v1",
+    "family": "RouterUnloaded",
+    "why": "Same autoload router but the crafted file carries GGUF magic with version 1, which ggml's loader rejects (gguf.cpp checks version 1 and >3): proves the header check, not just a magic sniff, reaches router-model-invalid.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"data": [{"id": "stories260K", "status": {"value": "unloaded", "args": ["{tmp}/router-bin", "--model", "{tmp}/gguf-v1.gguf"]}}]}
+      },
+      "/props": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"role": "router", "models_autoload": true}
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "MODEL_UNLOADED", "reason": "router-model-invalid", "exit": 2},
+    "files": {
+      "router-bin": {"text": "#!/bin/sh\nexit 0\n"},
+      "gguf-v1.gguf": {"hex": "474755460100000000000000000000000000000000000000"}
+    }
+  }
+]

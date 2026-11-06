@@ -1,0 +1,1075 @@
+{
+ "scenarios": [
+  {
+   "name": "h1-4field-missing",
+   "expect": "absent",
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-missing",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "note": "4-field read + new verdict path; base false green"
+  },
+  {
+   "name": "h2-args-not-list",
+   "expect": "absent",
+   "measured": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "note": "status.args is a string"
+  },
+  {
+   "name": "h3-args0-missing",
+   "expect": "absent",
+   "measured": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "note": "args[0] not a local file"
+  },
+  {
+   "name": "h4-props-not-autoload-json",
+   "expect": "absent",
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-unloaded",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-unloaded",
+    "exit": 2
+   },
+   "note": "router_autoload fails (python exit 1) inside &&-list; probe must not die (set -e)"
+  },
+  {
+   "name": "h5-models-garbage",
+   "expect": "absent",
+   "measured": {
+    "verdict": "FOREIGN_SERVICE",
+    "reason": "schema-unrecognized",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "FOREIGN_SERVICE",
+    "reason": "schema-unrecognized",
+    "exit": 2
+   },
+   "note": "non-JSON /v1/models body"
+  },
+  {
+   "name": "p1-wild-loadable-wins",
+   "expect": "*",
+   "measured": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "note": "wildcard: one unloadable + one loadable unloaded -> loadable wins"
+  },
+  {
+   "name": "p2-unloadable-plain-mix",
+   "expect": "*",
+   "measured": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "note": "wildcard: unloadable + plain unloaded (no args) -> plain-unloaded wins"
+  },
+  {
+   "name": "p3-loading-wins",
+   "expect": "*",
+   "measured": {
+    "verdict": "MODEL_LOADING",
+    "reason": "router-loading",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "note": "wildcard: unloadable + loading -> MODEL_LOADING"
+  },
+  {
+   "name": "p4-noautoload-reason",
+   "expect": "absent",
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-unloaded",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-unloaded",
+    "exit": 2
+   },
+   "note": "non-autoload router: reason must stay router-unloaded"
+  },
+  {
+   "name": "p5-failed-entry",
+   "expect": "absent",
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-unloaded-failed",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-unloaded-failed",
+    "exit": 2
+   },
+   "note": "failed:true entry -> router-unloaded-failed, no file state used"
+  },
+  {
+   "name": "p6-unloadable-vs-down",
+   "expect": "*",
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-missing",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "note": "wildcard: unloadable + down -> reason shifts router-down -> router-model-missing (verdict same)"
+  },
+  {
+   "name": "p7-sleeping-wins",
+   "expect": "*",
+   "measured": {
+    "verdict": "MODEL_OK",
+    "reason": "router-sleeping",
+    "exit": 0
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-sleeping",
+    "exit": 0
+   },
+   "note": "wildcard: unloadable + sleeping -> sleeping wins"
+  },
+  {
+   "name": "p8-loaded-wins",
+   "expect": "x",
+   "measured": {
+    "verdict": "MODEL_OK",
+    "reason": "matched",
+    "exit": 0
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "matched",
+    "exit": 0
+   },
+   "note": "two same-id entries: loaded wins"
+  },
+  {
+   "name": "e1-eq-form-missing",
+   "expect": "absent",
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-missing",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "note": "--model=PATH form"
+  },
+  {
+   "name": "e3-draft-missing",
+   "expect": "absent",
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-missing",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "note": "valid main + missing draft"
+  },
+  {
+   "name": "e4-mmproj-eq-missing",
+   "expect": "absent",
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-missing",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "note": "--mmproj=PATH missing"
+  },
+  {
+   "name": "e5-mm-short-missing",
+   "expect": "absent",
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-missing",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "note": "-mm short form missing"
+  },
+  {
+   "name": "e6-relative-model",
+   "expect": "absent",
+   "measured": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "note": "relative --model -> no decision"
+  },
+  {
+   "name": "e7-all-valid",
+   "expect": "absent",
+   "measured": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "note": "all paths valid -> old verdict stays (MODEL_OK router-unloaded-autoload)"
+  },
+  {
+   "name": "nopy-no-python3",
+   "expect": "absent",
+   "measured": {
+    "verdict": "MODEL_OK",
+    "reason": "matched",
+    "exit": 0
+   },
+   "base": null,
+   "note": "PATH without python3; expect round-88 verdict kept"
+  }
+ ],
+ "fixtures": [
+  {
+   "file": "align0.gguf",
+   "size": 416,
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-invalid",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.015.974 E common_fit_params: encountered an error while trying to fit params to free device memory: failed to load model\n0.00.015.982 E gguf_init_from_reader: alignment 0 is not a power of 2\n0.00.015.986 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/align0.gguf\n0.00.015.986 E llama_model_load_from_file_impl: failed to load model\n0.00.015.989 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/align0.gguf'\n0.00.015.991 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/align0.gguf'\n0.00.015.992 I srv    operator(): operator(): cleaning up before exit...\n0.00.016.877 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "align3.gguf",
+   "size": 416,
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-invalid",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.007.843 E common_fit_params: encountered an error while trying to fit params to free device memory: failed to load model\n0.00.007.851 E gguf_init_from_reader: alignment 3 is not a power of 2\n0.00.007.855 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/align3.gguf\n0.00.007.856 E llama_model_load_from_file_impl: failed to load model\n0.00.007.858 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/align3.gguf'\n0.00.007.860 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/align3.gguf'\n0.00.007.861 I srv    operator(): operator(): cleaning up before exit...\n0.00.008.258 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "alignstr.gguf",
+   "size": 448,
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-invalid",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.009.124 E common_fit_params: encountered an error while trying to fit params to free device memory: failed to load model\n0.00.009.141 E gguf_init_from_reader: key 'general.alignment' must be of type u32 but is str\n0.00.009.146 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/alignstr.gguf\n0.00.009.146 E llama_model_load_from_file_impl: failed to load model\n0.00.009.149 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/alignstr.gguf'\n0.00.009.152 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/alignstr.gguf'\n0.00.009.153 I srv    operator(): operator(): cleaning up before exit...\n0.00.010.706 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "badmagic.gguf",
+   "size": 384,
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-invalid",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.014.996 E common_fit_params: encountered an error while trying to fit params to free device memory: failed to load model\n0.00.015.002 E gguf_init_from_reader: invalid magic characters: 'GGUX', expected 'GGUF'\n0.00.015.007 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/badmagic.gguf\n0.00.015.007 E llama_model_load_from_file_impl: failed to load model\n0.00.015.009 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/badmagic.gguf'\n0.00.015.011 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/badmagic.gguf'\n0.00.015.012 I srv    operator(): operator(): cleaning up before exit...\n0.00.017.730 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "cut6.gguf",
+   "size": 6,
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-invalid",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.008.619 E common_fit_params: encountered an error while trying to fit params to free device memory: failed to load model\n0.00.008.625 E gguf_init_from_reader: failed to read header\n0.00.008.630 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/cut6.gguf\n0.00.008.631 E llama_model_load_from_file_impl: failed to load model\n0.00.008.632 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/cut6.gguf'\n0.00.008.635 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/cut6.gguf'\n0.00.008.636 I srv    operator(): operator(): cleaning up before exit...\n0.00.009.212 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "dims5.gguf",
+   "size": 416,
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-invalid",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.014.601 E gguf_init_from_reader: tensor 'blk.0.weight' has invalid number of dimensions: 5 > 4\n0.00.014.601 E gguf_init_from_reader: failed to read tensor info\n0.00.014.606 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/dims5.gguf\n0.00.014.607 E llama_model_load_from_file_impl: failed to load model\n0.00.014.609 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/dims5.gguf'\n0.00.014.612 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/dims5.gguf'\n0.00.014.613 I srv    operator(): operator(): cleaning up before exit...\n0.00.015.189 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "dir-at-path",
+   "size": 6,
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-invalid",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.009.943 E common_fit_params: encountered an error while trying to fit params to free device memory: failed to load model\n0.00.009.950 E gguf_init_from_reader: failed to read magic\n0.00.009.954 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/dir-at-path\n0.00.009.954 E llama_model_load_from_file_impl: failed to load model\n0.00.009.956 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/dir-at-path'\n0.00.009.959 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/dir-at-path'\n0.00.009.960 I srv    operator(): operator(): cleaning up before exit...\n0.00.011.057 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "duptensor.gguf",
+   "size": 704,
+   "measured": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.008.574 E gguf_init_from_reader: duplicate tensor name 'blk.0.weight' for tensor 1\n0.00.008.574 E gguf_init_from_reader: failed to read tensor info\n0.00.008.579 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/duptensor.gguf\n0.00.008.579 E llama_model_load_from_file_impl: failed to load model\n0.00.008.581 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/duptensor.gguf'\n0.00.008.583 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/duptensor.gguf'\n0.00.008.584 I srv    operator(): operator(): cleaning up before exit...\n0.00.009.614 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "emptykey.gguf",
+   "size": 416,
+   "measured": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.015.661 E gguf_init_from_reader: key 1 is empty\n0.00.015.661 E gguf_init_from_reader: failed to read key-value pairs\n0.00.015.666 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/emptykey.gguf\n0.00.015.666 E llama_model_load_from_file_impl: failed to load model\n0.00.015.668 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/emptykey.gguf'\n0.00.015.671 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/emptykey.gguf'\n0.00.015.672 I srv    operator(): operator(): cleaning up before exit...\n0.00.016.302 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "gap.gguf",
+   "size": 448,
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-invalid",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.008.728 E gguf_init_from_reader: tensor 'blk.0.weight' has offset 64, expected 0\n0.00.008.728 E gguf_init_from_reader: failed to read tensor data\n0.00.008.733 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/gap.gguf\n0.00.008.733 E llama_model_load_from_file_impl: failed to load model\n0.00.008.736 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/gap.gguf'\n0.00.008.738 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/gap.gguf'\n0.00.008.748 I srv    operator(): operator(): cleaning up before exit...\n0.00.009.490 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "hugekv.gguf",
+   "size": 352,
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-invalid",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.018.585 E read: string length 2251799813685248 exceeds maximum 1073741824\n0.00.018.589 E gguf_init_from_reader: failed to read key-value pairs\n0.00.018.594 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/hugekv.gguf\n0.00.018.594 E llama_model_load_from_file_impl: failed to load model\n0.00.018.596 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/hugekv.gguf'\n0.00.018.599 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/hugekv.gguf'\n0.00.018.600 I srv    operator(): operator(): cleaning up before exit...\n0.00.020.938 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "longname.gguf",
+   "size": 448,
+   "measured": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.008.966 E gguf_init_from_reader: tensor name 0 is too long: 64 >= 64\n0.00.008.967 E gguf_init_from_reader: failed to read tensor info\n0.00.008.972 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/longname.gguf\n0.00.008.973 E llama_model_load_from_file_impl: failed to load model\n0.00.008.975 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/longname.gguf'\n0.00.008.978 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/longname.gguf'\n0.00.008.980 I srv    operator(): operator(): cleaning up before exit...\n0.00.009.713 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "ne0mod.gguf",
+   "size": 272,
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-invalid",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.019.735 E gguf_init_from_reader: tensor 'blk.0.weight' of type 2 (q4_0) has 33 elements per row, not a multiple of block size (32)\n0.00.019.743 E gguf_init_from_reader: failed to read tensor info\n0.00.019.754 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/ne0mod.gguf\n0.00.019.761 E llama_model_load_from_file_impl: failed to load model\n0.00.019.769 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/ne0mod.gguf'\n0.00.019.778 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/ne0mod.gguf'\n0.00.019.785 I srv    operator(): operator(): cleaning up before exit...\n0.00.021.950 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "nestedarr.gguf",
+   "size": 480,
+   "measured": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.010.004 E gguf_init_from_reader: key 'tester.test.nested' has invalid GGUF type 9\n0.00.010.005 E gguf_init_from_reader: failed to read key-value pairs\n0.00.010.010 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/nestedarr.gguf\n0.00.010.010 E llama_model_load_from_file_impl: failed to load model\n0.00.010.012 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/nestedarr.gguf'\n0.00.010.014 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/nestedarr.gguf'\n0.00.010.015 I srv    operator(): operator(): cleaning up before exit...\n0.00.011.743 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "notgguf.txt",
+   "size": 240,
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-invalid",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.015.449 E common_fit_params: encountered an error while trying to fit params to free device memory: failed to load model\n0.00.015.456 E gguf_init_from_reader: invalid magic characters: 'this', expected 'GGUF'\n0.00.015.460 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/notgguf.txt\n0.00.015.460 E llama_model_load_from_file_impl: failed to load model\n0.00.015.462 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/notgguf.txt'\n0.00.015.465 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/notgguf.txt'\n0.00.015.466 I srv    operator(): operator(): cleaning up before exit...\n0.00.016.271 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "pasteof.gguf",
+   "size": 384,
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-invalid",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.009.191 E llama_model_load_from_file_impl: failed to load model\n0.00.009.215 E common_fit_params: encountered an error while trying to fit params to free device memory: failed to load model\n0.00.009.236 E llama_model_load: error loading model: tensor 'blk.0.weight' data is not within the file bounds, model is corrupted or incomplete\n0.00.009.238 E llama_model_load_from_file_impl: failed to load model\n0.00.009.240 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/pasteof.gguf'\n0.00.009.242 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/pasteof.gguf'\n0.00.009.243 I srv    operator(): operator(): cleaning up before exit...\n0.00.010.151 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "stories260K-real.gguf",
+   "size": 1185376,
+   "measured": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOADED",
+   "loader_exit": -9,
+   "loader_tail": "0.00.012.482 W srv  server_setup: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)\n0.00.014.221 I srv    load_model: loading model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/stories260K-real.gguf'\n0.00.018.006 W load: bad special token: 'tokenizer.ggml.seperator_token_id' = 4294967295, using default id -1\n0.00.018.021 W load: bad special token: 'tokenizer.ggml.padding_token_id' = 4294967295, using default id -1\n0.00.023.341 I cmn          init: llama threadpool init, n_threads = 16\n0.00.049.777 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 256, kv_unified = 'true'\n0.00.051.475 I srv  server_run_i: model loaded\n0.00.051.480 I srv  server_on_li: listening on http://127.0.0.1:51367\n"
+  },
+  {
+   "file": "truncnear.gguf",
+   "size": 376,
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-invalid",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.007.932 E llama_model_load_from_file_impl: failed to load model\n0.00.007.951 E common_fit_params: encountered an error while trying to fit params to free device memory: failed to load model\n0.00.007.966 E llama_model_load: error loading model: tensor 'blk.0.weight' data is not within the file bounds, model is corrupted or incomplete\n0.00.007.966 E llama_model_load_from_file_impl: failed to load model\n0.00.007.968 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/truncnear.gguf'\n0.00.007.970 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/truncnear.gguf'\n0.00.007.971 I srv    operator(): operator(): cleaning up before exit...\n0.00.008.659 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "type4.gguf",
+   "size": 272,
+   "measured": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.016.751 E gguf_init_from_reader: tensor 'blk.0.weight' of type 4 (DEPRECATED) has 32 elements per row, not a multiple of block size (0)\n0.00.016.751 E gguf_init_from_reader: failed to read tensor info\n0.00.016.756 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/type4.gguf\n0.00.016.756 E llama_model_load_from_file_impl: failed to load model\n0.00.016.758 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/type4.gguf'\n0.00.016.761 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/type4.gguf'\n0.00.016.762 I srv    operator(): operator(): cleaning up before exit...\n0.00.017.995 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "type44.gguf",
+   "size": 384,
+   "measured": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.010.659 E gguf_init_from_reader: tensor 'blk.0.weight' has invalid ggml type 44. should be in [0, 44)\n0.00.010.660 E gguf_init_from_reader: failed to read tensor info\n0.00.010.665 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/type44.gguf\n0.00.010.665 E llama_model_load_from_file_impl: failed to load model\n0.00.010.667 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/type44.gguf'\n0.00.010.671 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/type44.gguf'\n0.00.010.672 I srv    operator(): operator(): cleaning up before exit...\n0.00.011.515 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "v0.gguf",
+   "size": 384,
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-invalid",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.014.739 E gguf_init_from_reader: bad GGUF version: 0\n0.00.014.739 E gguf_init_from_reader: failed to read header\n0.00.014.743 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/v0.gguf\n0.00.014.744 E llama_model_load_from_file_impl: failed to load model\n0.00.014.745 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/v0.gguf'\n0.00.014.748 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/v0.gguf'\n0.00.014.749 I srv    operator(): operator(): cleaning up before exit...\n0.00.015.491 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "v1.gguf",
+   "size": 384,
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-invalid",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.009.729 E gguf_init_from_reader: GGUFv1 is no longer supported, please use a more up-to-date version\n0.00.009.729 E gguf_init_from_reader: failed to read header\n0.00.009.734 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/v1.gguf\n0.00.009.734 E llama_model_load_from_file_impl: failed to load model\n0.00.009.736 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/v1.gguf'\n0.00.009.739 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/v1.gguf'\n0.00.009.740 I srv    operator(): operator(): cleaning up before exit...\n0.00.012.248 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "v4.gguf",
+   "size": 384,
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-invalid",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.014.383 E gguf_init_from_reader: this GGUF file is version 4 but this software only supports up to version 3\n0.00.014.384 E gguf_init_from_reader: failed to read header\n0.00.014.387 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/v4.gguf\n0.00.014.387 E llama_model_load_from_file_impl: failed to load model\n0.00.014.389 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/v4.gguf'\n0.00.014.391 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/v4.gguf'\n0.00.014.392 I srv    operator(): operator(): cleaning up before exit...\n0.00.015.210 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "valid.gguf",
+   "size": 384,
+   "measured": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.011.687 E llama_model_load_from_file_impl: failed to load model\n0.00.011.714 E common_fit_params: encountered an error while trying to fit params to free device memory: failed to load model\n0.00.011.746 E llama_model_load: error loading model: unknown model architecture: 'stories'\n0.00.011.748 E llama_model_load_from_file_impl: failed to load model\n0.00.011.750 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/valid.gguf'\n0.00.011.754 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/valid.gguf'\n0.00.011.755 I srv    operator(): operator(): cleaning up before exit...\n0.00.012.253 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "valid2.gguf",
+   "size": 384,
+   "measured": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.015.610 E llama_model_load_from_file_impl: failed to load model\n0.00.015.635 E common_fit_params: encountered an error while trying to fit params to free device memory: failed to load model\n0.00.015.657 E llama_model_load: error loading model: unknown model architecture: 'stories'\n0.00.015.657 E llama_model_load_from_file_impl: failed to load model\n0.00.015.660 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/valid2.gguf'\n0.00.015.662 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/valid2.gguf'\n0.00.015.663 I srv    operator(): operator(): cleaning up before exit...\n0.00.016.439 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "vend.gguf",
+   "size": 384,
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-invalid",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.012.485 E gguf_init_from_reader: failed to load model: this GGUF file version 196608 is extremely large, is there a mismatch between the host and model endianness?\n0.00.012.485 E gguf_init_from_reader: failed to read header\n0.00.012.489 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/vend.gguf\n0.00.012.490 E llama_model_load_from_file_impl: failed to load model\n0.00.012.492 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/vend.gguf'\n0.00.012.494 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/vend.gguf'\n0.00.012.495 I srv    operator(): operator(): cleaning up before exit...\n0.00.012.963 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "zerodim.gguf",
+   "size": 146,
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-invalid",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.014.040 E gguf_init_from_reader: tensor 'blk.0.weight' of type 2 (q4_0) has 1 elements per row, not a multiple of block size (32)\n0.00.014.040 E gguf_init_from_reader: failed to read tensor info\n0.00.014.049 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/zerodim.gguf\n0.00.014.049 E llama_model_load_from_file_impl: failed to load model\n0.00.014.051 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/zerodim.gguf'\n0.00.014.054 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/zerodim.gguf'\n0.00.014.055 I srv    operator(): operator(): cleaning up before exit...\n0.00.015.931 E srv  server_run_i: exiting due to model loading error\n"
+  },
+  {
+   "file": "dir-at-path",
+   "size": -1,
+   "measured": {
+    "verdict": "MODEL_UNLOADED",
+    "reason": "router-model-invalid",
+    "exit": 2
+   },
+   "base": {
+    "verdict": "MODEL_OK",
+    "reason": "router-unloaded-autoload",
+    "exit": 0
+   },
+   "loader": "LOAD_FAIL",
+   "loader_exit": 1,
+   "loader_tail": "0.00.010.553 E common_fit_params: encountered an error while trying to fit params to free device memory: failed to load model\n0.00.010.564 E gguf_init_from_reader: failed to read magic\n0.00.010.570 E llama_model_load: error loading model: llama_model_loader: failed to load model from /fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/dir-at-path\n0.00.010.570 E llama_model_load_from_file_impl: failed to load model\n0.00.010.573 E cmn  common_init_: failed to load model '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/dir-at-path'\n0.00.010.576 E srv    load_model: failed to load model, '/fast/scratch/hyaku/kama-r89/RV01ProbeDiff/files/dir-at-path'\n0.00.010.577 I srv    operator(): operator(): cleaning up before exit...\n0.00.011.643 E srv  server_run_i: exiting due to model loading error\n"
+  }
+ ],
+ "qsizes": {
+  "probe": {
+   "0": [
+    1,
+    4
+   ],
+   "1": [
+    1,
+    2
+   ],
+   "2": [
+    32,
+    18
+   ],
+   "3": [
+    32,
+    20
+   ],
+   "6": [
+    32,
+    22
+   ],
+   "7": [
+    32,
+    24
+   ],
+   "8": [
+    32,
+    34
+   ],
+   "9": [
+    32,
+    36
+   ],
+   "10": [
+    256,
+    84
+   ],
+   "11": [
+    256,
+    110
+   ],
+   "12": [
+    256,
+    144
+   ],
+   "13": [
+    256,
+    176
+   ],
+   "14": [
+    256,
+    210
+   ],
+   "15": [
+    256,
+    292
+   ],
+   "16": [
+    256,
+    66
+   ],
+   "17": [
+    256,
+    74
+   ],
+   "18": [
+    256,
+    98
+   ],
+   "19": [
+    256,
+    50
+   ],
+   "20": [
+    32,
+    18
+   ],
+   "21": [
+    256,
+    110
+   ],
+   "22": [
+    256,
+    82
+   ],
+   "23": [
+    256,
+    136
+   ],
+   "24": [
+    1,
+    1
+   ],
+   "25": [
+    1,
+    2
+   ],
+   "26": [
+    1,
+    4
+   ],
+   "27": [
+    1,
+    8
+   ],
+   "28": [
+    1,
+    8
+   ],
+   "29": [
+    256,
+    56
+   ],
+   "30": [
+    1,
+    2
+   ],
+   "34": [
+    256,
+    54
+   ],
+   "35": [
+    256,
+    66
+   ],
+   "39": [
+    32,
+    17
+   ],
+   "40": [
+    64,
+    36
+   ],
+   "41": [
+    128,
+    18
+   ],
+   "42": [
+    64,
+    18
+   ],
+   "43": [
+    1,
+    1
+   ]
+  },
+  "s585": {
+   "0": [
+    1,
+    4
+   ],
+   "1": [
+    1,
+    2
+   ],
+   "2": [
+    32,
+    18
+   ],
+   "3": [
+    32,
+    20
+   ],
+   "6": [
+    32,
+    22
+   ],
+   "7": [
+    32,
+    24
+   ],
+   "8": [
+    32,
+    34
+   ],
+   "9": [
+    32,
+    36
+   ],
+   "10": [
+    256,
+    84
+   ],
+   "11": [
+    256,
+    110
+   ],
+   "12": [
+    256,
+    144
+   ],
+   "13": [
+    256,
+    176
+   ],
+   "14": [
+    256,
+    210
+   ],
+   "15": [
+    256,
+    292
+   ],
+   "16": [
+    256,
+    66
+   ],
+   "17": [
+    256,
+    74
+   ],
+   "18": [
+    256,
+    98
+   ],
+   "19": [
+    256,
+    50
+   ],
+   "20": [
+    32,
+    18
+   ],
+   "21": [
+    256,
+    110
+   ],
+   "22": [
+    256,
+    82
+   ],
+   "23": [
+    256,
+    136
+   ],
+   "24": [
+    1,
+    1
+   ],
+   "25": [
+    1,
+    2
+   ],
+   "26": [
+    1,
+    4
+   ],
+   "27": [
+    1,
+    8
+   ],
+   "28": [
+    1,
+    8
+   ],
+   "29": [
+    256,
+    56
+   ],
+   "30": [
+    1,
+    2
+   ],
+   "34": [
+    256,
+    54
+   ],
+   "35": [
+    256,
+    66
+   ],
+   "39": [
+    32,
+    17
+   ],
+   "40": [
+    64,
+    36
+   ],
+   "41": [
+    128,
+    18
+   ],
+   "42": [
+    64,
+    18
+   ],
+   "43": [
+    1,
+    1
+   ]
+  },
+  "identical": true,
+  "diffs": [],
+  "ggml_type_count": 44
+ }
+}

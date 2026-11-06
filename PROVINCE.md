@@ -424,3 +424,12 @@ matching `/v1/models` entry's `status` object (`MODEL_UNLOADED` / `MODEL_LOADING
 fixture model is restored by `tools/fetch-pinned-model.py`. Round 87's arm-14 fault harness is
 `tools/round87-gate-arm-faults.py`. The operator's own router (127.0.0.1:1234) is observed read-only and
 never loaded or registered by the lane.
+
+Round 89: the **model files a router lists** are part of the readiness surface. For a matching autoload
+`unloaded` entry, `tools/kama-probe.sh` checks the absolute model/mmproj/draft paths in `status.args` (only
+when `status.args[0]` is a local file) against the llama.cpp b12177 loader's GGUF header checks, reading
+headers only and never a non-regular file; graded by `tools/round89-unloadable-cells.py` on lane-owned b12177
+children. The current llama.cpp release (b12177) runs beside the pinned b11755 under `~/.local/opt/`. Router
+load/unload/completion error answers are captured on lane-owned children only
+(`tools/round89-router-signatures.py`) and bound to the SKILL error table by `tools/round89-signature-rows.py`. Model files, presets and the operator's router stay operator-owned:
+the lane reads them, never repairs, moves or loads them.

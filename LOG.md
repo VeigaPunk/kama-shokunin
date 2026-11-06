@@ -3705,3 +3705,12 @@ to load` (`.ufo/waves/round-89/controls/c1-base.out`, `mismatches=5`).
   `tools/round89-signature-rows.py`.
 - Knowledge `corpus/knowledge/router-unloadable-model.md`; SOURCES S583–S585 (admit), S586 (reject); QUALITY
   KQ144; README round-89 coverage/frontier; lesson `corpus/lessons/round-89.md` (M1, M2).
+- Wave 1 (13 seats, `.ufo/waves/round-89/w1/`; answering models `w1-seat-models.txt`): EX02 measured +1.3–1.4 s
+  per live check and SN01 a 41 s stall, `/proc` opens and a stat/open race at `4f9eacf7`; repaired at `5b1e0fb3`
+  (matching autoload candidates only, deadline/read budget, `O_NONBLOCK`+`fstat`, no `/proc` `/sys` `/dev`,
+  chunked vocab skip). C1 re-measured green at `5b1e0fb3` (`measured/c1-final.out`), harm unchanged
+  (`measured/harm-final.out`), held-out cells unchanged (`measured/heldout-Mprime.out`), bombs bounded
+  (`measured/sn01-bombs-Mprime.out`). CR02: SKILL row 2 action corrected (`router-unloaded-failed`). R5 integrated:
+  `tests/probe-verdicts/RouterUnloaded.json` + harness `files` support, 77/77, new rows fail on base
+  (`measured/harness-r5.out`; fault-control pins updated). R4 cause recorded (EX04); fix not applied, L0 question.
+  Frontier: router aliases (SC01). Lesson M3, M4.

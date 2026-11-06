@@ -1,0 +1,32 @@
+# Contested scope — round-89 kama surfaces vs sibling lanes
+
+Read-only sweep, 19 lanes, kama excluded. Artifact for L1 integration; the full report is
+`.ufo/waves/round-89/w1/CN01SiblingOverlap.md`. No lane file edited; no endpoint contacted.
+
+### Contested-scope table
+
+| # | Lane | Evidence | What it owns | vs round-89 kama entries | One-line recommendation |
+|---|---|---|---|---|---|
+| 1 | kengaku | `PROVINCE.md:26-27` — "**Not owned:** the model-serving plane (llama-server flags, slot/batch config) — no lane owns it; escalate to the integrator" | round-9 refusal block | **CONTEST — stale.** Contradicts its own `PROVINCE.md:15` ("flag authority is kama's (serving plane)") and kama `PROVINCE.md:6-19`. r89 makes router argv (`status.args`) a graded evidence source (`SKILL.md:1795-1801`), i.e. exactly the "serving plane" this block calls unowned | Report to kengaku: re-point its own refusal block at kama; no kama edit |
+| 2 | kengaku | `corpus/knowledge/served-endpoint-identity-pin.md:56-57` — "the router's list is a catalogue, not a statement about what is loaded" (2026-10-28) | served-endpoint identity pin (eval-side) | **DUPLICATES the inventory half** kama already held (r88 `SKILL.md:1763-1766`, S553/S581). Does **not** cover r89's half ("cannot load" before any request) | kama r89 adds one clause citing kengaku S178:57 as the adjacent prior statement; novelty stays the loader-rejection half |
+| 3 | kengaku | `served-endpoint-identity-pin.md:35` — `--models-dir /home/vgpnk/models/lfm3 --models-max 2`, "lists 5 model ids" | operator router :1234 pin (capture-time) | **COMPLEMENTS, count stale.** max 2 with 5 ids ⇒ ≥3 entries unloaded at any instant — precisely kama's false-red population. kama's own GET at 2026-11-06 lists **4** ids (`harm-base-operator-1234.out:…served_model`; `harm-M.out:18-21`), verdict unchanged | Report: kengaku re-takes under its own rule 2 ("re-take it, do not extend it"); kama keeps its 4-id receipt |
+| 4 | kengaku | `served-endpoint-identity-pin.md:19` — argv `--alias`,`--model` / `/props.model_path` | identity pin fields | **COMPLEMENTS, different reach.** kengaku's argv read needs a *running* instance; r89 reads per-entry `status.args` for entries that **never ran** (`router-unloadable-model.md` §3) | One clause in the r89 entry so the fleet does not read the two argv reads as one technique |
+| 5 | kengaku | `.ufo/waves/round-51/w1/SrcLlamaServer.md:157` — dropped "the doc's model-catalog/router material (`/models`, `/models/load`, L2197+) because the lane's surface is a single served endpoint" | eval surface scope | **COMPLEMENTS.** The router-API ground r89 C2 now holds (`SKILL.md:1809-1828`) was read and deliberately refused by kengaku; no competing row exists | No action; cite as the boundary that left this ground to kama |
+| 6 | kengaku | `corpus/evidence/round12-fleet/r12-endpoint-freshness.md:350-…` — stdlib GGUF header walk, "never reads a payload byte" | header-parse technique (for a `meta.size` delta) | **DUPLICATES technique only**; kama `PROVINCE.md:100-102` (round-20) already says the overlap is acknowledged, not absorbed. r89's new material is the *loader check set* (S584/S585), not header reading | No action |
+| 7 | kagi | `SKILL.md:43` — "Verify model endpoint is real \| `curl -fsS <endpoint>/health` → `{"status":"ok"}`" | credential/auth lane, but the row is endpoint identity | **CONTESTED PURPOSE.** A router answers `/health` 200 while listed entries cannot load (r89 C1; `harm-base-operator-1234.out` shows `GET /health -> 200` beside `router-unloaded-autoload`). `/health` proves a listener, not a loadable model | Report: kagi's row states "listener identity only" and cites r89 for the per-model layer; kama does not absorb the recipe |
+| 8 | kagi | `PROVINCE.md:63` — "configured model endpoint `127.0.0.1:8080` (dead: Jitsi) vs live llama-server on `34113`" | historical endpoint drift | **COMPLEMENTS, premise stale**: kama's last recorded listener census (round 65, `PROVINCE.md:250-258`) found no listener on 8080/34113 and the unit is absent; r89 sampled neither port | Report only (kagi's file) |
+| 9 | tameshi | `corpus/knowledge/fleet-kill-rate-ledger.md:125-127`, `fleet-suite-census.md:623-625` — kama `tools/{kama-probe,test-snapshot}.sh` are "sightings … file existence is O; gate-ness U" | fleet suite census / kill-rate | **NO CONTEST; census gap.** r89 adds `tools/round89-unloadable-cells.py`, `tools/round89-signature-rows.py` and a probe decision rule, none surveyed or queued | Report the two counter paths to tameshi; kama claims no fleet gate-ness |
+| 10 | revenger | `.ufo/waves/round-89/w1/ConnectorR89.md:36` — kama "not contested" (cites kama `PROVINCE.md:10-13`, `round79-unregistered-census.py`) | this round's own sibling scan | **CORROBORATES** | No action |
+| 11 | kotoba | `SKILL.md:151` "## Router model — which harness, which gate"; `corpus/knowledge/harness-router-models-round9.md`; `sibling-overlap-census-round49.md:76` (kama "adjacent") | harness/skill routing; description-level overlap census | **HOMONYM only** — no serving surface | No action |
+| 12 | kumitate | `corpus/knowledge/seat-route-from-session-transcripts.md:79` ("reported by a router") | dispatch/route mechanism | **HOMONYM.** `POST /models/load` is server state, not route selection; kama `SKILL.md:1828` already forbids it against an operator router | No action |
+| 13 | chousa | `.ufo/waves/round-40/w1/ConnectorSiblingScan.md`, `round-73/80/82` wave dirs | research lane; holds *copies* of kama's `kama-probe.sh`/counters as blobs | **NO CLAIM** — copies for source-curation scans | No action |
+| 14 | mado, kaidoku, kake, kasegi | `walker-route-r18.md`, `2026-10-13-r4-06`, `SKILL.md:755` (`react-router`), `SKILL.md:1021` | — | **HOMONYMS** | No action |
+
+
+## Recommendation summary
+
+- kengaku `PROVINCE.md:26-27`: report — kengaku re-points its own stale refusal at kama (DEFECT).
+- kengaku `served-endpoint-identity-pin.md:19,35,57`: report — three one-clause placements for the r89 entry; do not absorb.
+- kagi `SKILL.md:43`, `PROVINCE.md:63`: report — `/health` recipe is listener identity only (DEFECT-adjacent purpose contest).
+- tameshi `fleet-kill-rate-ledger.md:125-127`, `fleet-suite-census.md:623-625`: report the two r89 counters; no gate-ness claim.
+- kumitate/kotoba/mado/kaidoku/kake/kasegi: homonyms, no action. revenger/chousa: corroboration/copies, no action.

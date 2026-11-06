@@ -1,0 +1,32 @@
+# SC01RouterFrontier — live evidence (label -> result). "exit 2" = probe drift exit.
+# All rows are lane-owned b12177 children on free loopback ports, killed by process group.
+# Machine-readable twin: frontier-evidence.jsonl (61 records).
+
+aliases:  A-models-list id=kama-alias-model aliases=["kama-alias-x"] source=preset status=unloaded
+  A-completion-kama-alias-x -> HTTP 200 "model":"kama-alias-model"   (the alias resolves and is served)
+  A-probe-expect-kama-alias-x -> exit 2 MODEL_MISMATCH reason=served-id-mismatch
+  A-probe-expect-kama-alias-model -> exit 0 MODEL_OK reason=matched
+  N-models-list (models-dir m1 + preset [m1] alias=kama-alias-y) aliases=["kama-alias-y"]; N-completion-alias ->
+    HTTP 200 "model":"m1" ; N-probe-expect-alias -> exit 2 MODEL_MISMATCH
+  B-models-list (router-level --alias) aliases=[] ; B-completion-kama-alias-cli -> HTTP 400 not found
+  E-probe-expect-kama-alias-model -> exit 2 MODEL_UNLOADED router-model-missing ; E-completion-alias-deleted-file
+    -> HTTP 500 "model name=kama-alias-model failed to load"
+  J-completion-alias-unloadable -> HTTP 500 "model name=canon-bad failed to load" (CANONICAL id)
+  J-probe-expect-alias -> exit 2 MODEL_MISMATCH
+  I-unload-alias-not-running -> HTTP 400 "model is not running" ; I-unload-unknown-alias -> HTTP 400 "model is
+    not found" ; I-load-unknown-alias -> HTTP 404 "File Not Found" ; I-load-by-alias -> HTTP 200 {"success":true}
+margin: D-models-list-margin (512, startup 0.25 s) m1 memory={"status":"measured","min":{"n_ctx":2048,
+    "devices":[{"kind":"host","name":"Host",...}]},"max":{...same...},"effective":null} ; badhdr
+    memory={"status":"failed","min":null,...} ; D-completion-margin -> HTTP 200
+  G-router-log "memory measured for model name=.../m1.gguf at n_ctx=2048 (min) and n_ctx=2048 (max)" ;
+    "failed to measure memory for model name=.../badhdr.gguf: failed to load model"
+  H-models-list badhdr/gone value=unloaded failed=None exit_code=None memory=failed (a measurement failure is
+    NOT status.failed) ; H-probe-expect-gone -> exit 2 router-model-missing ; H-probe-expect-badhdr -> exit 2
+    router-model-invalid ; H-probe-expect-m1 -> exit 0 router-unloaded-autoload -> the margin does NOT mask C1
+autoload: C-completion-badhdr-default -> HTTP 500 "model name=badhdr failed to load" ;
+  C-completion-badhdr-autoload-false -> HTTP 400 "model is not loaded" ; C-completion-m1-autoload-false ->
+    HTTP 400 "model is not loaded" ; C-completion-m1-default -> HTTP 200 ; C-completion-m1-loaded-autoload-false
+    -> HTTP 200 (a loaded model ignores it) ; C-completion-unknown-autoload-false -> HTTP 400 not found
+  F-m1-autoload-true (--no-models-autoload router) -> HTTP 200 (per-request autoload=true beats the server flag)
+  K-probe-noautoload-valid -> exit 2 MODEL_UNLOADED router-unloaded ; L-probe-autoload-valid -> exit 0 MODEL_OK
+    router-unloaded-autoload ; L-wire-autoload-false-valid -> HTTP 400 "model is not loaded"

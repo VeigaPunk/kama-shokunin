@@ -1,0 +1,197 @@
+{
+  "schema": "kama-probe-verdicts/v1",
+  "probe": "/fast/scratch/hyaku/kama-r89/EX03CheckPyUnloaded/probe-F2.sh",
+  "probe_sha256": "0943fb461d0226e29d1b8a3b6af67740d4fe6863505ee6ed771719a30fdc3d19",
+  "matrix_sources": [
+    "AuthAndDead.json",
+    "EnvelopeShapes.json",
+    "ForeignControls.json",
+    "LoadingEnvelope.json",
+    "LoadingRace.json",
+    "NearMissTriple.json",
+    "NonLoadingStatuses.json",
+    "Overbroad503.json",
+    "ReadyControls.json",
+    "RouterUnloaded.json"
+  ],
+  "tests": 5,
+  "passes": 0,
+  "failures": 5,
+  "records": [
+    {
+      "name": "RouterUnloaded.router-unloaded-no-autoload",
+      "family": "RouterUnloaded",
+      "source": "RouterUnloaded.json",
+      "why": "A matching entry is listed unloaded without a failed flag and the router's bare /props does not assert models_autoload, so a request answers 400 'model is not loaded': MODEL_UNLOADED router-unloaded with the listed id still as served_model (classify() sets C_SERVED before router_refine rewrites the verdict).",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_UNLOADED",
+        "reason": "router-unloaded",
+        "exit": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 0,
+      "verdict": "MODEL_OK",
+      "reason": "matched",
+      "drift": false,
+      "served_model": "stories260K",
+      "served_model_expected": "stories260K",
+      "served_model_ok": true,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=matched)",
+      "error": null,
+      "passed": false,
+      "port": 38093
+    },
+    {
+      "name": "RouterUnloaded.router-unloaded-failed",
+      "family": "RouterUnloaded",
+      "source": "RouterUnloaded.json",
+      "why": "status.failed=true marks a load that already failed: the reason carries the -failed suffix. The rule reads bare /props only for a NON-failed unloaded entry, so this row never consults it (the autoload route is deliberately present and inert), and a real request answers 500 'failed to load'.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_UNLOADED",
+        "reason": "router-unloaded-failed",
+        "exit": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 0,
+      "verdict": "MODEL_OK",
+      "reason": "matched",
+      "drift": false,
+      "served_model": "stories260K",
+      "served_model_expected": "stories260K",
+      "served_model_ok": true,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=matched)",
+      "error": null,
+      "passed": false,
+      "port": 43015
+    },
+    {
+      "name": "RouterUnloaded.router-model-missing-autoload",
+      "family": "RouterUnloaded",
+      "source": "RouterUnloaded.json",
+      "why": "Autoload router, unloaded not-failed entry whose absolute -m path does not exist: a real request answers 500 'failed to load', so the round-89 rule grades router-model-missing instead of MODEL_OK router-unloaded-autoload.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_UNLOADED",
+        "reason": "router-model-missing",
+        "exit": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 0,
+      "verdict": "MODEL_OK",
+      "reason": "matched",
+      "drift": false,
+      "served_model": "stories260K",
+      "served_model_expected": "stories260K",
+      "served_model_ok": true,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=matched)",
+      "error": null,
+      "passed": false,
+      "port": 40511
+    },
+    {
+      "name": "RouterUnloaded.router-model-invalid-non-gguf",
+      "family": "RouterUnloaded",
+      "source": "RouterUnloaded.json",
+      "why": "Autoload router, unloaded not-failed entry whose -m path is a real file the harness creates without GGUF magic: the loader rejects it, so the round-89 rule grades router-model-invalid.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_UNLOADED",
+        "reason": "router-model-invalid",
+        "exit": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 0,
+      "verdict": "MODEL_OK",
+      "reason": "matched",
+      "drift": false,
+      "served_model": "stories260K",
+      "served_model_expected": "stories260K",
+      "served_model_ok": true,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=matched)",
+      "error": null,
+      "passed": false,
+      "port": 43543
+    },
+    {
+      "name": "RouterUnloaded.router-model-invalid-gguf-v1",
+      "family": "RouterUnloaded",
+      "source": "RouterUnloaded.json",
+      "why": "Same autoload router but the crafted file carries GGUF magic with version 1, which ggml's loader rejects (gguf.cpp checks version 1 and >3): proves the header check, not just a magic sniff, reaches router-model-invalid.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_UNLOADED",
+        "reason": "router-model-invalid",
+        "exit": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 0,
+      "verdict": "MODEL_OK",
+      "reason": "matched",
+      "drift": false,
+      "served_model": "stories260K",
+      "served_model_expected": "stories260K",
+      "served_model_ok": true,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=matched)",
+      "error": null,
+      "passed": false,
+      "port": 46477
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+1641:                        throw std::runtime_error("model name=" + name + " failed to load");
+1951:        res_err(res, format_error_response("model name is missing from the request", ERROR_TYPE_INVALID_REQUEST));
+1962:        res_err(res, format_error_response("model is not loaded", ERROR_TYPE_INVALID_REQUEST));
+2121:            res_err(res, format_error_response("model is not found", ERROR_TYPE_NOT_FOUND));
+2125:            res_err(res, format_error_response("model is already running", ERROR_TYPE_INVALID_REQUEST));
+2269:            res_err(res, format_error_response("model is not found", ERROR_TYPE_INVALID_REQUEST));
+2273:            res_err(res, format_error_response("model is not running", ERROR_TYPE_INVALID_REQUEST));
+--- server-http.cpp 200-213 ---
+    srv->set_error_handler([](const httplib::Request &, httplib::Response & res) {
+        if (res.status == 404) {
+            res.set_content(
+                safe_json_to_str(json {
+                    {"error", {
+                        {"message", "File Not Found"},
+                        {"type", "not_found_error"},
+                        {"code", 404}
+                    }}
+                }),
+                "application/json; charset=utf-8"
+            );
+        }
+        // for other error codes, we skip processing here because it's already done by res->error()

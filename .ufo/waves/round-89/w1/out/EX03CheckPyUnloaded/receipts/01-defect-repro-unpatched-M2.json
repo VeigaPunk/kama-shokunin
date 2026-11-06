@@ -1,0 +1,61 @@
+{
+  "schema": "kama-probe-verdicts/v1",
+  "probe": "/fast/scratch/hyaku/kama-r89/EX03CheckPyUnloaded/defect/tools/kama-probe.sh",
+  "probe_sha256": "a4f496bb0ed931792641171a1269a91a8307dce5d534d5f4ee03daba01a7ddaf",
+  "matrix_sources": [
+    "AuthAndDead.json",
+    "EnvelopeShapes.json",
+    "ForeignControls.json",
+    "LoadingEnvelope.json",
+    "LoadingRace.json",
+    "NearMissTriple.json",
+    "NonLoadingStatuses.json",
+    "Overbroad503.json",
+    "ReadyControls.json",
+    "ZZRepro.json"
+  ],
+  "tests": 1,
+  "passes": 0,
+  "failures": 1,
+  "records": [
+    {
+      "name": "ZZRepro.router-unloaded-no-autoload",
+      "family": "ZZRepro",
+      "source": "ZZRepro.json",
+      "why": "Minimal MODEL_UNLOADED row: a matching entry is listed unloaded and the router's bare /props does not assert models_autoload, so a real request would answer 400 'model is not loaded'.",
+      "port_mode": "stub",
+      "expect": "stories260K",
+      "expected": {
+        "verdict": "MODEL_UNLOADED",
+        "reason": "router-unloaded",
+        "exit": 2
+      },
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/v1/models"
+        },
+        {
+          "method": "GET",
+          "path": "/props"
+        },
+        {
+          "method": "GET",
+          "path": "/health"
+        }
+      ],
+      "route_ok": true,
+      "probe_exit": 2,
+      "verdict": "MODEL_UNLOADED",
+      "reason": "router-unloaded",
+      "drift": true,
+      "served_model": "stories260K",
+      "served_model_expected": "-",
+      "served_model_ok": false,
+      "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (runtime=other; expected=stories260K; reason=router-unloaded)",
+      "error": null,
+      "passed": false,
+      "port": 33729
+    }
+  ]
+}

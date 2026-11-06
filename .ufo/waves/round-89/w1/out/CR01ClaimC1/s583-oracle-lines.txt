@@ -1,0 +1,15 @@
+     1	                    // a spawn happened and the instance came back down
+     2	                    if (it->second.meta.is_failed()) {
+     3	                        throw std::runtime_error("model name=" + name + " failed to load");
+     4	                    }
+     5	                    break; // unloaded by another code path, caller reports "not running"
+     6	    auto meta = models.get_meta(name);
+     7	    if (!meta.has_value()) {
+     8	        res_err(res, format_error_response(string_format("model '%s' not found", name.c_str()), ERROR_TYPE_INVALID_REQUEST));
+     9	        return false;
+    10	    }
+    11	    // resolve alias to canonical model name
+    12	    name = meta->name;
+    13	    if (!models_autoload && !meta->is_running()) {
+    14	        res_err(res, format_error_response("model is not loaded", ERROR_TYPE_INVALID_REQUEST));
+    15	        return false;

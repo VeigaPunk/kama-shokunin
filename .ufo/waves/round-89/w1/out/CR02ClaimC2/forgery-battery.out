@@ -1,0 +1,91 @@
+PIN ba272ee3446d receipt 9 lines
+
+### T1-true-control  EXIT=0
+    SIGNATURE_ROWS rows=8 bound=8 unbound=0 duplicates=0 rev=fb9897e641544180d099d25677999cde72c266d4
+    SIGNATURE_ROW bound POST /v1/chat/completions 400 'model is not loaded' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /v1/chat/completions 500 'model name=<id> failed to load' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /v1/chat/completions 400 "model '<id>' not found" receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /v1/chat/completions 400 'model name is missing from the request' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/unload 400 'model is not running' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/unload 400 'model is not found' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/load 404 'File Not Found' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/load 400 'model is already running' receipt=receipt.jsonl
+
+### T2-duplicate  EXIT=1
+    SIGNATURE_ROWS rows=9 bound=8 unbound=0 duplicates=1 rev=8562d0b1284bf568aefbefaec0da6e2ee2f3ed8d
+    SIGNATURE_ROW bound POST /v1/chat/completions 400 'model is not loaded' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /v1/chat/completions 500 'model name=<id> failed to load' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /v1/chat/completions 400 "model '<id>' not found" receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /v1/chat/completions 400 'model name is missing from the request' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/unload 400 'model is not running' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/unload 400 'model is not found' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/load 404 'File Not Found' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/load 400 'model is already running' receipt=receipt.jsonl
+    SIGNATURE_ROW duplicate POST /v1/chat/completions 400 'model is not loaded'
+
+### T3-fabricated-msg  EXIT=1
+    SIGNATURE_ROWS rows=9 bound=8 unbound=1 duplicates=0 rev=b5bceceb55175084feb7e6062a8d054bd8191302
+    SIGNATURE_ROW bound POST /v1/chat/completions 400 'model is not loaded' receipt=receipt.jsonl
+    SIGNATURE_ROW unbound POST /v1/chat/completions 400 'model is not loaded anywhere' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /v1/chat/completions 500 'model name=<id> failed to load' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /v1/chat/completions 400 "model '<id>' not found" receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /v1/chat/completions 400 'model name is missing from the request' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/unload 400 'model is not running' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/unload 400 'model is not found' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/load 404 'File Not Found' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/load 400 'model is already running' receipt=receipt.jsonl
+
+### T4-wrong-code  EXIT=1
+    SIGNATURE_ROWS rows=8 bound=7 unbound=1 duplicates=0 rev=fda627951371efffbe74e8f1bc91cd9a7748081a
+    SIGNATURE_ROW unbound POST /v1/chat/completions 422 'model is not loaded' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /v1/chat/completions 500 'model name=<id> failed to load' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /v1/chat/completions 400 "model '<id>' not found" receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /v1/chat/completions 400 'model name is missing from the request' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/unload 400 'model is not running' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/unload 400 'model is not found' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/load 404 'File Not Found' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/load 400 'model is already running' receipt=receipt.jsonl
+
+### T5-source-text-not-wire  EXIT=1
+    SIGNATURE_ROWS rows=8 bound=7 unbound=1 duplicates=0 rev=878fa44774da7695a4230b6e68196018947c8b43
+    SIGNATURE_ROW bound POST /v1/chat/completions 400 'model is not loaded' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /v1/chat/completions 500 'model name=<id> failed to load' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /v1/chat/completions 400 "model '<id>' not found" receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /v1/chat/completions 400 'model name is missing from the request' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/unload 400 'model is not running' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/unload 400 'model is not found' receipt=receipt.jsonl
+    SIGNATURE_ROW unbound POST /models/load 404 'model is not found' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/load 400 'model is already running' receipt=receipt.jsonl
+
+### T6-wrong-build  EXIT=1
+    SIGNATURE_ROWS rows=8 bound=0 unbound=8 duplicates=0 rev=e32918af91a005203ac51d3c0fa6c95650f051b1
+    SIGNATURE_ROW unbound POST /v1/chat/completions 400 'model is not loaded' receipt=receipt.jsonl
+    SIGNATURE_ROW unbound POST /v1/chat/completions 500 'model name=<id> failed to load' receipt=receipt.jsonl
+    SIGNATURE_ROW unbound POST /v1/chat/completions 400 "model '<id>' not found" receipt=receipt.jsonl
+    SIGNATURE_ROW unbound POST /v1/chat/completions 400 'model name is missing from the request' receipt=receipt.jsonl
+    SIGNATURE_ROW unbound POST /models/unload 400 'model is not running' receipt=receipt.jsonl
+    SIGNATURE_ROW unbound POST /models/unload 400 'model is not found' receipt=receipt.jsonl
+    SIGNATURE_ROW unbound POST /models/load 404 'File Not Found' receipt=receipt.jsonl
+    SIGNATURE_ROW unbound POST /models/load 400 'model is already running' receipt=receipt.jsonl
+
+### T7-missing-receipt  EXIT=1
+    SIGNATURE_ROWS rows=8 bound=0 unbound=8 duplicates=0 rev=eb2c30e586482cd2fed2f759562b9eb453ba31c7
+    SIGNATURE_ROW unbound POST /v1/chat/completions 400 'model is not loaded' receipt=receipt.jsonl
+    SIGNATURE_ROW unbound POST /v1/chat/completions 500 'model name=<id> failed to load' receipt=receipt.jsonl
+    SIGNATURE_ROW unbound POST /v1/chat/completions 400 "model '<id>' not found" receipt=receipt.jsonl
+    SIGNATURE_ROW unbound POST /v1/chat/completions 400 'model name is missing from the request' receipt=receipt.jsonl
+    SIGNATURE_ROW unbound POST /models/unload 400 'model is not running' receipt=receipt.jsonl
+    SIGNATURE_ROW unbound POST /models/unload 400 'model is not found' receipt=receipt.jsonl
+    SIGNATURE_ROW unbound POST /models/load 404 'File Not Found' receipt=receipt.jsonl
+    SIGNATURE_ROW unbound POST /models/load 400 'model is already running' receipt=receipt.jsonl
+
+### T8-row-outside-section  EXIT=0
+    SIGNATURE_ROWS rows=8 bound=8 unbound=0 duplicates=0 rev=53f3b0f18413ec251d7f1f2c18c3f4f5b0d848ee
+    SIGNATURE_ROW bound POST /v1/chat/completions 400 'model is not loaded' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /v1/chat/completions 500 'model name=<id> failed to load' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /v1/chat/completions 400 "model '<id>' not found" receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /v1/chat/completions 400 'model name is missing from the request' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/unload 400 'model is not running' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/unload 400 'model is not found' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/load 404 'File Not Found' receipt=receipt.jsonl
+    SIGNATURE_ROW bound POST /models/load 400 'model is already running' receipt=receipt.jsonl

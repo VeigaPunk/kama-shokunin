@@ -48,3 +48,50 @@ item 4 ("Never … a mutating git/jj command"); the L1 did not apply it to `work
 `git worktree remove --force` (list back to one entry, `jj-lane.sh state` tracked=0); clean checkouts use
 `git clone --shared <lane> <scratch>` thereafter. Shown able to fail: `git worktree list` printed two entries
 before removal.
+
+**M3 — the round-88 "reasons are ungraded" counter defect repeated in the round-89 counter.** Class: frozen
+instrument grades the verdict column only. Evidence: r88 `w1/MT01RouterMutants.md` (DEFECT "reasons are
+ungraded by the counter", M01 escaped); round-89 `tools/round89-unloadable-cells.py` compares `oracle == probe`
+verdicts only, and wave-1 `w1/MT01ProbeMutants.md` M23 drops both `router-model-*` reasons yet prints
+`mismatches=0` (23/31 single-point mutants escape the frozen counter). Captured-by: the r88 MT01 finding itself
+(routed in r88 R1 as "held-out cells", not as "grade the reason"); no QUALITY criterion. Fix: the claim stays on
+its frozen verdict predicate (the oracle answers with an HTTP code, which cannot grade a reason); the reason
+column is graded by the harm harness instead — `tests/probe-verdicts/RouterUnloaded.json` (R5 integration)
+grades verdict, reason and exit and fails the three `router-model-*` rows on base
+(`.ufo/waves/round-89/measured/harness-r5.out`, `tests=77 passes=74`). Shown able to fail: that base run.
+
+**M4 — a measured commit that was correct but 10x slower and stallable.** Class: cost/robustness harm not in
+the frozen kill rules. Evidence: `w1/EX02HarmSweep.md` (+1.3–1.4 s per live check at `4f9eacf7`, every unloaded
+entry's file parsed whether it matched or not), `w1/SN01ProbeSafety.md` F1 (a 219-byte answer stalled the
+probe 41.4 s), F2 (`/proc/self/environ` opened through a listener-chosen path), F5 (stat/open race onto a
+FIFO). Captured-by: none — K2 named verdict suites, not latency or bounded work. Fix: repair `5b1e0fb3`
+(matching autoload candidates only; 4 s deadline and 4 M-read budget → undecidable; `O_NONBLOCK` open +
+`fstat`; nothing under `/proc`, `/sys`, `/dev`; chunked vocab skip). Re-measured: C1 counter unchanged green
+(`measured/c1-final.out`), harm suites unchanged (`measured/harm-final.out`), operator-router median latency
+0.136 → 0.251 s (single id) instead of +1.3 s, the SN01 CPU/memory bombs end in ≤1.6 s as undecidable (`measured/sn01-bombs-Mprime.out`), held-out
+cells unchanged (`measured/heldout-Mprime.out`). Shown able to fail: EX02/SN01 receipts at `4f9eacf7`.
+
+## Corrections (appended)
+
+- Gate row 5's sweep command is written inside a table, so its `\|` is literal in the cell (RV02 DEFECT). The
+  command that was run is: `grep -ril -E "failed to load|gguf.*header|truncat" corpus/knowledge SKILL.md`.
+- Gate row 5 also omitted `served-identity-crosswalk.md` and `unregistered-listener-census.md` as router prior art;
+  both are cited by `router-mode-readiness.md`, which the new entry cites.
+
+## Wave-1 dispositions (13 seats; answering models `.ufo/waves/round-89/w1-seat-models.txt`, r88 R6)
+
+| Seat | Finding | Disposition |
+|---|---|---|
+| RV01 | diff matches the loader's header-check set; QSIZES regenerated identical | agree; no change |
+| RV02 | S583–S586 re-open clean; S586 reject confirmed; KQ143 grep `\|` DEFECT | Corrections above |
+| CR01 | frozen counter reproduces; a name-keyed forgery passes the 11 cells (necessary, not sufficient) | reported as a limit; held-out cells (EX01) and the R5 harness are the extra discriminators |
+| CR02 | C2 reproduces 8/8; receipt recaptured byte-identical; row 2 Action wrong after failure; counter binds 3 of 6 columns; `<id>` with empty model binds | SKILL row 2 and decision table fixed (`router-unloaded-failed`); binding limits reported |
+| MT01 | 23/31 mutants escape the frozen counter | M3; R5 harness grades reasons |
+| EX01 | 13 held-out cells: 6 FIX, 3 AGREE, 3 LIMIT, 1 INDETERMINATE, 0 HARM | re-run at `5b1e0fb3`: identical classes |
+| EX02 | latency +1.3–1.4 s at M | M4, repaired `5b1e0fb3` |
+| EX03 | R5 reproduced; patched harness 77/77, new rows fail on base | integrated with the fault-control pin update |
+| EX04 | R4 cause: the audit's exempt-head eligibility is monotone in `<to>`; register-only fix would delete 19 late rows | not applied (deleting rows from an append-only register is an operator decision); L0 question filed |
+| SN01 | F1 CPU stall, F2 listener-chosen opens, F3 unbounded body (pre-existing fetch), F4 unsanitised ids (pre-existing), F5 TOCTOU | F1/F2/F5 repaired `5b1e0fb3`; F3/F4 routed to round 90 |
+| SC01 | router aliases give a false `MODEL_MISMATCH` (pre-existing at base) | frontier, routed to round 90 |
+| CN01 | no sibling contests the ground; kengaku `PROVINCE.md:26-27` stale | reported, not edited |
+| SB01 | SCORECARD round-89 draft, capability rows, R2 pointer | integrated after re-checking each number |
