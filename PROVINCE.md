@@ -417,3 +417,10 @@ its digest and compares the stored body with the live upstream range byte for by
 hash-consistent extract whose bytes differ from the named URL is a `mismatch`, never `verified`. The
 three registered consumers keep their last recorded `DEAD` state and no serving runtime, engine
 document or host service is touched.
+
+Round 88: llama.cpp **router mode** is a governed serving surface. `tools/kama-probe.sh` reads each
+matching `/v1/models` entry's `status` object (`MODEL_UNLOADED` / `MODEL_LOADING router-<value>`), graded by
+`tools/round88-router-cells.py` against stub cells and a live pinned b11755 router child; the pinned
+fixture model is restored by `tools/fetch-pinned-model.py`. Round 87's arm-14 fault harness is
+`tools/round87-gate-arm-faults.py`. The operator's own router (127.0.0.1:1234) is observed read-only and
+never loaded or registered by the lane.

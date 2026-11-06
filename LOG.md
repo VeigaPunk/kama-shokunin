@@ -3656,3 +3656,23 @@ Fresh-start round after the run-15 authorization (amendment 27). Freeze `94e8fe7
 - Calibration row corrected to the round-86 closure's observed disposition (SCORECARD §Axes, numeric score unchanged).
 - Freeze R86V1 strays committed; SOURCES row S580 added (`corpus/SOURCES.md`); lesson `corpus/lessons/round-87.md`.
 - Considerthese 2026-10-26 proposal 2 mined into KQ141 (lesson item, not implemented).
+
+## Round 88 — 2026-11-06 (fresh start; router-mode readiness, self-description reconciled)
+
+Frozen plan `plans/round-88-claims.md` (freeze `fb76e7f2`; base `9b4c7af1`). Motivating evidence: the
+lane-owned pinned b11755 router child (`--no-models-autoload`) answered a real completion with `400 model is
+not loaded` while `tools/kama-probe.sh` printed `MODEL_OK matched` (`.ufo/waves/round-88/controls/c1-base.out`
+L01/L03; read-only operator router `controls/pilot-live-1234.out`); the round-42 reconciler printed
+`mismatches=4 met=False` at base (`controls/c2-base.out`) because the live `## Axes` table carried two
+`calibration` rows.
+
+- **C1 operability (capability `router-mode-readiness`, sourced S581):** `tools/kama-probe.sh` grades the
+  matching `/v1/models` entry's router `status` (`MODEL_UNLOADED`, `MODEL_LOADING router-<value>`); counter
+  `tools/round88-router-cells.py` (17 cells). Implementation commit `68ab526e`. Measured result: §Round 88
+  in SCORECARD.md.
+- **C2 calibration:** duplicated calibration row moved verbatim to a history subsection; live row re-pointed
+  to the round-87 closure; round-88 canonical capabilities list; SKILL/PROVINCE anchors re-derived.
+- Prerequisite restore: `tools/fetch-pinned-model.py` (capability `pinned-fixture-restore`);
+  `round78-live-reconcile --selftest` 0/4 → 4/4 (`controls/r78-selftest-*.out`).
+- Knowledge `corpus/knowledge/router-mode-readiness.md`; SOURCES S581 (admit), S582 (reject); SKILL.md
+  §Round-88; lesson `corpus/lessons/round-88.md` (M1–M3, r87 routed-defect dispositions).

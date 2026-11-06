@@ -1754,3 +1754,25 @@ Subject-round note binding: `python3 tools/round81-append-debt.py --selftest` ex
 | Delivered debt mutant measurement | gate: `python3 .ufo/waves/round-85/count.py c2 --repo . --rev master --work /fast/scratch/hyaku/kama-r85/L1` | 0 three declared mutants produce accepted semantic-failure output; 1 survivor/invalid | pristine `python3 tools/round81-append-debt.py --selftest`; three mutation replacements pinned in frozen counter; classifier accepts forged unrelated-note summaries, so actual owning-arm receipts must be independently inspected | trusted committed Python execution in removed scratch; not a security sandbox |
 
 Round85 adds equality, above-subject direction and exact-summary coverage arms to the existing debt selftest, preserving grade behavior. Historical round84 token-only selfrecord and documentary-source-origin limitations remain explicit; no generic mutation/Markdown capability or serving-runtime readiness is acquired. The finite authority gate has external fixture controls, not an added self-invocation flag: frozen counter bytes remain unchanged.
+
+## Round-88 router-mode readiness (owner: kama)
+
+The seven-verdict list of the round-16 section is extended, not edited: `tools/kama-probe.sh` `VOCAB` now
+has an eighth verdict, `MODEL_UNLOADED`. A `llama-server` started without a model (router mode:
+`--models-dir`, `--models-preset`, or the HF cache) lists every model it can serve in `GET /v1/models`
+with a `status` object and answers `GET /health` 200 while nothing is loaded, so a listed id is not a
+loaded model (`corpus/knowledge/router-mode-readiness.md`, S581). Decision-table addition (applies after
+the served-id match, before `MODEL_OK` is final):
+
+| Situation | Verdict | Action |
+|---|---|---|
+| matching `/v1/models` entry has `status.value` `loaded`, or no `status` object | `MODEL_OK` / `matched` (unchanged) | Ready. |
+| matching entry `status.value` `loading` or `downloading` | `MODEL_LOADING` / `router-<value>`, drift, exit 2 | Not ready; re-probe later. |
+| matching entry `status.value` `unloaded`, `sleeping`, `incomplete` or unknown; `failed: true` appends `-failed` | `MODEL_UNLOADED` / `router-<value>`, drift, exit 2 | Listed, not resident. `POST /models/load {"model":"<id>"}` or accept a cold start (autoload on); with `--no-models-autoload` a completion answers 400 `model is not loaded`. |
+
+Error signature (llama.cpp b11755 router, `--no-models-autoload`, unloaded model): `POST
+/v1/chat/completions` → `400` `{"error":{"code":400,"message":"model is not loaded","type":"invalid_request_error"}}`.
+Never send a completion to an operator's router to test readiness: with autoload on it loads the model.
+Gate: `python3 tools/round88-router-cells.py --repo . --rev master --work <scratch>` (17 cells: 14 stub,
+3 live on a pinned b11755 router child; 0 all verdicts match, 1 mismatch, 2 could-not-evaluate).
+Prerequisite restore: `python3 tools/fetch-pinned-model.py` (sha256-verified, refuses a different file).
