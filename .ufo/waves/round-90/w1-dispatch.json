@@ -1,0 +1,239 @@
+{
+  "schema": "ufo-swarm-wave-dispatch-v1",
+  "wave": "w1",
+  "policy": {
+    "source": "config",
+    "maxLanes": 16,
+    "minLanes": 8,
+    "waveMinLanes": 8,
+    "waveMaxLanes": 16,
+    "declaredMaxLanes": 16,
+    "hardCeiling": 256,
+    "rampBatchSize": 5,
+    "rampIntervalMs": 700,
+    "globalRunnerCeiling": 1056
+  },
+  "counts": {
+    "spawn": 13,
+    "resume": 0,
+    "total": 13
+  },
+  "registry": {
+    "schema": "ufo-swarm-registry-v1",
+    "path": ".ufo/waves/round-90/w1/swarm-registry.json",
+    "reportDir": ".ufo/waves/round-90/w1",
+    "members": {
+      "RV01ProbeDiff": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "reviewer",
+        "item": null,
+        "axes": [
+          "operability"
+        ],
+        "milestone": "kama r90 w1"
+      },
+      "RV02ReasonTable": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "reviewer",
+        "item": null,
+        "axes": [
+          "depth"
+        ],
+        "milestone": "kama r90 w1"
+      },
+      "CR01ClaimC1": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "critic",
+        "item": null,
+        "axes": [
+          "operability"
+        ],
+        "milestone": "kama r90 w1"
+      },
+      "CR02ClaimC2": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "critic",
+        "item": null,
+        "axes": [
+          "depth"
+        ],
+        "milestone": "kama r90 w1"
+      },
+      "MT01ProbeMutants": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "mutation-tester",
+        "item": null,
+        "axes": [
+          "operability"
+        ],
+        "milestone": "kama r90 w1"
+      },
+      "MT02ReasonRowMutants": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "mutation-tester",
+        "item": null,
+        "axes": [
+          "depth"
+        ],
+        "milestone": "kama r90 w1"
+      },
+      "EX01HeldOutCells": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": null,
+        "axes": [
+          "operability"
+        ],
+        "milestone": "kama r90 w1"
+      },
+      "EX02HarmLatency": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": null,
+        "axes": [
+          "operability"
+        ],
+        "milestone": "kama r90 w1"
+      },
+      "EX03NoPythonPath": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": null,
+        "axes": [
+          "operability"
+        ],
+        "milestone": "kama r90 w1"
+      },
+      "SN01AnswerSafety": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "sentinel",
+        "item": null,
+        "axes": [
+          "operability"
+        ],
+        "milestone": "kama r90 w1"
+      },
+      "SC01SourceCheck": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "scout",
+        "item": null,
+        "axes": [
+          "operability",
+          "freshness"
+        ],
+        "milestone": "kama r90 w1"
+      },
+      "CN01SiblingOverlap": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "connector",
+        "item": null,
+        "axes": [
+          "adjacency"
+        ],
+        "milestone": "kama r90 w1"
+      },
+      "SB01RoundDrafts": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "scribe",
+        "item": null,
+        "axes": [
+          "calibration"
+        ],
+        "milestone": "kama r90 w1"
+      }
+    }
+  },
+  "compaction": {
+    "applied": false,
+    "mechanism": null,
+    "reason": null,
+    "savedBytes": 0,
+    "payloadBytesBefore": 0,
+    "payloadBytesAfter": 0
+  },
+  "taskCall": {
+    "context": "# Goal\nkama round 90 (L1 KamaR90, the only committer and integration owner). Lane repo /home/vgpnk/Projects/shokunin/kama-shokunin (llama.cpp / local model serving and endpoint health). Two frozen claims are declared in /home/vgpnk/Projects/shokunin/kama-shokunin/plans/round-90-claims.md — READ IT FULL FIRST; predicates, counters, controls and kill rules are frozen and bind you. This wave ATTACKS and corroborates work that is already landed; it never changes a frozen predicate.\n- C1 operability (sourced S587 curl max-filesize doc @ curl-8_23_0, S588 RFC 8259 §7): `tools/kama-probe.sh` now caps every listener answer body at MAX_BODY=4194304 bytes (`curl --max-filesize` on the /v1/models fetch, /props fetch and probe_short; a `wc -c` re-check for older curl); an oversize /v1/models answer is FOREIGN_SERVICE `body-too-large` (rc 63), an oversize /props means \"not autoload\"; ids (served_ids `clean()` prints C0/DEL/C1 controls as \\uXXXX text), router ids/status values (filtered to `?`/dropped), Server/Content-Type headers and curl error text (`strip_ctl`) lose control bytes; `jstr` escapes every U+0001-U+001F and DEL. Frozen counter `tools/round90-hostile-answers.py` (13 stub cells H1-H8 hostile, P1-P5 positive).\n- C2 depth: SKILL.md section `## Probe reason codes` — 24 rows (23 frozen population + `body-too-large` additional), each bound by frozen counter `tools/round90-reason-rows.py` to a line of `.ufo/waves/round-90/measured/reason-cells.jsonl` written by `tools/round90-reason-capture.py` (one stub cell per reason, receipt bound to the probe sha256).\nRevisions (full hashes): base B=99cdb4d6270455494dd27901efe84a0f3b342062; freeze F=6f6d7873dac936ba407398ce81b464d77d0fcf32; C1 measured M=f968fb19bb2a0c2afe271bfe606f11b52d10823f; C2 measured M2=2ee0b55f4d3fd0cb3157d26b03280c1d21e27b2d (current master).\nReceipts: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/controls/ (c1-base, c1-f1/f2/f3 forgeries with their probe files, c2-base, c2-forgeries.sh/.out, harm-base-*), /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/measured/ (c1.out, harm-M.out, reason-cells.jsonl, reason-capture.out). Measured: C1 base mismatches=8 positive=0 -> M 0/0; C2 base documented=0 missing=23 -> M2 documented=23 rows=24 bound=24.\nBinaries: pinned b12177 at /home/vgpnk/.local/opt/llama-b12177/llama-server; model ~/.cache/kama-shokunin/models/stories260K.gguf. Host curl 8.23.0, python 3.14.\n\n# Contract (binding on every seat)\n- Read-only in the lane repo except your own out dir /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/w1/out/<YOUR-NAME>/ (mkdir -p) and your `Report:` trailer file. Never edit tracked lane files (tools/, tests/, corpus/, SKILL.md, SCORECARD.md, LOG.md, plans/, registry/, anything tracked). Candidate files go into your out dir; the L1 integrates.\n- Every `Report:` trailer path is relative to /home/vgpnk/Projects/shokunin/kama-shokunin — write it at /home/vgpnk/Projects/shokunin/kama-shokunin/<that path>, and nowhere else.\n- Scratch: /fast/scratch/hyaku/kama-r90/<YOUR-NAME>/ only (mkdir -p; export TMPDIR to it; pass it as --work to any counter). One clone max: `git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin <scratch>/wt` then `git -C <scratch>/wt checkout --detach <rev>`. NEVER `git worktree add` from the lane. Any fixture repo: D=$(mktemp -d -p <scratch>) && git -C \"$D\" init -q, and verify `git -C \"$D\" rev-parse --show-toplevel` equals $D before any git write; never pass an empty or unchecked variable to `git -C`; never commit with a throwaway identity anywhere else. Remove your scratch dir before you yield (`rm -rf -- <scratch>`), after copying receipts (small files only) into your out dir. No hardcoded /tmp in any tool you write.\n- Never commit, push, fetch, stash, add, checkout (outside your own scratch clone), reset, pull, or run any mutating git or jj command in the lane or the fleet repo (read-only git and `jj --ignore-working-copy` are fine). Never touch the fleet root /home/vgpnk/Projects/shokunin (MANIFEST.json, templates/, scripts/, .ufo/state, .ufo/watchdog.log, .scratch/), sibling lanes (read-only for the connector), /home/vgpnk/Projects/shokuknow, or /home/vgpnk/Projects/shokunin/kama-shokunin/considerthese/.\n- Live endpoints: NEVER send a POST, load, unload or completion to 127.0.0.1:1234 (the operator's live llama.cpp router). GET /v1/models and GET /props on 1234 only where your item says so. Everything else runs on stubs or lane-owned children you start on free loopback ports and kill (process group) before you yield. Never mutate host sysctls or services; never kill processes you did not start.\n- Network: read-only GET on public URLs your item names. No credentials.\n- Leaf: never delegate (an executor may spawn at most one read-only labrat probe). Never pass or choose a model. Never message agent://all.\n- Tooling authorization (operator, 2026-10-19): you may install or upgrade tools that help your task. Read /home/vgpnk/.omp/agent/RULES.md first (official channels, update-safety gate); record tool, version, channel and reason in your report. Pacman guard: ALL pacman transactions are PAUSED host-wide — never run pacman -S/-Sy/-Syu/-U/-R, never restart a host service; use uv tool, npx, or an official release binary in ~/.local/bin.\n- Run only the checks your item names plus what you need to falsify it. An unrun check has not passed. Report exact commands, true exit codes, and the full hash of every revision you measured. Do not soften findings: a reproduced false green, a false red on a real model server's answer, or harm is the most valuable output.\n- Final report (your Report: file): sections Scope, Commands and outputs (with exit codes), Findings (each with an evidence pointer: path:line or command output; label each finding BLOCKER / DEFECT / NOTE), Deliverables (paths in your out dir), and a last line exactly `VERDICT: <holds|falsified|partial> — <one line>`. Under 120 lines.\n",
+    "tasks": [
+      {
+        "name": "RV01ProbeDiff",
+        "agent": "reviewer",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# RV01ProbeDiff\nOut dir: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/w1/out/RV01ProbeDiff/ . Scratch: /fast/scratch/hyaku/kama-r90/RV01ProbeDiff/ .\n\nReview the C1 implementation diff `git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff 99cdb4d6270455494dd27901efe84a0f3b342062 f968fb19bb2a0c2afe271bfe606f11b52d10823f -- tools/kama-probe.sh` line by line. Check: (1) `set -euo pipefail` hazards (the `wc -c` re-check when the body file is absent, `strip_ctl` in pipelines with `|| true`, `[ \"$F_RC\" -eq 63 ]`); (2) `jstr`: the bash bracket-range pre-check `[$'\\x01'-$'\\x1f'$'\\x7f']` under LC_ALL=C, en_US.UTF-8 and C.UTF-8 locales (does it miss any control byte, or fire on non-ASCII UTF-8 and cost time?) and the printf loop output for every byte 1..31 and 127 — build a tiny harness sourcing jstr and json.loads its output for each byte; (3) `clean()` in served_ids and the router_entries filters: non-UTF-8 bytes, surrogates, U+0085/U+2028/U+202E; (4) does any listener-controlled text still reach table or JSON output unsanitized (grep every C_EVIDENCE/C_SERVED/C_REASON composition; F_SIZE, F_CODE come from curl -w)? (5) is `body-too-large` = FOREIGN_SERVICE a defensible verdict versus the VOCAB and SKILL wording? Reproduce every finding on a stub (free loopback port) against `git -C /home/vgpnk/Projects/shokunin/kama-shokunin show f968fb19bb2a0c2afe271bfe606f11b52d10823f:tools/kama-probe.sh` and `git -C /home/vgpnk/Projects/shokunin/kama-shokunin show 99cdb4d6270455494dd27901efe84a0f3b342062:tools/kama-probe.sh` copied to scratch.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: kama r90 w1\n\nReport: write your scoped findings to .ufo/waves/round-90/w1/RV01ProbeDiff.md"
+      },
+      {
+        "name": "RV02ReasonTable",
+        "agent": "reviewer",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# RV02ReasonTable\nOut dir: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/w1/out/RV02ReasonTable/ . Scratch: /fast/scratch/hyaku/kama-r90/RV02ReasonTable/ .\n\nReview C2: SKILL.md section `## Probe reason codes` at M2 2ee0b55f4d3fd0cb3157d26b03280c1d21e27b2d. For each of the 24 rows, check the trigger prose against the probe source at M2 (`classify`, `router_refine`, `fetch` in tools/kama-probe.sh) and against the stub that `tools/round90-reason-capture.py` builds for its cell: is every trigger true, complete enough to act on, and not contradicted (frozen kill rule K2)? Name rows whose prose overclaims (e.g. 'any other curl failure', the `dns-failure` exclusion, the `router-unloaded` 'or /props unusable' clause after C1's /props cap). Re-run `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round90-reason-capture.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --rev 2ee0b55f4d3fd0cb3157d26b03280c1d21e27b2d --work <scratch> --out <scratch>/r.jsonl` and `cmp` with /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/measured/reason-cells.jsonl; re-run `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round90-reason-rows.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --rev 2ee0b55f4d3fd0cb3157d26b03280c1d21e27b2d` and at base 99cdb4d6270455494dd27901efe84a0f3b342062. Report every row by reason with a verdict true/overclaims/false.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: depth\nMilestone: kama r90 w1\n\nReport: write your scoped findings to .ufo/waves/round-90/w1/RV02ReasonTable.md"
+      },
+      {
+        "name": "CR01ClaimC1",
+        "agent": "critic",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# CR01ClaimC1\nOut dir: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/w1/out/CR01ClaimC1/ . Scratch: /fast/scratch/hyaku/kama-r90/CR01ClaimC1/ .\n\nAttack C1's claim, counter and predicate (`tools/round90-hostile-answers.py`, frozen at 6f6d7873dac936ba407398ce81b464d77d0fcf32). (a) Is there a cheap probe edit that meets the predicate without fixing the real defects (e.g. drop every id containing any non-alnum, treat every body over 1 MiB as DEAD, print JSON via python only)? Build each as a --probe-file forgery from `git -C /home/vgpnk/Projects/shokunin/kama-shokunin show 99cdb4d6270455494dd27901efe84a0f3b342062:tools/kama-probe.sh` in scratch and run the counter (`--repo /home/vgpnk/Projects/shokunin/kama-shokunin --rev f968fb19bb2a0c2afe271bfe606f11b52d10823f --work <scratch> --probe-file <f>`); a forgery that scores mismatches=0 positive_mismatches=0 is a BLOCKER for the counter. (b) Is the `sent <= 16 MiB` proxy sound (kernel buffers, H2 measured ~6.5-7.7 MB)? Run the counter at M 3 times and at base once; record sent values. (c) Does the predicate's population cover the F3/F4 defects named in plans/round-90-claims.md and the r89 SN01 report /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-89/w1/SN01ProbeSafety.md, or did the round narrow them (name what is not covered: listeners mode, snapshot mode, F1 CPU, F2 path choice)? Report coverage gaps as NOTE unless the plan claims them.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: kama r90 w1\n\nReport: write your scoped findings to .ufo/waves/round-90/w1/CR01ClaimC1.md"
+      },
+      {
+        "name": "CR02ClaimC2",
+        "agent": "critic",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# CR02ClaimC2\nOut dir: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/w1/out/CR02ClaimC2/ . Scratch: /fast/scratch/hyaku/kama-r90/CR02ClaimC2/ .\n\nAttack C2's counter `tools/round90-reason-rows.py` (frozen at 6f6d7873dac936ba407398ce81b464d77d0fcf32). In a scratch fixture repo (rules in context) build rows/receipts that the counter wrongly binds or wrongly refuses: HTML comment `<!-- -->` wrapped rows, a setext heading, a second `## Probe reason codes` heading, tab-indented rows, CRLF lines, a row with escaped `\\|` in the trigger, a receipt line with matching sha but forged reason (does anything stop a hand-written receipt?), receipt lines appended for a different probe sha mixed with current ones, a `reason` column with two backticked tokens. For each: expected verdict (yours, written before running), observed counter line, exit. Also judge: is the depth gain real (does the table teach an operator something SKILL.md did not hold before? grep SKILL.md at 99cdb4d6270455494dd27901efe84a0f3b342062 for each reason code) or a re-statement — answer with counts.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: depth\nMilestone: kama r90 w1\n\nReport: write your scoped findings to .ufo/waves/round-90/w1/CR02ClaimC2.md"
+      },
+      {
+        "name": "MT01ProbeMutants",
+        "agent": "mutation-tester",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# MT01ProbeMutants\nOut dir: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/w1/out/MT01ProbeMutants/ . Scratch: /fast/scratch/hyaku/kama-r90/MT01ProbeMutants/ .\n\nMutation-test C1's landed rule against its frozen counter. Start from `git -C /home/vgpnk/Projects/shokunin/kama-shokunin show f968fb19bb2a0c2afe271bfe606f11b52d10823f:tools/kama-probe.sh`; produce one mutant per rule, each reverting exactly one change: M1 drop --max-filesize in fetch; M2 drop the `wc -c` re-check; M3 drop both (M1+M2); M4 drop --max-filesize in router_autoload; M5 drop the router_autoload size check; M6 drop strip_ctl on F_SERVER; M7 drop strip_ctl on F_CT; M8 drop clean() in served_ids; M9 restore the old router_entries id filter (\\t\\r\\n only); M10 restore the old status-value filter; M11 drop the jstr control loop; M12 MAX_BODY=67108864; M13 rc 63 -> MODEL_OK. Run `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round90-hostile-answers.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --rev f968fb19bb2a0c2afe271bfe606f11b52d10823f --work <scratch> --probe-file <mutant>` for each; table: mutant, killed/escaped, failing cells. Every escape means a landed rule no frozen cell owns: name it (NOTE, or DEFECT if the rule is claimed in the plan). Put mutants (small) and outputs in your out dir.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: kama r90 w1\n\nReport: write your scoped findings to .ufo/waves/round-90/w1/MT01ProbeMutants.md"
+      },
+      {
+        "name": "MT02ReasonRowMutants",
+        "agent": "mutation-tester",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# MT02ReasonRowMutants\nOut dir: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/w1/out/MT02ReasonRowMutants/ . Scratch: /fast/scratch/hyaku/kama-r90/MT02ReasonRowMutants/ .\n\nMutation-test C2's binding. In a scratch clone at M2 2ee0b55f4d3fd0cb3157d26b03280c1d21e27b2d (`git clone --shared`, then make commits only inside that clone with `-c user.name=fixture -c user.email=fixture@invalid`, after verifying the clone's toplevel), apply one mutation per commit to SKILL.md `## Probe reason codes` or to the receipt and run `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round90-reason-rows.py --repo <clone> --rev HEAD`: swap two rows' verdicts; rename one cell; delete one row; duplicate one row; move one row below the next `## ` heading; edit one receipt line's verdict; change one byte of tools/kama-probe.sh (stale receipt); delete the receipt. Also: re-run `tools/round90-reason-capture.py` against a probe mutant that maps rc 63 to `no-http-response` and confirm the `body-too-large` row unbinds. Table: mutation, expected, observed line, exit, killed/escaped.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: depth\nMilestone: kama r90 w1\n\nReport: write your scoped findings to .ufo/waves/round-90/w1/MT02ReasonRowMutants.md"
+      },
+      {
+        "name": "EX01HeldOutCells",
+        "agent": "executor",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# EX01HeldOutCells\nOut dir: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/w1/out/EX01HeldOutCells/ . Scratch: /fast/scratch/hyaku/kama-r90/EX01HeldOutCells/ .\n\nHeld-out hostile answers (not in the frozen predicate). Write a stub-server driver in your out dir and run each cell against `git -C /home/vgpnk/Projects/shokunin/kama-shokunin show 99cdb4d6270455494dd27901efe84a0f3b342062:tools/kama-probe.sh` and `git -C /home/vgpnk/Projects/shokunin/kama-shokunin show f968fb19bb2a0c2afe271bfe606f11b52d10823f:tools/kama-probe.sh` (copied to scratch; run `check --port <p> --expect <id> [--json]` with --timeout 5): (1) gzip-encoded 64 MiB body with Content-Encoding: gzip; (2) slow drip 1 byte / 100 ms within --timeout; (3) a single 3.9 MiB id (under the cap) and a 4.1 MiB id; (4) ids with U+0085, U+2028, U+202E (bidi override), DEL; (5) JSON with a UTF-8 BOM; (6) Content-Type carrying a tab; (7) 200 header lines of 8 KiB each (header bloat: is -D unbounded?); (8) HTTP/1.1 chunked 64 MiB with Content-Length also present; (9) two consecutive answers on keep-alive; (10) a 2 MiB legitimate Ollama-shaped `models[]` list. For each: verdict/reason/exit/table ESC and JSON parse at base and M, server-sent bytes, wall time. Label each cell FIX (base wrong, M right), AGREE, HARM (base right, M wrong) or LIMIT (both wrong). Receipt: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/w1/out/EX01HeldOutCells/heldout.out.\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: operability\nMilestone: kama r90 w1\n\nReport: write your scoped findings to .ufo/waves/round-90/w1/EX01HeldOutCells.md"
+      },
+      {
+        "name": "EX02HarmLatency",
+        "agent": "executor",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# EX02HarmLatency\nOut dir: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/w1/out/EX02HarmLatency/ . Scratch: /fast/scratch/hyaku/kama-r90/EX02HarmLatency/ .\n\nHarm and budget (routed r89 R2/R3). (1) Re-run at M f968fb19bb2a0c2afe271bfe606f11b52d10823f: `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tests/probe-verdicts/check.py` (it runs the lane's working-tree probe; confirm `git -C /home/vgpnk/Projects/shokunin/kama-shokunin status --porcelain tools/kama-probe.sh` is empty first), `bash /home/vgpnk/Projects/shokunin/kama-shokunin/tools/test-snapshot.sh`, `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round89-unloadable-cells.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --rev f968fb19bb2a0c2afe271bfe606f11b52d10823f --work <scratch>`; compare with /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/controls/harm-base-*.out. (2) Latency budget: time 20 runs each of base and M probe (`check --port <stub> --expect good`) against one plain stub, and 5 runs each GET-only against the operator router (`check --port 1234 --expect '*'`, GET only); report median and p90 in Python (no `bc`), and propose a frozen budget line (e.g. M median <= 1.5x base median on the stub). (3) R2: recompute the per-call seconds that /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-89/measured/harm-final.out lost to a missing `bc`, if the raw timings exist there; otherwise say exactly what is missing. Receipts in your out dir.\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: operability\nMilestone: kama r90 w1\n\nReport: write your scoped findings to .ufo/waves/round-90/w1/EX02HarmLatency.md"
+      },
+      {
+        "name": "EX03NoPythonPath",
+        "agent": "executor",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# EX03NoPythonPath\nOut dir: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/w1/out/EX03NoPythonPath/ . Scratch: /fast/scratch/hyaku/kama-r90/EX03NoPythonPath/ .\n\nThe probe's no-python3 fallback (HAVE_PY=0: grep served_ids, raw emit_json). Build a PATH without python3 (a scratch bin dir with symlinks to bash, curl, ss, coreutils, grep, sed, awk, tr, wc, mktemp, flock — whatever the probe needs; check `command -v python3` fails inside it) and run `git -C /home/vgpnk/Projects/shokunin/kama-shokunin show 99cdb4d6270455494dd27901efe84a0f3b342062:tools/kama-probe.sh` and `git -C /home/vgpnk/Projects/shokunin/kama-shokunin show f968fb19bb2a0c2afe271bfe606f11b52d10823f:tools/kama-probe.sh` against stub cells H4-H8 equivalents (ids with \\n+tabs, U+0001, ESC; Server header with ESC; JSON escapes like \\u001b inside the JSON text — note the grep fallback sees the escaped text, not the byte). Note: the stub itself must run under the normal python outside that PATH. Report per cell: table ESC bytes, JSON parse, verdict, base vs M. Is C1's sanitization python-only? Label DEFECT if a hostile byte still reaches output on M with HAVE_PY=0.\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: operability\nMilestone: kama r90 w1\n\nReport: write your scoped findings to .ufo/waves/round-90/w1/EX03NoPythonPath.md"
+      },
+      {
+        "name": "SN01AnswerSafety",
+        "agent": "sentinel",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# SN01AnswerSafety\nOut dir: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/w1/out/SN01AnswerSafety/ . Scratch: /fast/scratch/hyaku/kama-r90/SN01AnswerSafety/ .\n\nSecurity review of the round-90 answer boundary at M f968fb19bb2a0c2afe271bfe606f11b52d10823f. Can a listener still (a) fill TMPDIR or RAM (headers via -D \"$FHDR\" — is curl's header size limit enough? measure with 1000 x 8 KiB headers; the `/health`, `/`, `/metrics` probe_short calls), (b) bypass --max-filesize (Content-Length lies smaller than the body, 1xx informational responses, chunked trailers, HTTP/0.9 response, `Transfer-Encoding: gzip` without --compressed), (c) inject into the TSV snapshot/history files (`snapshot` subcommand persisted rows: served ids, reasons — test with a scratch copy of the registry dir and `--registry`/history options pointing into scratch only), (d) make the probe hang past --timeout (the python helpers after the body is written)? Use stubs on free loopback ports only; never touch 1234. Each finding with reproducer script in your out dir and severity.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: kama r90 w1\n\nReport: write your scoped findings to .ufo/waves/round-90/w1/SN01AnswerSafety.md"
+      },
+      {
+        "name": "SC01SourceCheck",
+        "agent": "scout",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# SC01SourceCheck\nOut dir: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/w1/out/SC01SourceCheck/ . Scratch: /fast/scratch/hyaku/kama-r90/SC01SourceCheck/ .\n\nRe-open the round's sources independently and look for one more. (1) S587 https://raw.githubusercontent.com/curl/curl/curl-8_23_0/docs/cmdline-opts/max-filesize.md — sha256, and locate the quote \"this option aborts the transfer if it reaches the threshold during transfer\" (line). (2) S588 https://www.rfc-editor.org/rfc/rfc8259.txt — sha256, locate \"the control characters (U+0000 through U+001F)\" (line). (3) Find curl's own code for the abort at tag curl-8_23_0 (github raw, e.g. lib/transfer.c / lib/sendf.c / lib/cw-out.c; grep CURLE_FILESIZE_EXCEEDED) and give file:line and a ≤25-word quote. (4) Find one candidate a careful curator should REJECT for this claim (e.g. the curl.se manpage HTML that floats with the release, or a pre-8.4 doc saying the option has no effect for unknown sizes) with the reason. Output: one candidate SOURCES row per source in the lane's 11-column format (read /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md rows S583-S586 for the shape) in your out dir, each with URL, access date 2026-11-06, sha256, located quote, admit/reject and reason. Do not edit corpus/SOURCES.md.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability, freshness\nMilestone: kama r90 w1\n\nReport: write your scoped findings to .ufo/waves/round-90/w1/SC01SourceCheck.md"
+      },
+      {
+        "name": "CN01SiblingOverlap",
+        "agent": "connector",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# CN01SiblingOverlap\nOut dir: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/w1/out/CN01SiblingOverlap/ . Scratch: /fast/scratch/hyaku/kama-r90/CN01SiblingOverlap/ .\n\nSibling-overlap scan (read-only). Search the sibling lane repos under /home/vgpnk/Projects/shokunin/*-shokunin (not kama) for work overlapping round 90: response-size caps on HTTP probes (`max-filesize`, `--max-filesize`, body caps), control-character/terminal-escape sanitization of probe or tool output, JSON escaping of untrusted strings, reason-code tables for health probes. Use grep over corpus/, SKILL.md, tools/. For each hit: lane, path:line, what it covers, and whether it is contested scope, corroboration, or a reusable rule for kama (cite /home/vgpnk/Projects/shokunin/kama-shokunin/PROVINCE.md 'Out of province' rule). Draft (in your out dir) at most 2 candidate rows for /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/knowledge/cross-lane-scope.md in its table format. Never edit any repo.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: adjacency\nMilestone: kama r90 w1\n\nReport: write your scoped findings to .ufo/waves/round-90/w1/CN01SiblingOverlap.md"
+      },
+      {
+        "name": "SB01RoundDrafts",
+        "agent": "scribe",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\n# SB01RoundDrafts\nOut dir: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/w1/out/SB01RoundDrafts/ . Scratch: /fast/scratch/hyaku/kama-r90/SB01RoundDrafts/ .\n\nDraft the round's record text (drafts only, in your out dir; the L1 integrates): (1) `scorecard-round90.md`: a `## Round 90 — ...` section in the style of /home/vgpnk/Projects/shokunin/kama-shokunin/SCORECARD.md `## Round 89` (read it), with C1/C2 predicates, base→after numbers from /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/controls and /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/measured, revisions B/F/M/M2, and two capability rows for the Capabilities table (`hostile-answer-bounds` evidence tools/round90-hostile-answers.py; `probe-reason-table` evidence tools/round90-reason-rows.py + tools/round90-reason-capture.py), plus a `### Planned (round 91)` list drawn from r89 closure routed defects R1, R3, R5 and anything C1 leaves uncovered (F1 CPU budget, F2 path choice, listeners/snapshot modes); (2) `log-round90.md`: a LOG.md entry in the style of the newest entry of /home/vgpnk/Projects/shokunin/kama-shokunin/LOG.md; (3) `lesson-round90.md`: `corpus/lessons/round-90.md` draft in the shape of /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-89.md with sections Gate (rows for S587 and S588 admitted; leave a placeholder row 'REJECT candidate from SC01' that the L1 fills), Mistakes (two mined mistakes, each class · evidence pointer · captured-by · fix: (a) the C1 counter's first H4 cell did not discriminate — base passed it because check mode joins ids with commas; caught by running the base control before freeze, see the plan; (b) the C2 forgery battery's printed expectation miscounted the duplicate row; corrected before freeze, see /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-90/controls/c2-forgeries.sh), and Dispositions of r89 closure R1-R5. Numbers only from committed receipts; mark anything you could not verify.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: calibration\nMilestone: kama r90 w1\n\nReport: write your scoped findings to .ufo/waves/round-90/w1/SB01RoundDrafts.md"
+      }
+    ]
+  },
+  "resumeSends": [],
+  "note": "Issue exactly one batched task call with taskCall ({context, tasks}); never split a wave into multiple task calls (one-swarm-per-wave). Then one hub send per resumeSends entry: hub send --to <entry.resume> --message <entry.message> (entry.name is bookkeeping, not a hub field)."
+}

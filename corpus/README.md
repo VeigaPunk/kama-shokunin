@@ -1829,3 +1829,14 @@ Frontier after round 88:
 - **Frontier (not held):** router model **aliases** (`router_validate_model` resolves an alias to the canonical
   name, S583:1960; the probe matches ids only); `--models-memory-margin` LRU eviction (new in b12177 README);
   corrupt tensor bytes behind an intact header; split-model shards; per-request `?autoload`.
+
+## Coverage and frontier — round 90 (appended)
+
+- **Core (moved from frontier):** the probe's own answer boundary — a listener's `/v1/models` and `/props`
+  answer is capped at 4 MiB on the wire (curl `--max-filesize`, S587) and listener text loses or escapes
+  control characters before table or JSON output (RFC 8259 §7 and §8.1, S588–S589; curl's in-transfer abort, S590); `corpus/knowledge/probe-answer-bounds.md`,
+  receipts `.ufo/waves/round-90/`. The probe's 24 printable reason codes are a SKILL decision table
+  (`## Probe reason codes`), each row bound to a captured probe answer on a stub cell.
+- **Frontier (not held):** the CPU cost of router GGUF header checks on crafted files (r89 SN01 F1); the
+  listener's choice of which local files the probe opens (F2); router model aliases; held-out LIMIT cells
+  from round 89 (chmod-000, missing split shard, relative missing path).

@@ -3714,3 +3714,27 @@ to load` (`.ufo/waves/round-89/controls/c1-base.out`, `mismatches=5`).
   `tests/probe-verdicts/RouterUnloaded.json` + harness `files` support, 77/77, new rows fail on base
   (`measured/harness-r5.out`; fault-control pins updated). R4 cause recorded (EX04); fix not applied, L0 question.
   Frontier: router aliases (SC01). Lesson M3, M4.
+
+## Round 90 — 2026-11-06 (hostile listener answers bounded; probe reason-code table)
+
+Frozen plan `plans/round-90-claims.md` (freeze `6f6d7873`; base `99cdb4d6`). Motivating evidence: round-89 wave
+seat SN01 (`.ufo/waves/round-89/w1/SN01ProbeSafety.md` F3/F4) — a streamed answer filled TMPDIR at wire speed and
+a control character in a served id forged table columns or made `--json` exit 1; the round-90 base control
+reproduces both (`.ufo/waves/round-90/controls/c1-base.out`: a 64 MiB answer read whole and graded `MODEL_OK`,
+`mismatches=8`). Separately, `SKILL.md` documented 9 of the probe's 23 reachable reason codes (CR02 count).
+
+- **C1 operability (sourced S587/S588):** `tools/kama-probe.sh` caps `/v1/models`, `/props` and short probes at
+  4 MiB (`curl --max-filesize`, written-size re-check), grades an oversize model answer `FOREIGN_SERVICE
+  body-too-large`, escapes control characters in ids and JSON, drops them from header evidence. Implementation
+  `f968fb19`; counter `tools/round90-hostile-answers.py` `8/0 → 0/0`; wave-1 repair `a09effae` (RV01 harm:
+  dropped router entries, non-UTF-8 `Server:`, 401 over the cap; EX03 grep-fallback bytes), re-measured
+  `measured/c1-final.out` 0/0, harm unchanged, held-out matrix `repair/rv01-matrix-base-M-Mprime.out`.
+- **C2 depth:** SKILL §"Probe reason codes" — 24 rows bound to probe answers captured on stub cells by
+  `tools/round90-reason-capture.py` (`measured/reason-cells.jsonl`); counter `tools/round90-reason-rows.py`
+  `documented 0 → 23`, `bound 24/24` at `2ee0b55f` and, after re-capture at the repaired probe, at `1f8eed67`.
+- Knowledge `corpus/knowledge/probe-answer-bounds.md`; SOURCES S587–S588 (admit); QUALITY KQ145; README round-90
+  coverage/frontier; lesson `corpus/lessons/round-90.md` (M1–M5).
+- Wave 1 (13 seats, `.ufo/waves/round-90/w1/`): MT01 8/13 one-change reverts killed (escapes: older-curl
+  re-checks, `jstr` loop, Content-Type strip, router-id filter); CR01 counter forgeable by a 1 MiB-cap probe;
+  CR02 counter is a form judge; MT02 8/8 binding mutants killed; EX02 harm unchanged, C1 adds ≤10 % latency;
+  SN01 time bound absent (207 s, present at base). All routed to §Planned (round 91).
