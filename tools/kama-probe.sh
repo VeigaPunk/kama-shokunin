@@ -573,7 +573,27 @@ class Unknown(Exception):
     pass
 
 
+# Round 93 (C1; r92 wave-1 SC02 F6): one regular file is parsed once per call, whatever path
+# string names it (identity = device, inode, size, mtime). Every candidate shares one deadline,
+# so a listing that repeated one slow invalid file spent the budget on copies and left the later
+# candidates undecided, i.e. loadable: the verdict flipped to MODEL_OK with the repeat count.
+SEEN = {}
+
+
 def gguf_state(path):
+    try:
+        st = os.stat(path)
+    except OSError:
+        return gguf_parse(path)
+    if not stat.S_ISREG(st.st_mode) or os.path.realpath(path).startswith(NO_OPEN):
+        return gguf_parse(path)
+    key = (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns)
+    if key not in SEEN:
+        SEEN[key] = gguf_parse(path)
+    return SEEN[key]
+
+
+def gguf_parse(path):
     try:
         st = os.stat(path)
     except FileNotFoundError:
