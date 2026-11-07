@@ -1,0 +1,71 @@
+SC01SourceReopen — kama round 91 w1 — machine-readable re-open verdicts
+opener: independent live re-fetch; every sha256 is of the fetched bytes
+lane: /home/vgpnk/Projects/shokunin/kama-shokunin
+revs: B=c06838c5b94576971ea33ac465bf2c935e9037f9 F=9a41912a598cad00f7ff08391586a0ef3732bbed M=3decfa36b0eba7e5197c034dd1547146bca1568a M2=3f317ecd211e80929c673e306e3230be287fdf20
+
+== SOURCES re-opened (lane: corpus/SOURCES.md) ==
+S592 https://pubs.opengroup.org/onlinepubs/9799919799/utilities/awk.html
+  sha256_fetched 6df7d0776af4b28dbc3ec667a02a18e51ccd5066ea45a22166214e7e3832f898
+  sha256_sources 6df7d0776af4b28dbc3ec667a02a18e51ccd5066ea45a22166214e7e3832f898
+  sha_match YES  bytes 144111
+  quote_lines 107-108 present YES  quote_words 17  quote "shall be interpreted as if they appeared in the awk program preceded and followed by a double-quote"
+  environ_lines 793-797 present YES
+  tag_upstream N/A (spec page)
+  verdict MATCH
+S593 https://raw.githubusercontent.com/ggml-org/llama.cpp/b12177/common/common.h
+  sha256_fetched c3010a3c662a14556adb651b79bff00089564fde6b5e336959403e3db34e6073
+  sha256_sources c3010a3c662a14556adb651b79bff00089564fde6b5e336959403e3db34e6073
+  sha_match YES  bytes 58830
+  quote_line 634 present YES  quote_words 10  quote "int32_t timeout_read        = 3600;          // http read timeout in seconds"
+  tag b12177 -> 6c01da6278ab6c69ed67d9124806b50d2b299ba7 present YES
+  tag_bytes_equal_commit_bytes YES
+  verdict MATCH
+S594 https://raw.githubusercontent.com/ollama/ollama/v0.40.11/envconfig/config.go
+  sha256_fetched 0b0ea669b31cfe2b54313427257326a2b7a909bbc7bf8a671035efc446fb1895
+  sha256_sources 0b0ea669b31cfe2b54313427257326a2b7a909bbc7bf8a671035efc446fb1895
+  sha_match YES  bytes 16343
+  quote_line 130 present YES (+doc comment line 128)  quote_words 5  quote "keepAlive = 5 * time.Minute"
+  tag v0.40.11 -> 675150d6ad2747df1e218ef59de9194bc4a7e538 present YES
+  tag_bytes_equal_commit_bytes YES
+  verdict MATCH
+S595 https://raw.githubusercontent.com/vllm-project/vllm/v0.32.0/vllm/envs.py
+  sha256_fetched e963af06cf6c775fe285147e0d811ea5b4d679e5cbd6958980ec2a0d1da70694
+  sha256_sources e963af06cf6c775fe285147e0d811ea5b4d679e5cbd6958980ec2a0d1da70694
+  sha_match YES  bytes 118996
+  quote_line 809 present YES  quote_words 11  quote "Timeout in seconds for waiting for engine cores to become ready"
+  tag v0.32.0 -> 5df63a7203cdb9328d824a27b682e77c7b9928be present YES
+  tag_bytes_equal_commit_bytes YES
+  verdict MATCH
+
+== C2 table rows re-bound independently (SKILL.md "## Serving timeout and limit thresholds") ==
+T01 S593:632 OK   T02 S593:634 OK   T03 S593:636 OK   T04 S593:644 OK
+T05 S593:669 OK   T06 S593:703 OK   T07 S593:464 OK   T08 S594:23 OK
+T09 S594:130 OK  T10 S594:150 OK  T11 S594:277 OK  T12 S594:281 OK
+T13 S595:26 OK   T14 S595:111 OK
+counter_at_M2: THRESHOLD_ROWS rows=14 bound=14 unbound=0 duplicates=0 engines=3 fetch_failures=0 exit=0
+independent_reimplementation: ALL_BOUND exit=0
+NOTE T07: literal+value bind, but llama-server at b12177 auto-resolves n_parallel (-1) to 4
+  (common/arg.cpp:1373 ; tools/server/server.cpp:126-131 ; live /props total_slots=4) -> semantic defect
+
+== SGLang v0.5.22 (candidates only; not appended) ==
+tag v0.5.22 -> 35ce313293052f8362e0829e7512bc9bc3d336c9 present YES (peeled baa9befa381511cd4d56f83980951e5a45fffc6d)
+tarball sha256 9b946c6433c6b1467cd7e5b83951c1e12c84a0bb2cd05646b71e4f4a39772bc6
+python/sglang/srt/arg_groups/fields/serving.py 66a9ab458053c31290f21d9b7ce6686c7a9d83e6387f2a12a61a0e5599ff4923 13638
+python/sglang/srt/arg_groups/fields/device.py 4bb4b4e2999358946c510a3fd6d56c1bbbf5f1c2972c5cda8cd57e4f5595cdd7 3576
+python/sglang/srt/environ.py 80017ce7326d2af4d331518f1c3a3d24f1a379c8193f59b2ffabd54017c21441 113688
+python/sglang/srt/entrypoints/http_server.py a89d20bb2fa8a86c511ab4d9d054f74d707423ab220f733ff25e62fcc0e49979 110718
+python/sglang/srt/server_args.py d1b9ffc79edcbc857efd02a47d47eed9b414f8ac44bc4e3214d78a7922e90e03 35396
+python/sglang/srt/arg_groups/server_args.py -> HTTP 404 (does not exist at this tag)
+candidates_bound_by_frozen_grade(): T15 port 30000 | T16 host 127.0.0.1 | T17 keep-alive 5 s |
+  T18 weights-ready 120 s | T19 health-check 20 s | T20 worker healthcheck 10 s |
+  T21 warmup -1 | T22 warmup fallback 600 s
+watchdog_timeout (300 s): UNBOUND - declaration split over device.py 66-69; B6/B7 need name+value on one line
+
+== counters re-run at the measured revs ==
+tools/round91-threshold-rows.py --rev 3f317ecd211e80929c673e306e3230be287fdf20 -> rows=14 bound=14 exit=0 (load 8.01)
+tools/round91-answer-time.py --rev 3decfa36b0eba7e5197c034dd1547146bca1568a -> cells=12 mismatches=0 positive_mismatches=0 exit=0 (load 47.26; max cell 3.12s)
+
+== cleanup ==
+scratch /fast/scratch/hyaku/kama-r91/SC01SourceReopen removed; child llama-servers on 18811/18812 killed
+(18811 via pkill, 18812 via kill 4165158); pgrep -cf 'llama-server.*1881[12]' = 0 afterwards;
+operator router 127.0.0.1:1234 untouched and alive (GET /v1/models -> 200); no tracked lane file written

@@ -1,0 +1,22 @@
+diff --git c/tools/kama-probe.sh w/tools/kama-probe.sh
+index 54a01aae..af2996c6 100755
+--- c/tools/kama-probe.sh
++++ w/tools/kama-probe.sh
+@@ -457,7 +457,7 @@ model_matches() {
+   printf '%s\n' "$served" | KAMA_EXP=$exp_n LC_ALL=C awk "$AWK_NORM"'
+     BEGIN { e = ENVIRON["KAMA_EXP"] ""; found = 0; hit = 0 }
+     hit { next }
+-    { s = norm($0); found = 1; if (s == e) hit = 1 }
++    { s = norm($0); if (s == "") next; found = 1; if (s == e) hit = 1 }
+     END { exit (hit ? 0 : (found ? 1 : 2)) }' || rc=$?
+   return "$rc"
+ }
+@@ -817,7 +817,7 @@ router_refine() {
+       *) if [ "$val" = unloaded ] && [ "$failed" != 1 ]; then cand="$cand $idx"; ncand=$((ncand + 1)); fi
+          if [ -z "$down" ]; then down="router-$val"; [ "$failed" = 1 ] && down="$down-failed"; fi ;;
+     esac
+-  done < <(if [ "$wild" -eq 1 ]; then router_entries "$body"; else router_entries "$body" | router_match "$exp_n"; fi)
++  done < <(if [ "$wild" -eq 0 ]; then router_entries "$body"; else router_entries "$body" | router_match "$exp_n"; fi)
+   [ "$any_status" -eq 1 ] || return 0
+   [ "$ok" -eq 1 ] && return 0
+   if [ "$sleeping" -eq 1 ]; then RT_VERDICT=MODEL_OK; RT_REASON=router-sleeping; return 0; fi

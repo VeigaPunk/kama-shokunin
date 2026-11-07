@@ -1,0 +1,52 @@
+== core_client.py
+738:            while identities:
+739:                if not sync_input_socket.poll(
+1854:            if not sync_input_socket.poll(timeout=VLLM_ENGINE_READY_TIMEOUT_S * 1000):
+== ollama config.go
+23:	defaultPort := "11434"
+33:	case scheme == "http":
+34:		defaultPort = "80"
+42:		host, port = "127.0.0.1", defaultPort
+== sched.go
+90:	s.loadedMu.Lock()
+241:	s.loadedMu.Lock()
+245:		req.useLoadedRunner(runner, s.finishedReqCh)
+248:		case s.pendingReqCh <- req:
+249:		default:
+250:			req.errCh <- ErrMaxQueue
+289:				s.loadedMu.Lock()
+305:						pending.useLoadedRunner(runner, s.finishedReqCh)
+419:			s.loadedMu.Lock()
+472:			s.loadedMu.Lock()
+503:				delete(s.loaded, runner.modelKey)
+518:func (pending *LlmRequest) useLoadedRunner(runner *runnerRef, finished chan *LlmRequest) {
+== llama_server.go
+1331:	stallTimeout := envconfig.LoadTimeout()
+1337:		lastActivity = time.Now()
+1339:	loadDeadline := lastActivity.Add(stallTimeout)
+1376:			lastActivity = activity
+1399:			lastActivity = time.Now()
+== server-context.cpp
+1592:            SRV_INF("%s", "decision model: prompt cache disabled by default, use `--cache-ram N` to enable it\n");
+1605:            prompt_cache = std::make_unique<server_prompt_cache>(params_base.cache_ram_mib, n_ctx);
+5301:        bypass_sleep |= sleep_idle_seconds < 0;
+5555:                    SRV_DBG("%s", "sending SSE ping\n");
+== server.cpp
+115:static bool server_prepare_params(common_params & params, server_role_type role_type) {
+116:    if (role_type != SERVER_ROLE_ROUTER) {
+126:        if (params.n_parallel < 0) {
+129:            params.n_parallel = 4;
+== disagg/entry
+153:        timeout_keep_alive=envs.VLLM_HTTP_TIMEOUT_KEEP_ALIVE,
+952:    # with ServerDisconnectedError, and the server logs nothing at all: it
+== arg.cpp
+1373:        params.n_parallel = -1;     // auto by default
+3323:    ).set_examples({LLAMA_EXAMPLE_SERVER}).set_env("LLAMA_ARG_PORT"));
+3566:    ).set_examples({LLAMA_EXAMPLE_SERVER}).set_env("LLAMA_ARG_TIMEOUT"));
+== httplib
+252:// until asked not to), while a server keeps a ceiling that reclaims a worker
+== server-http
+217:    srv->set_read_timeout (params.timeout_read);
+218:    srv->set_write_timeout(params.timeout_write);
+== routes
+2134:func (s *Server) ListHandler(c *gin.Context) {

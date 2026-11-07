@@ -1,0 +1,241 @@
+### M01 B2 value-in-literal dropped
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M01.py
+@@ -140,5 +140,5 @@
+     lit = literal.strip().strip("`")
+     nums = NUM_RE.findall(value)
+-    if not nums or not any(n in lit for n in nums):
++    if False:  # M01 drop B2 value-in-literal
+         return False, "value-not-in-literal", None
+     row = srcs.get(sid)
+
+### M02 B4 moving-ref check dropped
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M02.py
+@@ -153,5 +153,5 @@
+         return False, "source-no-url-or-sha", None
+     url = m.group(0).rstrip(").,;")
+-    if any(x in url for x in MOVING):
++    if False:  # M02 drop B4 moving-ref
+         return False, "moving-ref", None
+     pin = engine.split()[-1]
+
+### M03 B4 pin-in-URL check dropped
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M03.py
+@@ -156,5 +156,5 @@
+         return False, "moving-ref", None
+     pin = engine.split()[-1]
+-    if pin not in url:
++    if False:  # M03 drop B4 pin-in-url
+         return False, "pin-not-in-url", None
+     if engine.split()[0].lower() not in url.lower():
+
+### M04 B4 engine-in-URL check dropped
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M04.py
+@@ -158,5 +158,5 @@
+     if pin not in url:
+         return False, "pin-not-in-url", None
+-    if engine.split()[0].lower() not in url.lower():
++    if False:  # M04 drop B4 engine-in-url
+         return False, "engine-not-in-url", None
+     body = fetch(url)
+
+### M05 B5 sha256 compare dropped
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M05.py
+@@ -163,5 +163,5 @@
+     if body is None:
+         return False, "fetch-failed", "fetch"
+-    if hashlib.sha256(body).hexdigest() != h.group(1):
++    if False:  # M05 drop B5 sha compare
+         return False, "sha-mismatch", None
+     try:
+
+### M06 B6 line off-by-one
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M06.py
+@@ -170,5 +170,5 @@
+         return False, "bad-line", None
+     lines = body.decode("utf-8", "replace").split("\n")
+-    if not 1 <= n <= len(lines) or lit not in lines[n - 1]:
++    if not 1 <= n <= len(lines) or lit not in lines[n]:  # M06 off-by-one
+         return False, "literal-not-at-line", None
+     names = [t for t in re.findall(r"`([^`]+)`", _name) if len(t) >= 3]
+
+### M07 comment stripping disabled
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M07.py
+@@ -85,5 +85,5 @@
+             else:
+                 continue
+-        while "<!--" in line:
++        while False:  # M07 comment stripping disabled
+             pre, rest = line.split("<!--", 1)
+             if "-->" in rest:
+
+### M08 fence detection disabled
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M08.py
+@@ -94,5 +94,5 @@
+                 break
+         s = line.lstrip()
+-        if s.startswith("```") or s.startswith("~~~"):
++        if False:  # M08 fence detection disabled
+             fence = s[:3]
+             continue
+
+### M09 duplicate rule removed
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M09.py
+@@ -200,5 +200,5 @@
+         rid = cells[0]
+         pair = (cells[4], cells[5]) if len(cells) >= 6 else None
+-        if rid in seen_id or (pair and pair in seen_pair):
++        if False:  # M09 duplicate rule removed
+             dup += 1
+             print(f"THRESHOLD_ROW {rid} bound=0 why=duplicate")
+
+### M10 B7 name-in-literal dropped
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M10.py
+@@ -173,5 +173,5 @@
+         return False, "literal-not-at-line", None
+     names = [t for t in re.findall(r"`([^`]+)`", _name) if len(t) >= 3]
+-    if not any(t in lit for t in names):
++    if False:  # M10 drop B7 name-in-literal
+         return False, "name-not-in-literal", None
+     return True, "bound", None
+
+### M11 MIN_ENGINES 3 -> 1
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M11.py
+@@ -50,5 +50,5 @@
+ HEAD = "## Serving timeout and limit thresholds"
+ MIN_ROWS = 10
+-MIN_ENGINES = 3
++MIN_ENGINES = 1  # M11
+ ROW_RE = re.compile(r"^\| *(T\d+) *\|")
+ SRC_RE = re.compile(r"^ {0,3}\| *(S\d{3,}) *\|")
+
+### M12 MIN_ROWS 10 -> 1
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M12.py
+@@ -49,5 +49,5 @@
+ 
+ HEAD = "## Serving timeout and limit thresholds"
+-MIN_ROWS = 10
++MIN_ROWS = 1  # M12
+ MIN_ENGINES = 3
+ ROW_RE = re.compile(r"^\| *(T\d+) *\|")
+
+### M13 8-cell arity check dropped
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M13.py
+@@ -133,5 +133,5 @@
+ 
+ def grade(cells, srcs):
+-    if len(cells) != 8:
++    if False:  # M13 drop cell-arity check
+         return False, f"cells={len(cells)}", None
+     rid, engine, _name, value, sid, line, literal, _decision = cells
+
+### M14 fetch failure counts as bound
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M14.py
+@@ -162,5 +162,5 @@
+     body = fetch(url)
+     if body is None:
+-        return False, "fetch-failed", "fetch"
++        return True, "bound-unfetched", None  # M14
+     if hashlib.sha256(body).hexdigest() != h.group(1):
+         return False, "sha-mismatch", None
+
+### M15 empty-cell `-` marker dropped
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M15.py
+@@ -136,5 +136,5 @@
+         return False, f"cells={len(cells)}", None
+     rid, engine, _name, value, sid, line, literal, _decision = cells
+-    if any(not c or c == "-" for c in cells):
++    if any(not c for c in cells):  # M15 drop the "-" marker
+         return False, "empty-cell", None
+     lit = literal.strip().strip("`")
+
+### M16 source status/tier check dropped
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M16.py
+@@ -146,5 +146,5 @@
+         return False, "source-absent", None
+     tier, anchor, status = row[3], row[5], row[7]
+-    if status != "mined" or tier not in ("A", "B"):
++    if False:  # M16 drop status/tier check
+         return False, f"source-status={status}/tier={tier}", None
+     m = re.search(r"https://\S+", row[1])
+
+### M17 section heading matched by prefix
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M17.py
+@@ -104,5 +104,5 @@
+     for line in rendered_lines(skill):
+         if line.startswith("## "):
+-            inside = line.rstrip() == HEAD
++            inside = line.rstrip().startswith(HEAD)  # M17 prefix match
+             continue
+         if inside and ROW_RE.match(line):
+
+### M18 duplicate: id half dropped (pair kept)
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M18.py
+@@ -200,5 +200,5 @@
+         rid = cells[0]
+         pair = (cells[4], cells[5]) if len(cells) >= 6 else None
+-        if rid in seen_id or (pair and pair in seen_pair):
++        if pair and pair in seen_pair:  # M18 id half dropped
+             dup += 1
+             print(f"THRESHOLD_ROW {rid} bound=0 why=duplicate")
+
+### M19 duplicate: pair half dropped (id kept)
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M19.py
+@@ -200,5 +200,5 @@
+         rid = cells[0]
+         pair = (cells[4], cells[5]) if len(cells) >= 6 else None
+-        if rid in seen_id or (pair and pair in seen_pair):
++        if rid in seen_id:  # M19 pair half dropped
+             dup += 1
+             print(f"THRESHOLD_ROW {rid} bound=0 why=duplicate")
+
+### M20 backticks not stripped from literal
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M20.py
+@@ -138,5 +138,5 @@
+     if any(not c or c == "-" for c in cells):
+         return False, "empty-cell", None
+-    lit = literal.strip().strip("`")
++    lit = literal.strip()  # M20 keep backticks
+     nums = NUM_RE.findall(value)
+     if not nums or not any(n in lit for n in nums):
+
+### M21 always-green exit code
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M21.py
+@@ -220,5 +220,5 @@
+     met = n >= MIN_ROWS and bound == n and unbound == 0 and dup == 0 and fails == 0 \
+         and len(engines) >= MIN_ENGINES
+-    return 0 if met else 1
++    return 0  # M21 always green
+ 
+ 
+
+### M22 empty-string cell check dropped
+--- pristine//home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-91/w1/out/MT02RowCounterMutants/pristine.py
++++ mutants/M22.py
+@@ -136,5 +136,5 @@
+         return False, f"cells={len(cells)}", None
+     rid, engine, _name, value, sid, line, literal, _decision = cells
+-    if any(not c or c == "-" for c in cells):
++    if any(c == "-" for c in cells):  # M22 drop empty-string check
+         return False, "empty-cell", None
+     lit = literal.strip().strip("`")

@@ -1,0 +1,22 @@
+diff --git c/tools/kama-probe.sh w/tools/kama-probe.sh
+index 81895c2c..0dbd9ef0 100755
+--- c/tools/kama-probe.sh
++++ w/tools/kama-probe.sh
+@@ -458,7 +458,7 @@ model_matches() {
+     BEGIN { e = ENVIRON["KAMA_EXP"] ""; found = 0; hit = 0 }
+     hit { next }
+     { s = norm($0); if (s == "") next; found = 1; if (s == e) hit = 1 }
+-    END { exit (hit ? 0 : (found ? 2 : 1)) }' || rc=$?
++    END { exit (hit ? 0 : (found ? 1 : 2)) }' || rc=$?
+   return "$rc"
+ }
+ 
+@@ -467,7 +467,7 @@ model_matches() {
+ router_match() {
+   KAMA_EXP=$1 LC_ALL=C awk -F '\t' "$AWK_NORM"'
+     BEGIN { e = ENVIRON["KAMA_EXP"] "" }
+-    { s = norm($1); if (s != "" && s == e) print }'
++    { print }'
+ }
+ 
+ # A model array must be PRESENT for MODEL_OK. v3: a status code or a `Server: llama.cpp`

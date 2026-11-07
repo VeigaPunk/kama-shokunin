@@ -1,0 +1,21 @@
+diff --git c/tools/kama-probe.sh w/tools/kama-probe.sh
+index 76b97e05..96f3db5d 100755
+--- c/tools/kama-probe.sh
++++ w/tools/kama-probe.sh
+@@ -456,7 +456,6 @@ model_matches() {
+   local rc=0
+   printf '%s\n' "$served" | KAMA_EXP=$exp_n LC_ALL=C awk "$AWK_NORM"'
+     BEGIN { e = ENVIRON["KAMA_EXP"] ""; found = 0; hit = 0 }
+-    hit { next }
+     { s = norm($0); if (s == "") next; found = 1; if (s == e) hit = 1 }
+     END { exit (hit ? 0 : (found ? 1 : 2)) }' || rc=$?
+   return "$rc"
+@@ -465,7 +464,7 @@ model_matches() {
+ # Round 91 (C1): stdin router_entries lines, $1 normalized expected id -> the lines whose id field
+ # matches it under normalize_id's rule, in one pass (router_refine no longer forks per entry).
+ router_match() {
+-  KAMA_EXP=$1 LC_ALL=C awk "$AWK_NORM"'
++  KAMA_EXP=$1 LC_ALL=C awk -F '\t' "$AWK_NORM"'
+     BEGIN { e = ENVIRON["KAMA_EXP"] "" }
+     { s = norm($1); if (s != "" && s == e) print }'
+ }

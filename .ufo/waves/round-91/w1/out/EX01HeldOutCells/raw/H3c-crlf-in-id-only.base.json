@@ -1,0 +1,34 @@
+# probe=/fast/scratch/hyaku/kama-r91/EX01HeldOutCells/probe-base.sh sha256=b71c309ad849c25db9c33a2e1bde4c691c766d68073ed0378b5fc96f1e4b48d7 rc=2 seconds=0.14 verdict=MODEL_MISMATCH reason=served-id-mismatch raw_len=1009 raw_sha256=bfeba97d305c8d3d0073f9c00c5300cfeb63943742035cd7cbaffb31231d7138 elided=0
+{
+ "schema": "kama-probe/v1",
+ "subcommand": "check",
+ "registry": "/fast/scratch/hyaku/kama-r91/registry/endpoint-consumers.tsv",
+ "verdict_vocabulary": "MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP MODEL_LOADING MODEL_UNLOADED",
+ "exit_codes": {
+  "0": "every declared consumer reconciles",
+  "2": "at least one drift",
+  "1": "probe error"
+ },
+ "summary": {
+  "registry_rows_evaluated": 1,
+  "model_ok": 0,
+  "drift": 1,
+  "exit": 2
+ },
+ "rows": [
+  {
+   "id": "cli-override",
+   "consumer_path": "-",
+   "declared": "http://127.0.0.1:42153/v1",
+   "file_match": "cli-override",
+   "resolver_kind": "cli-override",
+   "expected_model_id": "good",
+   "verdict": "MODEL_MISMATCH",
+   "reason": "served-id-mismatch",
+   "served_model": "good\\u000d\\u000a",
+   "drift": true,
+   "evidence": "GET /v1/models -> 200 application/json (runtime=other; expected=good; reason=served-id-mismatch)",
+   "notes": ""
+  }
+ ]
+}

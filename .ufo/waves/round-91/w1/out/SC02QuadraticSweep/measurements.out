@@ -1,0 +1,30 @@
+# SC02QuadraticSweep measurement receipt (probe revisions, stub cells, host load)
+# probe M  = 3f317ecd211e80929c673e306e3230be287fdf20 sha256 0aa43573be3a52fa22d9b419049814133324e423dcd22429f107ad28ee0a75da
+# probe BASE= c06838c5b94576971ea33ac465bf2c935e9037f9 sha256 b71c309ad849c25db9c33a2e1bde4c691c766d68073ed0378b5fc96f1e4b48d7
+# host: 32 cores, load 29-77 during runs (read /proc/loadavg per line)
+
+## F1 jstr quadratic: one served id of N backslashes, stub, check --port --expect nomatch --json
+M:  N=80000 2.01s | N=160000 6.97s | N=320000 27.11s | N=640000 129.04s (body 1.28MB)
+BASE: N=80000 7.09s | N=160000 32.76s
+H1 (N=1900000 backslashes, body 3.80MB, under 4MiB cap): KILLED at 180.10s at M
+attribution N=160000: probe 10.92s -> candA(no jstr global replacements) 0.35s -> candC(LC_ALL=C in jstr) 0.58s
+
+## F2 router_refine cand accumulation: router entries status=unloaded, --expect *
+M:  N=8000 2.37s | N=16000 9.61s | N=32000 37.79s | N=80000 KILLED>180s
+BASE: N=8000 2.52s | N=32000 37.40s
+control same N=32000: status=weird 1.03s, status=loaded 0.95s (no accumulation)
+attribution N=32000: probe 40.27s -> candB(cand="" no accumulation) 1.12s
+duplicate ids (32000 entries id=good, status=unloaded, --expect good): 39.96s at M
+
+## F3 snapshot served_persist fork-per-id: registry row -> stub serving N ids
+M snapshot: N=2000 11.72s | N=8000 51.21s
+attribution N=8000: probe 51.21s -> candD(no per-id forks) 1.50s
+M snapshot one id of N no-slash chars (normalize_id ${s##*/}): N=50000 5.6s | N=100000 19.2s | N=200000 61.5s
+
+## micro-benchmarks bash (LC_ALL=en_US.UTF-8 vs C)
+jstr alone N=40000 506ms | N=80000 1945ms | N=160000 8041ms | N=320000 35102ms UTF-8; N=320000 792ms LC_ALL=C
+${s##*/} no-slash N=40000 1348ms UTF-8 / 522ms C
+${s##*/} with slashes N=40000 1ms both
+${s//bs/bsbs} matches=0: 3ms at len 400000 (non-matching pattern is NOT the cost)
+
+## R3 router-? : H5 (id good, status.value 'loa\x01ding') -> M: MODEL_UNLOADED router-? 0.16s | BASE: MODEL_UNLOADED router-? 0.11s

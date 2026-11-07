@@ -1,0 +1,124 @@
+# SB01LessonDraft — receipts, 2026-11-06 (kama round 91)
+
+All commands below were run by seat SB01LessonDraft in
+`/fast/scratch/hyaku/kama-r91/SB01LessonDraft` (removed after copy) with `TMPDIR` set there.
+bash 5.3.20, curl 8.23.0, python 3.14.8. Host load at the time: `uptime` 19.5 / 23.7 / 40.7 / 42.3 /
+45.8 (32 cores). Timings are single runs; the 3 000× gaps are far outside load noise.
+
+## 1. Source re-open (S592-S595) — digests equal to the committed rows
+
+```
+$ curl -sfL --max-time 60 -o awk.html  https://pubs.opengroup.org/onlinepubs/9799919799/utilities/awk.html
+rc=0  6df7d0776af4b28dbc3ec667a02a18e51ccd5066ea45a22166214e7e3832f898  awk.html
+$ curl -sfL --max-time 60 -o common.h  https://raw.githubusercontent.com/ggml-org/llama.cpp/b12177/common/common.h
+rc=0  c3010a3c662a14556adb651b79bff00089564fde6b5e336959403e3db34e6073  common.h
+$ curl -sfL --max-time 60 -o config.go https://raw.githubusercontent.com/ollama/ollama/v0.40.11/envconfig/config.go
+rc=0  0b0ea669b31cfe2b54313427257326a2b7a909bbc7bf8a671035efc446fb1895  config.go
+$ curl -sfL --max-time 60 -o envs.py   https://raw.githubusercontent.com/vllm-project/vllm/v0.32.0/vllm/envs.py
+rc=0  e963af06cf6c775fe285147e0d811ea5b4d679e5cbd6958980ec2a0d1da70694  envs.py
+```
+
+Every SKILL threshold literal read on its declared line:
+
+```
+common.h:464: int32_t n_parallel            =     1; // number of parallel sequences to decode
+common.h:632: int32_t port                = 9931;          // server listens on this network port
+common.h:634: int32_t timeout_read        = 3600;          // http read timeout in seconds
+common.h:636: int32_t sse_ping_interval   = 30;            // SSE ping interval in seconds
+common.h:644: int32_t cache_ram_mib       = 8192;  // -1 = no limit, 0 - disable, 1 = 1 MiB, etc.
+common.h:669: int sleep_idle_seconds = -1;   // if >0, server will sleep after this many seconds of idle time
+common.h:703: int models_max = 4;                 // maximum number of models to load simultaneously
+config.go:23:  \tdefaultPort := "11434"
+config.go:130: \tkeepAlive = 5 * time.Minute
+config.go:150: \tloadTimeout = 5 * time.Minute
+config.go:277: \tNumParallel = Uint("OLLAMA_NUM_PARALLEL", 1)
+config.go:281: \tMaxQueue = Uint("OLLAMA_MAX_QUEUE", 512)
+envs.py:26:    VLLM_ENGINE_READY_TIMEOUT_S: int = 600          (inside `if TYPE_CHECKING:` at line 16)
+envs.py:111:   VLLM_HTTP_TIMEOUT_KEEP_ALIVE: int = 5  # seconds  (same block)
+envs.py:809-812:  # Timeout in seconds ... Default is 600 seconds (10 minutes).
+                  "VLLM_ENGINE_READY_TIMEOUT_S": lambda: int(os.environ.get("VLLM_ENGINE_READY_TIMEOUT_S", "600"))
+envs.py:1142-1144: "VLLM_HTTP_TIMEOUT_KEEP_ALIVE": lambda: int(os.environ.get("VLLM_HTTP_TIMEOUT_KEEP_ALIVE", "5"))
+awk.html:107-108, 185, 796-797 as quoted in the Gate row.
+```
+
+Binary check: `llama-server --version` → `version: 0.9.0-dev (build 12177, commit 6c01da627)`;
+`sha256sum /home/vgpnk/.local/opt/llama-b12177/llama-server` →
+`ba272ee3446d9b98c9150c79667e6a8b217f25ee58ce0c6156cc96d2b5b362b0` = the harm receipts' `server_sha256`.
+
+## 2. GNU gawk manual pages — unreachable host (the L1's rc=28 reproduces)
+
+```
+$ for u in Assignment-Options.html Variable-Assignment-Options.html Options.html; do curl -sS -o /dev/null \
+    -w 'http=%{http_code} size=%{size_download} time=%{time_total}\n' --max-time 45 "$u"; done
+curl: (28) Connection timed out after 45001 milliseconds      http=000 size=0 time=45.001  rc=28   (x3)
+$ curl ... --max-time 20 https://www.gnu.org/software/gawk/manual/html_node/index.html
+curl: (28) Connection timed out after 20001 milliseconds      http=000 rc=28
+$ curl ... --max-time 20 http://www.gnu.org/software/gawk/manual/html_node/Assignment-Options.html
+curl: (28) Connection timed out after 20001 milliseconds      http=000 rc=28
+$ curl ... --max-time 20 https://www.gnu.org/
+curl: (28) Connection timed out after 20001 milliseconds      http=000 rc=28
+$ getent hosts www.gnu.org
+2001:470:142:5::116 www.gnu.org
+$ curl -v ... (tail)
+* Host www.gnu.org:443 was resolved.  * IPv6: 2001:470:142:5::116  * IPv4: 209.51.188.116
+*   Trying [2001:470:142:5::116]:443...  *   Trying 209.51.188.116:443...
+* Connection timed out after 20001 milliseconds
+```
+
+No page on this host is reachable, so page existence is not judgeable from here (not a 404 observation).
+
+## 3. SGLang v0.5.22 `server_args.py` — defaults are no longer in that file
+
+```
+$ curl -sS --max-time 60 -o server_args.py .../v0.5.22/python/sglang/srt/server_args.py
+http=200 size=35396 time=0.015  sha256 d1b9ffc79edcbc857efd02a47d47eed9b414f8ac44bc4e3214d78a7922e90e03
+$ grep -n 'arg_groups\|class ServerArgs' server_args.py | head
+31: from sglang.srt.arg_groups.arg_utils import (
+137: from sglang.srt.arg_groups.fields import collect_input_fields
+159-177: from sglang.srt.arg_groups.fields.{memory,mm,model,observability,parallel,schedule,serving} import (
+$ grep -n 'timeout\|keep_alive' server_args.py | head        -> (no output)
+$ curl ... api.github.com/repos/sgl-project/sglang/contents/python/sglang/srt/arg_groups?ref=v0.5.22
+http=200  39 entries (arg_utils, argparse_actions, fields/, ... )
+$ curl -sfL ... arg_groups/fields/serving.py ; sha256 66a9ab458053c31290f21d9b7ce6686c7a9d83e6387f2a12a61a0e5599ff4923
+256-260: stream_interval: A[ int, "The interval (or buffer size) for streaming ..." ] = 1
+```
+
+## 4. `${var%,}` cost — mechanism bench (M2)
+
+One list, 1 800 000 bytes, 200 000 ids of 8 bytes joined by commas.
+
+```
+$ bash t/g.sh          # string built the way the base probe builds it
+rep=1 one-strip=0.033 tr+cmdsub=0.055 y-strip=55.960 len=1799999/1799999
+rep=2 one-strip=0.024 tr+cmdsub=0.062 y-strip=69.868 len=1799999/1799999
+
+$ bash t/i.sh          # same string, three suffix-removal cases
+len=1800000 last=,
+nomatch-unquoted 68.568 len=1800000        # ${one%X}
+nomatch-quoted   62.946 len=1800000        # ${one%"X"}
+match-quoted      0.021 len=1799999        # ${one%","}
+
+$ LC_ALL=<loc> bash t/t2.sh   # base shape: ids=$(cat nl-list) ; C_SERVED=$(printf|tr) ; ${C_SERVED%,}
+locale=C.UTF-8     tr+cmdsub=0.045 strip=56.393
+locale=en_US.UTF-8 tr+cmdsub=0.048 strip=65.086
+locale=pt_BR.UTF-8 tr+cmdsub=0.025 strip=11.704    # locale absent on host -> C semantics
+```
+
+Read: the expansion costs 0.02 s when its pattern matches the last character and 56-69 s when it does
+not (one scan per split point, multibyte-aware). The base probe's `ids=$(served_ids …)` strips the
+trailing newline, so `tr '\n' ','` emits **no** trailing comma and the `%,` strip matched nothing: a
+no-op that paid the scan. Independent in-situ confirmation: the F1 forgery (per-id fork removed)
+still spends 39.38 s on T1 (`.ufo/waves/round-91/controls/c1-f1-count-cap.out`).
+
+## 5. Round-90 counter could not see it
+
+```
+tools/round90-hostile-answers.py:185   p = subprocess.run(cmd, capture_output=True, timeout=90, ...)
+tools/round90-hostile-answers.py:311   big_ids = ["good"] + [f"m-{i:05d}" for i in range(20000)]
+$ grep -n "seconds\|time.monotonic" tools/round90-hostile-answers.py   -> (no output; no time is graded)
+```
+
+## 6. Lane repo left untouched
+
+Reads only (`git show`, `grep`, `curl`, `awk`, `sed -n`, `sha256sum`, `sources-census.sh validate`
+→ exit 0 `kama ok`). No git/jj mutation anywhere; scratch directory removed before yield.

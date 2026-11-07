@@ -1,0 +1,32 @@
+RV01ProbeDiff — norm equivalence harness summary
+=================================================
+Fixture: 200,086 id lines (86 handpicked edge cases + 200,000 deterministic random,
+seed 91). Edge cases include: ids ending "/", ".gguf" alone, "a.gguf/", "x.GGUF",
+".GGUF", ".Gguf", "..gguf", "good.gguf.gguf", leading/trailing whitespace, embedded
+tab, CR (leading/trailing/embedded), backslashes, literal "\u001bgood" text, raw ESC
+byte, embedded spaces, multibyte UTF-8 (モデル/na.me.gguf, модель, 𝄞, café.gguf),
+invalid UTF-8 (\xff\xfeabc.gguf, \x80.gguf, abc\xff, a/\xffb), numeric lookalikes
+(1.0, 1, 01, 0x10, 16, 1e3, 1000, 1E3, 1e-3, nan, inf, +5, -5, .5, 5., 0, 00,
+010, 10, 1e3/1000 crosses), empty line, " ", "  ", comma/percent/equals/colon/quote
+in ids. NUL excluded: bash variables cannot hold NUL, and both served_ids paths
+escape controls, so NUL is unreachable through classify() in base and M alike.
+
+Method: base side = extracted base `normalize_id` (bash) run per line under
+LC_ALL=<loc>; M side = extracted M AWK_NORM `norm()` run once over the same file
+with LC_ALL=C (exactly as model_matches invokes it); byte compare with cmp(1).
+Second awk run under LC_ALL=C.utf8 as an information point.
+
+Results:
+  NORM_EQ bash(LC_ALL=C)         vs awk(LC_ALL=C)       — cmp clean over 200,086 lines
+  NORM_EQ bash(LC_ALL=C.utf8)    vs awk(LC_ALL=C)       — cmp clean
+  NORM_EQ bash(LC_ALL=en_US.utf8) vs awk(LC_ALL=C)      — cmp clean
+  AWK_C_EQ_AWK_CUTF8 (awk itself locale-insensitive here)
+
+String-vs-numeric proof (inside model_matches pairs, both engines agree):
+  "1e3" != "1000", "0x10" != "16", "1.0" != "1", "01" != "1" (string compare holds;
+  the `s ""` / `e = ENVIRON[...] ""` idiom defeats numeric-string comparison).
+
+S592 corroboration (assignment operand vs ENVIRON):
+  printf 'a\b' | awk -v e='a\b' ...  -> e is escape-processed to 2 chars (a + backspace), no match
+  printf 'a\b' | KAMA_EXP='a\b' awk ENVIRON lookup -> 3 chars verbatim, match
+  i.e. the ENVIRON transport is required for ids containing backslashes; -v would break them.

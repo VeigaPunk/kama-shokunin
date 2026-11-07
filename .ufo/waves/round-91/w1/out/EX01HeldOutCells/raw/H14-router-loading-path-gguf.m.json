@@ -1,0 +1,34 @@
+# probe=/fast/scratch/hyaku/kama-r91/EX01HeldOutCells/probe-M.sh sha256=0aa43573be3a52fa22d9b419049814133324e423dcd22429f107ad28ee0a75da rc=2 seconds=0.30 verdict=MODEL_LOADING reason=router-loading raw_len=1003 raw_sha256=90f661655152f842f6d3b482ff100414b3ad2310d363331966ee260ca936d66f elided=0
+{
+ "schema": "kama-probe/v1",
+ "subcommand": "check",
+ "registry": "/fast/scratch/hyaku/kama-r91/registry/endpoint-consumers.tsv",
+ "verdict_vocabulary": "MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP MODEL_LOADING MODEL_UNLOADED",
+ "exit_codes": {
+  "0": "every declared consumer reconciles",
+  "2": "at least one drift",
+  "1": "probe error"
+ },
+ "summary": {
+  "registry_rows_evaluated": 1,
+  "model_ok": 0,
+  "drift": 1,
+  "exit": 2
+ },
+ "rows": [
+  {
+   "id": "cli-override",
+   "consumer_path": "-",
+   "declared": "http://127.0.0.1:43039/v1",
+   "file_match": "cli-override",
+   "resolver_kind": "cli-override",
+   "expected_model_id": "good",
+   "verdict": "MODEL_LOADING",
+   "reason": "router-loading",
+   "served_model": "/models/sub/good.gguf",
+   "drift": true,
+   "evidence": "GET /v1/models -> 200 application/json (runtime=other; expected=good; reason=router-loading)",
+   "notes": ""
+  }
+ ]
+}

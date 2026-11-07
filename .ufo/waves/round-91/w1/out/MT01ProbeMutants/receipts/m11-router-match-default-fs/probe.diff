@@ -1,0 +1,22 @@
+diff --git c/tools/kama-probe.sh w/tools/kama-probe.sh
+index 04b847d4..76b97e05 100755
+--- c/tools/kama-probe.sh
++++ w/tools/kama-probe.sh
+@@ -465,7 +465,7 @@ model_matches() {
+ # Round 91 (C1): stdin router_entries lines, $1 normalized expected id -> the lines whose id field
+ # matches it under normalize_id's rule, in one pass (router_refine no longer forks per entry).
+ router_match() {
+-  KAMA_EXP=$1 LC_ALL=C awk -F '\t' "$AWK_NORM"'
++  KAMA_EXP=$1 LC_ALL=C awk "$AWK_NORM"'
+     BEGIN { e = ENVIRON["KAMA_EXP"] "" }
+     { s = norm($1); if (s != "" && s == e) print }'
+ }
+@@ -932,7 +932,7 @@ classify() { # $1 port, $2 expected -> sets C_VERDICT C_SERVED C_EVIDENCE C_REAS
+     ids=$(served_ids "$FBODY")
+     # Round 91 (C1): `paste -sd,` joins without a trailing comma; the earlier `${C_SERVED%,}` took
+     # 38 s on a 1.6 MB list in a UTF-8 locale (bash suffix removal is quadratic there).
+-    C_SERVED=$(printf '%s' "$ids" | tr '\n' ',')
++    C_SERVED=$(printf '%s\n' "$ids" | paste -sd, -)
+     [ -n "$C_SERVED" ] || C_SERVED='-'
+     local runtime="other"
+     [ "$F_SERVER" = "llama.cpp" ] && runtime="llama.cpp"

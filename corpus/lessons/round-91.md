@@ -48,6 +48,17 @@ fix touched. Evidence: `controls/c1-base.out` (T1/T2/T4/T5 killed at 120 s, T3 `
 R5. Captured-by: r90 closure R5. Fix: C1 (`BUDGET = 20 s` inside every pass condition). Shown able to fail:
 `controls/c1-base.out`, `controls/c1-f1-count-cap.out`.
 
+**M4 — a probe change staled another capability's receipt, and the harm list did not name it.** Class: harm
+outside the frozen kill list (an instrument bound to the probe's sha256). Evidence: wave-1 SC02 F6
+(`.ufo/waves/round-91/w1/SC02QuadraticSweep.md`): `tools/round90-reason-rows.py` at the C1 measured commit prints
+`bound=0 unbound=24 receipt=stale`, because the round-90 receipt binds the base probe `b71c309a`; receipt
+`.ufo/waves/round-91/measured/r90-reason-rows-stale.out` (rev `3c4f6a1e`, exit 1). Captured-by: none — C1's K2 harm
+suite (`controls/harm.sh`) lists five suites and not the reason-row counter. Fix: receipt re-captured at the current
+probe (`tools/round90-reason-capture.py`, `measured/r90-reason-recapture.out`); the 24 (cell, reason, verdict) triples
+are identical to the prior receipt (`measured/r90-reason-cells-prior.jsonl` vs `-recaptured.jsonl`), so no reason or
+verdict changed; the counter re-binds 24/24 at the landing commit (`measured/r90-reason-rows-tip.out`). Routed: a
+successor harm list names every probe-sha-bound instrument. Shown able to fail: the stale receipt above.
+
 **Driver-side note (not a lane mistake, orchestrator ruling).** Attempt 2 found `w1.ready` (l1 `KamaR91`) marked
 `.partial.dead` and wrote a new wave `w1a2` with the same 12 items. The orchestrator had already re-spawned `w1` under
 the attempt-2 label (`live()` matches `KamaR91` → `KamaR91a2`) at 20:23:18; `w1a2` spawned at 20:24:52; the
@@ -59,7 +70,7 @@ seat names (§6 run-6 rule) — the check that would have shown `w1` live.
 
 - R1 `round75-instruments` red (`bad_rows=19`): carried, L0 still open.
 - R2 verified-at: dated correction in `corpus/knowledge/probe-answer-bounds.md` (landed `3f317ecd`).
-- R3 `router-?` reason: wave-1 SC02 swept it (`w1/SC02QuadraticSweep.md` when settled); carried to round 92.
+- R3 `router-?` reason: wave-1 SC02 F6 confirms it is still printed and absent from SKILL §Probe reason codes; carried to round 92.
 - R4 latency budget pin: C1's counter puts a 20 s budget in every cell (`tools/round91-answer-time.py`); a
   persisted budget in `tests/` is still absent (EX02 proposed line, `w1/EX02NoPythonPath.md`): carried.
 - R5 time bound: C1. Counter limits (CR01: expected id always last, probe identity not compared, `served_model`

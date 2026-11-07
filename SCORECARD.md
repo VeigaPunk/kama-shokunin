@@ -69,7 +69,8 @@ The live plan follows; historical plans remain as filed (round 78's in `plans/ro
    T02/T04/T09/T10/T11/T13) as a new revision, never an edit of the round-91 rows' frozen measurement.
 2. Operability (wave-1 CR01 B2/B3/D1/D2, MT01 m08/m11/m14): a successor answer-time counter with the expected id first
    and in the middle, a normalize-at-scale cell, a 250 001-id cell, a `served_model` check, a foreign-loaded /
-   expected-unloaded router cell and a space-bearing router id; probe identity compared with the frozen M bytes.
+   expected-unloaded router cell and a space-bearing router id; probe identity compared with the frozen M bytes; the
+   three super-linear paths wave-1 SC02 measured (`jstr` replacements, `router_refine` `cand`, `served_persist` forks).
 3. Operability (wave-1 SB01 M2): reword the `${C_SERVED%,}` comment in `tools/kama-probe.sh` to the measured mechanism
    (unmatched suffix scan, linear).
 4. Carried: r90 R1 (`round75-instruments` `bad_rows=19`, L0 open), R3 `router-?` reason, R4 persisted latency budget
@@ -5897,6 +5898,14 @@ python-free path (EX02): no base-right/M-wrong pair; RV01: verdict-equivalent to
   g1/g2/g4/g6), and it never compares the printed probe sha256 with M. The router filter is unowned (MT01 m08, m11,
   m14 survive both the counter and `tests/probe-verdicts/check.py`). Held-out cells with the expected id first or in
   the middle grade correctly at M (CR01 `heldout.out`).
+- The C1 change staled the round-90 reason-row receipt (bound to the base probe): `round90-reason-rows.py` read
+  `bound=0 receipt=stale` at `3c4f6a1e` (`measured/r90-reason-rows-stale.out`); re-captured with identical triples
+  and re-bound 24/24 (`measured/r90-reason-rows-tip.out`; lesson M4).
+- Linear time is shown for the id compare only. Wave-1 SC02 (`w1/SC02QuadraticSweep.md`) measures three super-linear
+  paths left on listener data, all present at base: `jstr`'s `${s//…}` on a backslash-heavy id (640k backslashes
+  129 s; a 3.8 MB body killed at 180 s), `router_refine`'s `cand` accumulation on unloaded wildcard entries (32k
+  entries 38 s, base identical) and `served_persist`'s per-id forks in `snapshot` (8 000 ids 51 s). Routed (§Planned
+  round 92 item 2).
 - The C2 counter binds a literal on a line; it cannot see whether the line is the binary's default (T07) or whether
   a decision overreaches (RV02: T02, T04, T09, T10, T11, T13). Forgery classes binding at the counter: CR02 (w1, w1a2),
   MT02 (13/22 and 5/19 single-point rules unowned by the battery).
