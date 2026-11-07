@@ -6204,3 +6204,6 @@ first-working round 93.
   ones that change the repeat count's share of the deadline); 12 survive — key fields dropped one at a time, `lstat`,
   undecided → invalid, no deadline — four of them flip a verdict on listings no cell holds (two distinct files of
   equal size and mtime, 16 symlinks, 12 distinct slow files). Routed with CR01's cells to round 94.
+- C2 (wave-1 SC01, `.ufo/waves/round-93/w1/SC01SetterSweep.md`): K2 fires a second time — a `config.ini` sets the port
+  and slot count of the pinned binary (measured 18099 / 7 slots) and R16/R17 omit it; `llama-cli`'s embedded server
+  runs 1 slot on a free port. `SKILL.md` §Round 93 correction, second note; lesson M8.

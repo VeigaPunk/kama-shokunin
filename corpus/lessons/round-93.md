@@ -124,3 +124,13 @@ must fail (`mismatches>0`), and any named cell is checked for load sensitivity b
 Wave-1 adjacency read (CN01, `w1/CN01SiblingOverlap.md`): kama's own consumer rows
 `registry/endpoint-consumers.tsv:35-37` pin 8080 and 34113 without naming which setter (R16) the unit uses — routed
 to round 94 (R16 is not verified); kagi's `SKILL.md:9-10` keeps a stale 8080 model pin — reported, not absorbed.
+
+**M8 — a mechanical population taken as the setter sweep (K2, wave-1 SC01).** Class: "every line matching a pattern"
+read as "every setter". Evidence: a `config.ini` sets the pinned llama-server's port (18099) and slot count (7)
+through the option handlers, and no line of that route matches `POP_RE`
+(`.ufo/waves/round-93/w1/SC01SetterSweep.md` F1, receipts `out/SC01SetterSweep/prec*.log`, `cfg-parallel.log`); the
+embedded `llama-cli` server runs 1 slot on a free port (F2). R16/R17 named neither, so they state a port and a count
+for starts another setter changes. Captured-by: K2 (fired). The plan's limit paragraph disclosed data-flow setters
+for the *counter*; it did not stop the *decision* from claiming completeness. Fix: decisions scoped to the entry
+point they were swept for and to the setters a live run of the pinned binary confirms (config file, env, argv,
+presets, AIP, router child), routed to round 94 (SCORECARD §Planned item 5).

@@ -2057,3 +2057,16 @@ byte-identical; read them through this note.
   P37 holds for one TCP host); the Source cells resolve to files, whose S-row anchor cells name narrower line ranges.
 
 Round-93 C2 is therefore **not verified** by the author (lesson `corpus/lessons/round-93.md` M4, QUALITY KQ151).
+
+#### Round 93 correction, second note (2026-11-07) — wave-1 SC01 measured on the pinned binary
+
+- **A `config.ini` is a fifth setter R16 and R17 omit.** `common_params_apply_system_config` (`common/arg.cpp:729`,
+  applied at 779) reads `/etc/llama.cpp/config.ini` and `${XDG_CONFIG_HOME:-~/.config}/llama.cpp/config.ini` through
+  the same option handlers; with only `port = 18099` in the user file the pinned llama-server listened on 18099, with
+  `parallel = 7` it ran 7 slots, and argv beat env beat the file (`.ufo/waves/round-93/w1/out/SC01SetterSweep/prec.log`,
+  `prec2.log`, `cfg-parallel.log`). No population line carries the route, so the counter cannot see it.
+- **R16/R17 hold for the `llama-server` (and `llama serve`) entry point only.** `llama-cli` runs an embedded server
+  on a free port with 1 slot (`tools/cli/cli-server.h:35-44`; measured `cli4.log`).
+- **A router child inherits the router's `AIP_MODE`/`AIP_HTTP_PORT`**, replaces its free port with `AIP_HTTP_PORT`
+  and fails to bind (measured `aip2.log`); `LLAMA_SERVER_ROUTER_PORT` in the environment makes a process a child
+  rather than a router (`tools/server/server-common.cpp:2235-2237`; `role2.log`).
