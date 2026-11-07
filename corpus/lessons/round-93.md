@@ -110,3 +110,17 @@ rule; superseding rows planned (round 94). Not run on a live child (the claim is
 - **R5** the round-93 report is authored after the final lane push; its author date is checked against the tip
   before filing.
 - **R6** carried (R03 wording untouched).
+
+**M7 — a frozen control's named expectation is load-sensitive.** Class: control receipt that names *which* cell a
+forgery fails, where the failing cell depends on parse speed. Evidence: the replay of the frozen battery at
+`487e5b15` (`.ufo/waves/round-93/measured/c1-forgeries-replay.out`, load ~70, 0.8 s per slow parse) rejects F4
+(first-8 cap) with `mismatches=5` on R02–R06, but its named cell P02 is green — eight capped parses outlast the 4 s
+deadline, the uncapped valid file is never reached and stays loadable — so `as_expected=0`, `C1_CONTROLS 4/5`; the
+pre-freeze run at load 38 failed F4 on P02 (`controls/c1-forgeries.out`). The forgery is rejected either way; the
+receipt's label is not reproducible. Captured-by: KQ150's sibling rule (forgery run against the frozen counter), which
+holds, but nothing required the named cell to be load-independent. Fix (round 94): a control names the predicate it
+must fail (`mismatches>0`), and any named cell is checked for load sensitivity by a replay at a second load.
+
+Wave-1 adjacency read (CN01, `w1/CN01SiblingOverlap.md`): kama's own consumer rows
+`registry/endpoint-consumers.tsv:35-37` pin 8080 and 34113 without naming which setter (R16) the unit uses — routed
+to round 94 (R16 is not verified); kagi's `SKILL.md:9-10` keeps a stale 8080 model pin — reported, not absorbed.
