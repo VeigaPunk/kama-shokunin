@@ -6181,3 +6181,14 @@ first-working round 93.
   survive the committed battery, scope ungraded outside `common/arg.cpp`.
 - The `setter-rows` capability row above stands as an instrument that ran and binds what it checks; its decision rows
   are not admitted knowledge until the correction's readings land as superseding rows (planned round 94).
+
+### Round-93 wave-1 counter findings (appended; not falsifications of the measured commits)
+
+- C1 counter (wave-1 CR01, `.ufo/waves/round-93/w1/CR01RepeatCounter.md`): 15 of 19 wrong probes score 0/0; a memo
+  keyed by `realpath` passes and re-opens the F6 false green on **hard links** (33 links × 64 entries: base and the
+  forgery `MODEL_OK`, M1 `MODEL_UNLOADED`); a fail-closed cap at exactly P02's 64-candidate edge passes; coarser keys
+  (basename, size) and "second sighting → invalid" pass while false-redding listings no cell holds; a cross-call disk
+  cache passes. No listing falsifies M1 or `b3765799`. Routed: successor cells R05b (hard links), P02 with 2048
+  candidates, a same-basename/same-size collision cell, a two-path-flag single entry, a two-invocation rewrite cell.
+- C2 counter (wave-1 CR02, MT02): 20/38 forged variants bind; 16/26 single-point counter mutants survive the committed
+  battery; scope is ungraded outside `common/arg.cpp`.
