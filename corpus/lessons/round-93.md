@@ -71,3 +71,42 @@ size with its mtime restored between two candidates of one call: `.ufo/waves/rou
 at `fe5f031c` entry 2 `-` (loadable) 3/3. Captured-by: none in the frozen plan (the counter never mutates a file).
 Fix: `st_ctime_ns` added to the key (`b3765799`; utime() cannot set ctime); same receipt at `b3765799` entry 2
 `invalid` 3/3; C1 counter 10/10 0/0 and harm unchanged at `b3765799` (`measured/c1-M1b.out`, `harm-M1b.out`).
+
+**M6 — R16's router-child clause is defeated by a later-sorting preset option (K2, second clause).** Class: a
+decision states a port for a start that another population row changes. Evidence: `common/preset.cpp:44-51` renders a
+child's argv by iterating a `std::map` keyed by `strcmp(args[0], …)` (`common/arg.h:91-96`), so `--port` precedes
+`--vision-gemma-4b-default`, whose lambda sets `params.port = 8014;` (`common/arg.cpp:4753`, P23/P24) after P41's
+`--port`; `unset_reserved_args(preset, false)` (`server-models.cpp:268-286`, called at 314) does not remove preset
+options. Such a child listens on 8014, not on the free port the router chose. Non-author read: wave-1
+`w1/RV02SetterRows.md` DEFECT-2. Captured-by: K2 (fired). Fix: `SKILL.md` §Round 93 correction states the argv-order
+rule; superseding rows planned (round 94). Not run on a live child (the claim is the source read).
+
+### Corrections to M1–M4 (appended after wave-1 SB01; the rows above stand as written)
+
+- M1: "≈1.4 s at load 21" is not a receipt token. The receipt is `measured/m1-v0-alias-F2.out`: R05 2.64 s / 2.96 s /
+  2.64 s at load 73 for four parses; the frozen R05's 33 strings put the path-string memo past the 4 s deadline.
+  The v0 counter bytes are not committed (the receipt names `<scratch>/v0-counter.py`, rebuilt from the frozen
+  counter by one line); v0 is not presented as replayable.
+- M2: captured by the counter's `decision-names` arm; the receipt `measured/m2-range-decision.out` is a reconstruction
+  after the freeze (`--skill-file` override at `4c4adc63`), not the original P0 run.
+- M3: the numbers are those of the terminal gate receipt `.ufo/waves/round-93/measured/gate-final.out` (committed at the
+  end of the round), not a hand-copied line.
+- M4: Captured-by is K2 (fired, wave-1 RV02); no QUALITY criterion existed, hence KQ151.
+- Gate: the re-opened rows S596, S598, S599 are admitted for their files; their anchor cells name narrower line
+  ranges than the P-rows cite (P08–P24 at 3318–4764, P37 at 512, P39–P45) — read them through `SKILL.md` §Round 93
+  correction. The `server-models-sched.cpp` reject was read in the pinned archive, not fetched as a raw URL.
+- The C1 rule prose in `plans/round-93-claims.md` names a four-field key; the tip's key has five fields
+  (`st_ctime_ns`, `b3765799`, M5). The plan stays frozen; this is the dated note.
+
+## Dispositions of the round-92 closure (R1–R6)
+
+- **R1** carried, not claimed (M3; L0 r87/r89 open). This round's own deletion events are the two KQ148 re-captures of
+  `.ufo/waves/round-90/measured/reason-cells.jsonl` (24 identical triples each, at `995fe905` and `8e9ecd63`) and the
+  SCORECARD head-row updates.
+- **R2** answered in form (R16/R17 supersede R01/R08 with every population setter named), **C2 not verified** (M4, M6).
+- **R3** done for the R01/R08 class: `controls/c2-forgeries.out` V1 (the round-92 decisions) → `decisions_bound=0`;
+  the broader battery is thin (wave-1 CR02 20/38 forgeries bind, MT02 16/26 counter mutants survive) — routed.
+- **R4** routed to round 94 (SCORECARD §Planned (round 94) item 1).
+- **R5** the round-93 report is authored after the final lane push; its author date is checked against the tip
+  before filing.
+- **R6** carried (R03 wording untouched).
