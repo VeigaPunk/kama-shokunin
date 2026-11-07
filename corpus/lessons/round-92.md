@@ -82,3 +82,19 @@ prints 18 lines — the parser's own four (1373, 2521, 2529, 3321), 4613 and 461
 - **R5** SC02 F1–F3: C2 (`measured/c2.out`, L1–L6 within 20 s, D1–D9 equal to base). The round-91 limit "the counter does
   not own the rule" still holds for C2's counter: wave-1 CR01 passes five forgeries at `probe=rev` (SCORECARD §Round-92
   disclosed limits); M2 itself is linear and correct on each of those held-out shapes.
+
+## Wave-1 findings integrated (`.ufo/waves/round-92/w1/`)
+
+- RV01 (C2 diff): no reachable behaviour change in 915 comparisons; three latent differences (non-default IFS words,
+  >pipe-buffer multi-line `served_persist` exit 141, awk-missing failure) unreachable in the probe's runtime.
+- RV02 (C1 K2 read): 15/15 rows hold, three non-firing notes (R03 policy clause, R04 "0 for decision models", R07
+  default-scoped). SC01 (source sweep): every literal on its line; R01/R08 decisions overstate the binary → M4.
+- CR01 (C2 counter): five forgeries pass at `probe=rev` (mixed-escape quadratic fallback, 85 000 router cap, `/m/`-only
+  persist, 20 000 persist cap, trailing-space strip); M2 correct and linear on each held-out shape; routed to round 93.
+  L1 doubling at M2 (`.ufo/waves/round-92/measured/c2-doubling.out`): mixed-escape id 0.48 → 0.87 → 1.72 s, snapshot
+  4 000 → 32 000 ids 0.22 → 0.59 s, router 20 000 → 80 000 entries 0.49 → 1.64 s.
+- CR02 / MT02 (C1 counter): 14 wrong tables exit 0; 16/23 counter mutants exit-identical on the battery; routed.
+- MT01 (C2 probe mutants): 7/19 killed, 8 equivalent, 4 real gaps identical at base and M2; routed.
+- EX01 (held-out cells): no harm; base and M2 byte-equal where base completes. EX02 (no-python, awk portability): M2
+  equal to base with and without python; `AWK_JSTR`/`served_persist` byte-identical under gawk, busybox 1.35.0 and mawk
+  1.3.4 (scratch-only binaries). CN01: no sibling contradicts R01–R15.
