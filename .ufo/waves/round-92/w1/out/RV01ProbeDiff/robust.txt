@@ -1,0 +1,24 @@
+== 1. awk missing (PATH has only python3+dirname) ==
+[jstr-ctl-B] rc=0 out=b'"a\\\\x01b"JSTR_RC=0\n' err=b''
+[jstr-ctl-M2] rc=127 out=b'"' err=b'/fast/scratch/hyaku/kama-r92/RV01ProbeDiff/hM2.sh: line 232: awk: command not found\n'
+[sp-ctl-B] rc=0 out=b'-,-SP_RC=0\n' err=b'/fast/scratch/hyaku/kama-r92/RV01ProbeDiff/hB.sh: line 1462: tr: command not found\n/fast/scratch/hyaku/kama-r92/RV01ProbeDiff/hB.sh: line 1462: tr: command not found\n'
+[sp-ctl-M2] rc=127 out=b'' err=b'/fast/scratch/hyaku/kama-r92/RV01ProbeDiff/hM2.sh: line 1493: awk: command not found\n'
+== 2. SIGPIPE: jstr output closed early by head -c 1 ==
+[jstr-sigpipe-B] rc=141 out=b'' err=b''
+[jstr-sigpipe-M2] rc=141 out=b'' err=b''
+== 3. served_persist multiline 2MB: internal NR>1 exit vs base first-line read ==
+[sp-bigmultiline-B] rc=0 out=b'a SP_RC=0\n' err=b''
+[sp-bigmultiline-M2] rc=141 out=b'a' err=b''
+== 4. served_persist multiline small under pipefail (status only) ==
+[sp-smallml-B] rc=0 out=b'a RC=0\n' err=b''
+[sp-smallml-M2] rc=0 out=b'a RC=0\n' err=b''
+== 5. LC_ALL / LANG restoration after jstr and served_persist ==
+[lc-restore-B] rc=0 out=b'LC_ALL_after=en_US.UTF-8 LANG=unset out="x\\\\x01"\n' err=b''
+[lc-restore-M2] rc=0 out=b'LC_ALL_after=en_US.UTF-8 LANG=unset out="x\\\\x01"\n' err=b''
+[lc-exported-B] rc=0 out=b'LC_ALL_after=en_US.UTF-8\n' err=b''
+[lc-exported-M2] rc=0 out=b'LC_ALL_after=en_US.UTF-8\n' err=b''
+[lc-sp-B] rc=0 out=b'LC_ALL_after=unset\n' err=b''
+[lc-sp-M2] rc=0 out=b'LC_ALL_after=unset\n' err=b''
+== 6. jstr under set -e with awk missing mid-corpus: function exit vs output ==
+[jstr-cmdsub-B] rc=0 out=b'ASSIGN_RC=0 v="a\\\\x01b"\n' err=b''
+[jstr-cmdsub-M2] rc=0 out=b'ASSIGN_RC=0 v=""\n' err=b'/fast/scratch/hyaku/kama-r92/RV01ProbeDiff/hM2.sh: line 232: awk: command not found\n'

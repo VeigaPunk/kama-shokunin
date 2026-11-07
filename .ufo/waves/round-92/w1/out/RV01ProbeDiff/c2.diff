@@ -1,0 +1,126 @@
+diff --git a/tools/kama-probe.sh b/tools/kama-probe.sh
+index 0babf673..d53c9a9b 100755
+--- a/tools/kama-probe.sh
++++ b/tools/kama-probe.sh
+@@ -201,24 +201,36 @@ parse_args() {
+ }
+ 
+ # ---------------------------------------------------------------- json helpers
++# Round 92 (C2; r91 wave-1 SC02 F1): the escaping runs in ONE awk pass over the value, so its cost
++# is linear in the value's length. The former `${s//pat/repl}` global replacements cost O(length)
++# per match, so a served list of 1.9M backslashes (a legal 3.8 MB answer) ran past 180 s. The rule
++# is unchanged: `\` and `"` are escaped, TAB/LF/CR become \t \n \r, and every other control
++# character U+0001-U+001F and DEL becomes \u00XX (round 90, S588 RFC 8259 section 7). A value
++# with none of those bytes is printed as is (no fork); awk reads the value as LF-separated records
++# in the C locale, so a byte >= 0x80 passes through unchanged and LF is the record boundary.
++AWK_JSTR='BEGIN { for (i = 1; i < 32; i++) C[sprintf("%c", i)] = sprintf("\\u%04x", i)
++  C[sprintf("%c", 127)] = "\\u007f"; C["\t"] = "\\t"; C["\r"] = "\\r" }
++function piece(t,  n, k, c) {
++  if (t !~ /[\001-\037\177]/) { printf "%s", t; return }
++  n = length(t)
++  for (k = 1; k <= n; k++) { c = substr(t, k, 1); printf "%s", ((c in C) ? C[c] : c) }
++}
++function quotes(t,  n, q, j) {
++  n = split(t, q, "\""); piece(q[1])
++  for (j = 2; j <= n; j++) { printf "%s", "\\\""; piece(q[j]) }
++}
++NR > 1 { printf "%s", "\\n" }
++{ n = split($0, b, "\\"); quotes(b[1]); for (i = 2; i <= n; i++) { printf "%s", "\\\\"; quotes(b[i]) } }'
++
+ jstr() { # $1 -> JSON string literal
+-  local s=${1-}
+-  s=${s//\\/\\\\}
+-  s=${s//\"/\\\"}
+-  s=${s//$'\t'/\\t}
+-  s=${s//$'\n'/\\n}
+-  s=${s//$'\r'/\\r}
+-  # Round 90 (S588 RFC 8259 section 7): every other control character U+0001-U+001F and DEL is
+-  # escaped too, so a listener-supplied byte can never make the generated JSON unparseable.
+-  local i c
+-  if [[ $s == *[$'\x01'-$'\x1f'$'\x7f']* ]]; then
+-    for i in {1..31} 127; do
+-      printf -v c "\\x$(printf '%02x' "$i")"
+-      printf -v c "$c"
+-      s=${s//"$c"/$(printf '\\u%04x' "$i")}
+-    done
++  local s=${1-} LC_ALL=C
++  if [[ $s != *[\\\"$'\x01'-$'\x1f'$'\x7f']* ]]; then
++    printf '"%s"' "$s"
++    return 0
+   fi
+-  printf '"%s"' "$s"
++  printf '"'
++  printf '%s\n' "$s" | LC_ALL=C awk "$AWK_JSTR"
++  printf '"'
+ }
+ 
+ # Round 90 (C1): listener-supplied header/status text loses every control byte before it reaches
+@@ -799,7 +811,11 @@ PY
+ # of the matching entries refines a MODEL_OK; leaves both empty otherwise (see header).
+ router_refine() {
+   local body=$1 expected=$2 port=$3 id val failed idx wild=0 any_status=0 ok=0 loading='' down=''
+-  local sleeping=0 cand='' unloaded=0 unloadable='' autoload=0 fidx fstate nbad=0 ncand=0
++  local sleeping=0 unloaded=0 unloadable='' autoload=0 fidx fstate nbad=0 ncand=0
++  # Round 92 (C2; r91 wave-1 SC02 F2): autoload candidates collect in an array; the former
++  # `cand="$cand $idx"` copied the whole string per unloaded entry (O(n^2): 80 000 entries > 180 s).
++  # `$idx` stays unquoted so the words passed on are exactly those of the former word-split string.
++  local -a cand=()
+   RT_VERDICT='' RT_REASON=''
+   case "$expected" in ''|'*'|'-') wild=1 ;; esac
+   local exp_n=''
+@@ -814,7 +830,8 @@ router_refine() {
+       -|loaded) ok=1 ;;
+       sleeping) sleeping=1 ;;
+       loading|downloading) [ -n "$loading" ] || loading=$val ;;
+-      *) if [ "$val" = unloaded ] && [ "$failed" != 1 ]; then cand="$cand $idx"; ncand=$((ncand + 1)); fi
++      # shellcheck disable=SC2206
++      *) if [ "$val" = unloaded ] && [ "$failed" != 1 ]; then cand+=($idx); ncand=$((ncand + 1)); fi
+          if [ -z "$down" ]; then down="router-$val"; [ "$failed" = 1 ] && down="$down-failed"; fi ;;
+     esac
+   done < <(if [ "$wild" -eq 1 ]; then router_entries "$body"; else router_entries "$body" | router_match "$exp_n"; fi)
+@@ -825,12 +842,11 @@ router_refine() {
+     autoload=1
+     # Round 89: only the matching autoload candidates' model files are checked; an entry the
+     # check cannot decide (or a check that fails or times out) stays loadable.
+-    # shellcheck disable=SC2086
+     while IFS=$'\t' read -r fidx fstate; do
+       case "$fstate" in
+         missing|invalid) nbad=$((nbad + 1)); [ -n "$unloadable" ] || unloadable="router-model-$fstate" ;;
+       esac
+-    done < <(router_file_states "$body" $cand)
++    done < <(router_file_states "$body" "${cand[@]}")
+     if [ "$nbad" -lt "$ncand" ]; then unloaded=1; fi
+   fi
+   if [ "$unloaded" -eq 1 ]; then
+@@ -1465,16 +1481,23 @@ persist_clean() { # $1 -> single-line, tab-free, control-stripped value
+ 
+ # served ids persist as NORMALISED basenames (matches contract v2 semantics):
+ # two ids differing only in directory or a trailing .gguf are the same model.
++# Round 92 (C2; r91 wave-1 SC02 F3): one awk pass replaces two forks per served id (persist_clean,
++# normalize_id) and normalize_id's `${s##*/}`, which is quadratic on a long slash-free id in a UTF-8
++# locale (8 000 ids: 51 s). Same rule, field for field: only the first line of $1 is read and one
++# trailing empty field is dropped (as `IFS=, read -r -a` did); TAB/CR become a space and every other
++# control byte (0x01-0x1F, 0x7F) is deleted (persist_clean); the id keeps what follows its last `/`
++# and loses ONE trailing `.gguf` (normalize_id, AWK_NORM); an empty result persists as `-`.
+ served_persist() { # $1 comma-joined raw served ids -> comma-joined basenames
+-  local s=${1-} out='' parts=() p
++  local s=${1-}
+   [ "$s" = "-" ] && { printf '%s' '-'; return 0; }
+-  IFS=',' read -r -a parts <<< "$s"
+-  for p in "${parts[@]}"; do
+-    p=$(normalize_id "$(persist_clean "$p")")
+-    [ -n "$p" ] || p='-'
+-    out+="${out:+,}$p"
+-  done
+-  printf '%s' "${out:--}"
++  printf '%s\n' "$s" | LC_ALL=C awk "$AWK_NORM"'
++    NR > 1 { exit }
++    { n = split($0, p, ","); if (n > 0 && substr($0, length($0)) == ",") n--
++      for (i = 1; i <= n; i++) {
++        v = p[i]; gsub(/[\t\r]/, " ", v); gsub(/[\001-\037\177]/, "", v); v = norm(v)
++        printf "%s%s", (i > 1 ? "," : ""), (v == "" ? "-" : v)
++      }
++      if (n == 0) printf "-" }'
+ }
+ 
+ cmd_snapshot() {
