@@ -6159,3 +6159,23 @@ first-working round 93.
   loadable (round-89 rule, unchanged).
 - C2: the population is a line pattern (L1: a trace string relabelled as an override binds; the counter traces no
   data flow). Every non-`arg.cpp` condition and effect and every decision's wording rest on the non-author read.
+
+### Round-93 C1 repair and C2 verdict correction (appended after wave-1 RV01, RV02, CR02; supersedes the author verdict cells above)
+
+- **C1:** wave-1 RV01 DEFECT-1 — the memo key `(dev, ino, size, mtime)` served a stale state after a same-size in-place
+  rewrite with the mtime restored (false-green direction). Repaired in round at `b37657998858b6300fc8fbbbebb7e256239bf0f8`
+  (`st_ctime_ns` added); reproduction `.ufo/waves/round-93/measured/c1-ctime-rewrite.out` entry 2 wrong 3/3 at
+  `fe5f031c`, right 3/3 at `b3765799`; the frozen counter re-run at `b3765799` → `ROUTER_REPEAT cells=10 mismatches=0
+  positive_mismatches=0 probe=rev`, exit 0 (`measured/c1-M1b.out`); harm unchanged (`measured/harm-M1b.out`); r90
+  receipt re-captured (24 identical triples) and current at `8e9ecd63` (`measured/r90-reason-rows-tip-M1b.out`).
+  Author verdict: verified at M1 and at the repaired revision; the capability row's evidence revision reads `b3765799`.
+- **C2 not verified (author).** The frozen predicate holds at M2, but K2 fired: non-author reviewer RV02 reports P05,
+  P06, P07 as misstating (parameter `-` / effect `unrelated` on the same constructs whose twins P02, P03, P04 carry
+  `n_parallel` / `declares` / `overrides`, against the section's own definition of `unrelated`), and R16's
+  router-child clause fails for a child preset carrying a `--vision-gemma-*` option (argv order puts it after
+  `--port`; the child listens on 8014). Dated correction `SKILL.md` §Round 93 correction; lesson M4; QUALITY KQ151.
+  Counter coverage findings (not falsifications of M2): CR02 20/38 forged variants bind (value cells on a non-integer
+  right-hand side, arg.cpp condition semantics and effects, ids, section placement); MT02 16/26 counter mutants
+  survive the committed battery, scope ungraded outside `common/arg.cpp`.
+- The `setter-rows` capability row above stands as an instrument that ran and binds what it checks; its decision rows
+  are not admitted knowledge until the correction's readings land as superseding rows (planned round 94).

@@ -1891,3 +1891,11 @@ and router children on a free port (S596, S598, S599; `SKILL.md` §Round 92 corr
   (`tools/round93-router-repeat.py`).
 - **Frontier (not held):** many distinct slow model files still share one deadline (C1 limit); a setter that writes
   through another name (C2 limit L1); Ollama/vLLM port and parallelism setters swept the same way.
+
+## Coverage correction — round 93 (appended, 2026-11-06)
+
+The round-93 depth line above holds for the population and the values, not for three labels and one decision clause:
+P05–P07 (the non-server `--parallel`) are a setter llama-server never registers, not `unrelated`; R16's router-child
+port loses to a `--vision-gemma-*` preset that sorts after `--port` in the child's argv (`SKILL.md` §Round 93
+correction). Round-93 C2 is not verified (lesson M4, KQ151). Frontier: superseding rows with a label for unregistered
+setters and an argv-order rule.

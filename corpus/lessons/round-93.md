@@ -51,3 +51,23 @@ unaccepted=21` at the round-93 record (r92: 97/18); this round's deletion events
 `.ufo/waves/round-90/measured/reason-cells.jsonl` (`995fe905`, 24 lines replaced by 24 identical triples) and the
 SCORECARD head-row updates. Captured-by: `round75-instruments` (red since r87; L0 r87/r89 open). Fix: none this
 round — the register cannot accept rows without the operator ruling the L0 asks for; stated, not claimed.
+
+**M4 — row labels contradicted the section's own vocabulary (C2 not verified).** Class: a label chosen for the
+decision's convenience instead of by the glossary the section defines. Evidence: P05, P06, P07 (`common/arg.cpp`
+2526, 2529, 2531: the non-server `--parallel` declaration, its `params.n_parallel = value;` and its env declaration)
+carry parameter `-` and effect `unrelated`, which the section defines as "another variable, or text"; their twins
+P02, P03 (and P04) carry `n_parallel` / `declares` / `overrides` (wave-1 RV02 finding 1, CR02 DEFECT-2;
+`.ufo/waves/round-93/measured/kq151-twins.out`: `TWIN_LABEL_DIFF` on P02/P05 and P03/P06, exit 1). The vocabulary
+had no label for "a setter the pinned program never registers", so the author bent `unrelated` to keep P06 out of
+R17's overriding set. Captured-by: none — the counter checks label membership, not meaning; KQ149 asks that a setter
+be named or excluded, not that the label be consistent. Fix: dated correction under the section (rows unchanged),
+new QUALITY KQ151. Shown able to fail: the twin receipt above (P40/P46 also differ and are legitimate: different
+structs, reasons stated in their condition cells — the check flags, the reviewer reads).
+
+**M5 — a file-identity key without a mutation control (C1, repaired in round).** Class: an identity key chosen from the
+fields that change on an ordinary write, not from the fields a hostile writer cannot restore. Evidence: wave-1 RV01
+DEFECT-1 — the memo key `(dev, ino, size, mtime)` served a stale state when a file was rewritten in place to the same
+size with its mtime restored between two candidates of one call: `.ufo/waves/round-93/measured/c1-ctime-rewrite.out`
+at `fe5f031c` entry 2 `-` (loadable) 3/3. Captured-by: none in the frozen plan (the counter never mutates a file).
+Fix: `st_ctime_ns` added to the key (`b3765799`; utime() cannot set ctime); same receipt at `b3765799` entry 2
+`invalid` 3/3; C1 counter 10/10 0/0 and harm unchanged at `b3765799` (`measured/c1-M1b.out`, `harm-M1b.out`).

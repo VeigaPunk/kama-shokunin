@@ -3804,3 +3804,9 @@ shown able to fail on that class). Depth was the lowest axis (7).
 - Lesson `corpus/lessons/round-93.md` (M1 an alias cell sized below its forgery's threshold, KQ150; M2 a range
   shorthand hid ids from the decision rule). End-to-end domain task: the probe graded 10 router listings on stubs,
   3 runs each, against fixture GGUF files built in scratch.
+- **After wave 1 (appended):** C1 repaired in round — wave-1 RV01 DEFECT-1 (stale state on a same-size rewrite with
+  restored mtime) fixed by adding `st_ctime_ns` to the key (`b3765799`); counter and harm re-run green
+  (`measured/c1-M1b.out`, `harm-M1b.out`, `c1-ctime-rewrite.out`). C2 **not verified**: RV02 (K2) finds P05–P07 labels
+  contradicting the section's glossary and R16's router-child clause defeated by a `--vision-gemma-*` child preset
+  (argv order); dated correction `SKILL.md` §Round 93 correction, lesson M4/M5, QUALITY KQ151
+  (`measured/kq151-twins.out`).

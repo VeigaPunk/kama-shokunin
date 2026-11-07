@@ -2036,3 +2036,24 @@ the overstatement, KQ149). Population (frozen, `tools/round93-setter-rows.py`): 
 Limit (declared before the freeze): the population is a line pattern. A setter that assigns through another name (a
 struct copy, a reference, a preset file read into argv) is graded only through the rows its value passes (P09, P03);
 the counter does not trace data flow.
+
+### Round 93 correction (2026-11-06) — non-author wave-1 read (RV02, CR02); rows above unchanged
+
+The rows above are the measured round-93 C2 surface (`ee19acbdabc8ac572e82ae56459c364457895b06`) and stay
+byte-identical; read them through this note.
+
+- **P05, P06, P07 misstate their labels.** They are the `-np`/`--parallel` declaration, its `params.n_parallel = value;`
+  and its env declaration in the `else` branch of `if (ex == LLAMA_EXAMPLE_SERVER)` (`common/arg.cpp:2512`, `2524`) —
+  the same constructs as P02, P03, P04. This section defines `unrelated` as "another variable, or text"; they are
+  neither. Read: parameter `n_parallel`; effects `declares`, `overrides`, `declares`; a setter llama-server never
+  registers, so it is outside R17's set. The table's vocabulary has no label for that class (KQ151).
+- **R16's router-child clause needs the argv-order rule.** A router renders a child's argv from a `std::map` ordered by
+  each option's first name (`common/preset.cpp:44-51`, `common/arg.h:91-96`). A child preset that carries
+  `--vision-gemma-4b-default` or `--vision-gemma-12b-default` puts it after `--port` (`"--port"` sorts first), so the
+  preset lambda sets 8014 (P23, P24) after P41's free port and that child listens on 8014, not on the port the router
+  chose. The other presets sort before `--port`. Read: when several rows apply to one start, the last one parsed
+  wins; a system or user `config.ini` is applied first, then the environment, then argv (`common/arg.cpp:778-816`).
+- **Limits, not misstatements:** `--port 0` is refused with more than one TCP host (`tools/server/server-http.cpp:135-137`;
+  P37 holds for one TCP host); the Source cells resolve to files, whose S-row anchor cells name narrower line ranges.
+
+Round-93 C2 is therefore **not verified** by the author (lesson `corpus/lessons/round-93.md` M4, QUALITY KQ151).
