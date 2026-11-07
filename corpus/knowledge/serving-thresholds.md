@@ -60,3 +60,32 @@ Evidence: `.ufo/waves/round-91/w1/RV02ThresholdRows.md` (per-row table, tag bise
   so total startup can exceed 600 s. Elapsed time alone does not prove loading.
 - Lesson: a struct default is not the runtime default until the binary's own argument parser or `--help`
   agrees (QUALITY KQ146, `corpus/lessons/round-91.md` M1).
+
+## Round 92 revision (2026-11-06) — the defaults re-declared under KQ146
+
+source: S596 (llama.cpp `common/arg.cpp` @ tag `b12177`, per-example defaults line 1373), S597 (llama.cpp
+`tools/server/server.cpp` @ tag `b12177`, `server_prepare_params` lines 115-131); S593, S594, S595 re-opened this round
+(sha256 equal to their rows).
+verified-at: round 92 — `python3 tools/round92-server-defaults.py --repo . --rev <rev> --binary <llama-server b12177>`
+(receipts under `.ufo/waves/round-92/measured/`).
+
+`SKILL.md` §Serving defaults (round 92 revision) supersedes the round-91 table row for row (R01–R15 name the
+T01–T14 they replace). The reading rules, revised:
+
+1. **The binary decides.** A default is the value the program kama probes uses. For llama-server that is the
+   `common_params` struct default only where the server's parser keeps it; the counter compares each option row with
+   the pinned binary's `--help` (H1), which prints the post-parser default. `n_parallel` is the case: struct 1
+   (`common.h:464`), parser -1 = auto (S596 line 1373), startup 4 slots with unified KV outside the router role
+   (S597 lines 126-130). A derived value no option prints (the 4) binds only to the server entry point (H2).
+2. **The run-time reader, not the declaration.** vLLM's `envs.py` declares `VLLM_ENGINE_READY_TIMEOUT_S: int = 600`
+   under `TYPE_CHECKING` (line 26) for type checkers; the value the server uses comes from the
+   `environment_variables` lambda (line 812, `os.environ.get(…, "600")`, served by the module `__getattr__`). The
+   two agree at this pin, but only the lambda is the default; the counter cannot tell them apart (pre-freeze control
+   V7), so this rule is a reviewer read.
+3. **A default says what the server may do, not what happened.** Every decision cell is phrased as what kama may
+   and may not infer: a probe timeout is the probe's, a missing `/api/ps` entry is consistent with keep-alive, a slow
+   first answer is never graded from elapsed time against a stall window, and how queued requests are served is not
+   read from a parallelism default.
+
+Limits: llama.cpp rows are bound to b12177 and its Linux x64 binary only; Ollama and vLLM rows have no installed
+binary to compare, so they rest on the line alone (KQ146's `--help` half does not apply). Pin bumps need new rows.
