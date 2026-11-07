@@ -74,6 +74,14 @@ The live plan follows; historical plans remain as filed (round 78's in `plans/ro
 4. Carried: closure R1 (`round75-instruments` `bad_rows=19`, L0 r87/r89 open), R6 (RV02 NOTE-1, R03 wording). Host:
    an Ollama listener on 127.0.0.1:8080 (systemd user unit, started 2026-11-06 23:08:39 -03, not lane-owned) keeps the
    `round78-live-reconcile.py --selftest` registered-port arm red (fail-closed by design).
+5. Depth (round-93 C2 not verified, K2): superseding rows for P05–P07 under a label for setters the program never
+   registers, and for R16/R17 with the argv-order rule (config.ini → env → argv; a later-sorting preset option in a
+   router child's argv wins over P41) — KQ151 first; then cite the setter in `registry/endpoint-consumers.tsv:35-37`
+   (wave-1 CN01).
+6. Operability (wave-1 CR01, MT01): a successor repeat counter with hard links (R05b), P02 at 2048 candidates, a
+   same-basename / same-size / same-mtime collision pair, one entry naming one file twice, a two-invocation rewrite
+   cell, an undecided-parse cell and 16 symlinks; control expectations stated as `mismatches>0`, replayed at a second
+   load (lesson M7).
 
 ### Planned (round 93)
 
