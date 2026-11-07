@@ -1873,3 +1873,10 @@ re-binds it under KQ146.
   linear in the answer (1.9 M-byte escape runs, 80 000 router entries, 16 000 persisted ids each ≤ 3.5 s; base killed).
 - **Frontier (not held):** a counter that tells a run-time reader from a declaration (control V7) and checks the
   value's unit and derivation (wave-1 CR02); Ollama and vLLM defaults compared with a pinned binary; SGLang defaults.
+
+## Coverage correction — round 92 (appended, 2026-11-06)
+
+The round-92 core line above holds for the values, not for two decisions: R01 (port 9931 "without `--port`") and R08
+(4 slots "without `-np`") ignore presets such as `--embd-gemma-default` (port 8011, 32 slots), `AIP_MODE=PREDICTION`
+and router children on a free port (S596, S598, S599; `SKILL.md` §Round 92 correction). Round-92 C1 is not verified
+(lesson M4, KQ149). Frontier: a setter sweep per decision cell.

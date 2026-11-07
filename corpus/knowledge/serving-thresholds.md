@@ -89,3 +89,14 @@ T01–T14 they replace). The reading rules, revised:
 
 Limits: llama.cpp rows are bound to b12177 and its Linux x64 binary only; Ollama and vLLM rows have no installed
 binary to compare, so they rest on the line alone (KQ146's `--help` half does not apply). Pin bumps need new rows.
+
+## Round 92 correction (2026-11-06) — every setter, not only the default
+
+source: S596 (`common/arg.cpp` @ `b12177` lines 4613-4764), S598 (`tools/server/server-http.cpp` @ `b12177` lines 93-125),
+S599 (`tools/server/server-models.cpp` @ `b12177` line 1218).
+
+Rule 1 above is necessary, not sufficient: the value can be the binary's default while a decision about what the binary
+*does* still fails. llama-server b12177 has eleven preset options that set `params.port` and/or `params.n_parallel`
+(`--embd-gemma-default`: port 8011, 32 slots), an AIP mode that replaces the port (`AIP_HTTP_PORT`, default 8080) and
+router children that listen on a free port. A decision that states the default's effect names or excludes each setter
+(QUALITY KQ149; lesson `corpus/lessons/round-92.md` M4; wave-1 SC01).

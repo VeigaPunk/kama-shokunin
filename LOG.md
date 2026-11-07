@@ -3775,3 +3775,8 @@ and R5 with wave-1 SC02 F1–F3 (`.ufo/waves/round-91/w1/SC02QuadraticSweep.md`:
   its two invalid-UTF-8 differences, both base defects (`measured/c2-fuzz-equivalence.out`, `c2-fuzz-classify.out`).
 - Round-91 R2 (S593/S595 dated correction in `corpus/SOURCES.md`), lesson `corpus/lessons/round-92.md` (M1–M3; M3
   repeats round-91 M4: the round-90 reason receipt staled again and was re-bound 24/24), QUALITY KQ147, KQ148.
+- **C1 not verified (appended after wave 1):** scout SC01 swept every setter at b12177 — `--embd-gemma-default` and
+  ten other presets (`arg.cpp:4613-4764`), `AIP_MODE=PREDICTION` (S598) and router children on a free port (S599)
+  — so R01's and R08's decision cells overstate the binary although reviewer RV02 passed them; dated correction
+  `SKILL.md` §Round 92 correction, lesson M4, QUALITY KQ149 (`measured/kq149-setter-sweep.out`). C2 holds (RV01, EX01,
+  EX02 no harm; CR01/MT01 counter limits disclosed in SCORECARD §Round-92 disclosed limits).

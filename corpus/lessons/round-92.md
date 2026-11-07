@@ -18,6 +18,8 @@ Rows opened 2026-11-06 by the L1 (`curl -sS -m 60`, receipt `.ufo/waves/round-92
 | S595 vLLM `vllm/envs.py` @ `v0.32.0` | **re-opened**, admitted for lines 812 and 1144 | https://raw.githubusercontent.com/vllm-project/vllm/v0.32.0/vllm/envs.py — 2026-11-06, sha256 `e963af06…0694` equal | `os.environ.get("VLLM_ENGINE_READY_TIMEOUT_S", "600")` (line 812) | R14/R15 bind the `environment_variables` lambdas the module `__getattr__` (line 2291) serves at run time. |
 | S595 lines 26 and 111 as the default's anchor | **reject** (declaration, not the reader) | same URL — 2026-11-06 | `VLLM_ENGINE_READY_TIMEOUT_S: int = 600` (line 26, under `if TYPE_CHECKING:` line 14) | A type-checker declaration is not what the server reads. Counter limit: control V7 binds it anyway (`controls/c1-forgeries.out`), so this stays a reviewer rule. Flip: never (a declaration is not a default) unless vLLM reads it at run time. |
 | S593 line 464 as the llama-server slot-count anchor | **reject** (shared struct overridden) | S593 URL — 2026-11-06 | `int32_t n_parallel            =     1; // number of parallel sequences to decode` (line 464) | KQ146: `arg.cpp:1373` overrides it for the server; control V1 (`help-default=-1`) fails it mechanically. Flip: a future pin's parser stops overriding it and `--help` prints 1. |
+| S598 llama.cpp `tools/server/server-http.cpp` @ `b12177` | **admit** (A, code, mined) — opened after the wave, for the correction | https://raw.githubusercontent.com/ggml-org/llama.cpp/b12177/tools/server/server-http.cpp — 2026-11-06, sha256 `aad15b757323f36b81235182c4a0a35d448399012ae3ef4fed9902b716fa17ea` | `port = std::stoi(getenv("AIP_HTTP_PORT", "8080"));` (line 96, under `AIP_MODE` == `PREDICTION`, line 93) | Grounds SKILL §Round 92 correction (R01): the AIP mode replaces the parsed port. Found by wave-1 SC01, re-read by the L1. |
+| S599 llama.cpp `tools/server/server-models.cpp` @ `b12177` | **admit** (A, code, mined) — opened after the wave, for the correction | https://raw.githubusercontent.com/ggml-org/llama.cpp/b12177/tools/server/server-models.cpp — 2026-11-06, sha256 `cab14969b9e5adf08a057c622d1abfc30fd8a17484de5b35942632d739a71108` | `inst.meta.port        = common_http_get_free_port();` (line 1218) | Grounds SKILL §Round 92 correction (R01): a router child listens on a free port. |
 
 `status` / `recheck` / `used-by` changes on existing rows: none (S593–S595 stay byte-identical; their limits are in the
 appended correction). S596, S597 are new rows (`mined`, recheck `on-release`). Their `used-by` changed in place this
@@ -54,6 +56,20 @@ read it. Fix: receipt re-captured at the C2 probe — 24 (cell, reason, verdict)
 24/24 at `d5a06431` (`measured/r90-reason-rows-tip.out`, exit 0); new QUALITY KQ148 names the instrument so the next
 probe change's harm list must carry it. Shown able to fail: the stale receipt above.
 
+**M4 — a decision cell universalised one line's default over the binary's other setters (round-91 overreach class,
+again).** Class: the value is the binary's default (KQ146 holds) but the decision states what the binary *does* without
+a sweep of the parameter's other setters. Evidence: R01 says a llama-server "started without `--port` … listens on
+9931" and R08 says one "started without `-np` runs 4 slots"; wave-1 SC01 (`.ufo/waves/round-92/w1/SC01SourceReopen.md`)
+found, and the L1 re-read at b12177, `--embd-gemma-default` setting `params.port = 8011` and `params.n_parallel = 32`
+(S596 `arg.cpp:4613`, `:4616`; more presets at 4629-4764), `AIP_MODE=PREDICTION` replacing the port (S598 lines 93-125)
+and router children on a free port (S599 line 1218). The designated K2 reviewer (RV02) passed every row; the scout's
+sweep caught it. Captured-by: none — KQ146 covers the value only, and the counter cannot read a decision. Fix: dated
+correction under the table (`SKILL.md` §Round 92 correction), C1 recorded **not verified** by the author; new QUALITY
+KQ149 (a decision that says what the binary does names or excludes every setter a `params.<field> =` sweep of the
+program's sources finds). Shown able to fail: `grep -n 'params.port = \|params.n_parallel = ' common/arg.cpp` at b12177
+prints 18 lines — the parser's own four (1373, 2521, 2529, 3321), 4613 and 4616, and twelve more preset lines
+(4629-4764) — against R01/R08's unconditional wording.
+
 ## Dispositions of the round-91 closure (R1–R5)
 
 - **R1** `round75-instruments` red (`bad_rows=19`, L0 open since r87): carried, not claimed; the arm stays red in the
@@ -61,6 +77,8 @@ probe change's harm list must carry it. Shown able to fail: the stale receipt ab
 - **R2** S593 teaches cell: dated correction appended (`corpus/SOURCES.md` §Round-92 correction), row byte-identical.
 - **R3** scratch discipline: every wave item names its own root `/fast/scratch/hyaku/kama-r92/<seat>/` and the context
   forbids another seat's path (`.ufo/waves/round-92/w1-spec.json`).
-- **R4** superseding rows: C1 (R01–R15 supersede T01–T14 row for row; counter `supersedes=14`).
-- **R5** SC02 F1–F3: C2 (`measured/c2.out`, L1–L6 within 20 s, D1–D9 equal to base). The "counter does not own the
-  rule" limit of round 91 is answered for these paths by the differential cells and the scaled `served_model` check.
+- **R4** superseding rows: C1 (R01–R15 supersede T01–T14; counter `supersedes=14`), but C1 is not verified: R01 and R08
+  decisions overstate the binary (M4), corrected in a dated note; R4 stays open for those two rows.
+- **R5** SC02 F1–F3: C2 (`measured/c2.out`, L1–L6 within 20 s, D1–D9 equal to base). The round-91 limit "the counter does
+  not own the rule" still holds for C2's counter: wave-1 CR01 passes five forgeries at `probe=rev` (SCORECARD §Round-92
+  disclosed limits); M2 itself is linear and correct on each of those held-out shapes.

@@ -1946,3 +1946,23 @@ can change any value. Context and Gate: `corpus/knowledge/serving-thresholds.md`
 | R13 | ollama v0.40.11 | queued request limit `MaxQueue` | `OLLAMA_MAX_QUEUE` | 512 | S594 | 281 | `MaxQueue = Uint("OLLAMA_MAX_QUEUE", 512)` | T12 | at most 512 requests are queued by default (doc comment line 280); an error a consumer sees only under heavy concurrent load is reported with this limit named, never graded as an endpoint identity fault; whether a given request waited in this queue is not read from this line |
 | R14 | vllm v0.32.0 | engine-ready wait `VLLM_ENGINE_READY_TIMEOUT_S` (run-time reader) | `VLLM_ENGINE_READY_TIMEOUT_S` | 600 s | S595 | 812 | `os.environ.get("VLLM_ENGINE_READY_TIMEOUT_S", "600")` | T13 | the wait for engine cores to become ready during startup is bounded by 600 s by default (comment lines 809-810); a vLLM listener that answers but is not ready is never graded dead on elapsed time below this bound |
 | R15 | vllm v0.32.0 | HTTP keep-alive `VLLM_HTTP_TIMEOUT_KEEP_ALIVE` (run-time reader) | `VLLM_HTTP_TIMEOUT_KEEP_ALIVE` | 5 s | S595 | 1144 | `os.environ.get("VLLM_HTTP_TIMEOUT_KEEP_ALIVE", "5")` | T14 | the API server keeps an idle HTTP connection alive 5 s by default (comment line 1142); a client that reuses a connection after that can find it closed and must reconnect, which is not a server fault |
+
+### Round 92 correction (2026-11-06) — non-author wave-1 read (SC01); rows above unchanged
+
+The rows above are the measured round-92 C1 surface and stay byte-identical; read R01 and R08 through this note.
+Wave-1 scout SC01 (`.ufo/waves/round-92/w1/SC01SourceReopen.md`) swept every setter of the two parameters in the
+b12177 server sources, and the L1 re-read each site:
+
+- **R01 overstates.** "Started without `--port` … listens on 9931" is the parser default only. `--embd-gemma-default`
+  sets `params.port = 8011` (S596 `common/arg.cpp:4613`; the FIM, gpt-oss and vision-gemma presets set 8012, 8013,
+  8014 at 4629-4764); `AIP_MODE=PREDICTION` replaces the port with `AIP_HTTP_PORT` (default 8080) (S598
+  `tools/server/server-http.cpp:93`, `:96`, `:125`); a router-spawned child listens on a free port (S599
+  `tools/server/server-models.cpp:1218`). Read: without `--port`, `LLAMA_ARG_PORT`, a preset option or `AIP_MODE`, and
+  outside a router child, the port is 9931; a registry row must cite whichever of those the unit uses.
+- **R08 overstates.** "Started without `-np` runs 4 slots" holds only without a preset that sets `n_parallel`
+  (`--embd-gemma-default` 32 at `arg.cpp:4616`; the gpt-oss presets 2 at 4720 and 4738). Read: outside the router
+  role, with neither `-np`/`LLAMA_ARG_N_PARALLEL` nor such a preset, the auto count resolves to 4 slots.
+- **R04 (limit, not a misstatement):** a decision model forces the prompt cache to 0 unless `--cache-ram` was given
+  (`--help`: "0 for decision models"); 8192 MiB stays the upper bound the row states.
+
+Round-92 C1 is therefore **not verified** by the author (lesson `corpus/lessons/round-92.md` M4, QUALITY KQ149).
