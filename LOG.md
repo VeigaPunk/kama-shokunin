@@ -3780,3 +3780,27 @@ and R5 with wave-1 SC02 F1–F3 (`.ufo/waves/round-91/w1/SC02QuadraticSweep.md`:
   — so R01's and R08's decision cells overstate the binary although reviewer RV02 passed them; dated correction
   `SKILL.md` §Round 92 correction, lesson M4, QUALITY KQ149 (`measured/kq149-setter-sweep.out`). C2 holds (RV01, EX01,
   EX02 no harm; CR01/MT01 counter limits disclosed in SCORECARD §Round-92 disclosed limits).
+
+## Round 93 — 2026-11-06 (router model-file verdict repeat-invariant; every port and slot-count setter named)
+
+Frozen plan `plans/round-93-claims.md` (freeze `0f272a37`; base `5af79495`). Motivating evidence: round-92 wave-1
+SC02 F6 (`.ufo/waves/round-92/w1/SC02SuperlinearSweep.md`: a router listing that repeats one slow invalid GGUF flips
+`MODEL_UNLOADED` to `MODEL_OK` at a load-dependent count; reproduced by the round-93 base control
+`.ufo/waves/round-93/controls/c1-base.out`, R02–R06 `MODEL_OK` at load 48) and the round-92 closure R2/R3
+(`corpus/lessons/round-92-verifier-spotcheck.md`: R01/R08 need superseding rows naming every setter, and a counter
+shown able to fail on that class). Depth was the lowest axis (7).
+
+- **C1 operability:** `tools/kama-probe.sh` `ROUTER_PY` parses each regular model file once per call, keyed by identity
+  (`fe5f031c`); counter `tools/round93-router-repeat.py` `mismatches=5 → 0`, `positive_mismatches=0`, 3 runs per cell
+  (`measured/c1.out`); harm suites unchanged (`measured/harm-M.out`); round-90 reason receipt re-captured with 24
+  identical triples and re-bound 24/24 (`995fe905`, `measured/r90-reason-rows-tip.out`; KQ148 carried this time).
+  Pre-freeze battery 5/5 (`controls/c1-forgeries.out`: fail-closed, path-string memo, per-file deadline and
+  first-8 cap each fail a named cell).
+- **C2 depth (sourced S600–S603):** `SKILL.md` §Listen port and slot-count setters (round 93 revision) — P01–P48, one
+  row per population line of the pinned b12177 archive, and R16/R17 superseding R01/R08 (`ee19acbd`); counter
+  `tools/round93-setter-rows.py` `rows=0 missing=48 → rows=48 bound=48 … decisions_bound=2`, exit 0
+  (`measured/c2.out`). Pre-freeze battery 12/12 (`controls/c2-forgeries.out`; V1 = the round-92 decisions,
+  `decisions_bound=0`).
+- Lesson `corpus/lessons/round-93.md` (M1 an alias cell sized below its forgery's threshold, KQ150; M2 a range
+  shorthand hid ids from the decision rule). End-to-end domain task: the probe graded 10 router listings on stubs,
+  3 runs each, against fixture GGUF files built in scratch.

@@ -448,3 +448,8 @@ Round 92: the engines' defaults are read from the line **the binary uses** (KQ14
 parser and entry point (S596, S597) and the pinned `--help`, vLLM's run-time env readers — and are still never tuned
 (`SKILL.md` §Serving defaults (round 92 revision)). The probe's JSON escaping, router candidate list and snapshot
 persistence run in linear time on listener data (`tools/round92-linear-paths.py`).
+
+Round 93: a router listing's **repeat count** is not evidence — the probe grades a listing that names one model file
+many times as it grades one entry (`tools/round93-router-repeat.py`). Which start of llama-server listens on which port
+and runs how many slots is read from every setter line of the pinned sources, never from one default line
+(`SKILL.md` §Listen port and slot-count setters (round 93 revision), KQ149).

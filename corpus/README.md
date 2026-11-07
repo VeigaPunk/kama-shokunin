@@ -1880,3 +1880,14 @@ The round-92 core line above holds for the values, not for two decisions: R01 (p
 (4 slots "without `-np`") ignore presets such as `--embd-gemma-default` (port 8011, 32 slots), `AIP_MODE=PREDICTION`
 and router children on a free port (S596, S598, S599; `SKILL.md` §Round 92 correction). Round-92 C1 is not verified
 (lesson M4, KQ149). Frontier: a setter sweep per decision cell.
+
+## Coverage and frontier — round 93 (appended, 2026-11-06)
+
+- **Core (new, depth):** every line of llama.cpp b12177 `common/` and `tools/server/` that assigns or names the listen
+  port or the slot count (48 rows P01–P48: parser defaults, `--port`/`-np` and their env names, eleven presets,
+  `AIP_MODE`, `--port 0`, router children, free-port helper, unrelated client and log lines) and decisions R16/R17
+  that supersede R01/R08 (S593, S596–S603; `SKILL.md` §Listen port and slot-count setters (round 93 revision)).
+- **Core (probe):** a router listing that repeats one model file grades like a single entry
+  (`tools/round93-router-repeat.py`).
+- **Frontier (not held):** many distinct slow model files still share one deadline (C1 limit); a setter that writes
+  through another name (C2 limit L1); Ollama/vLLM port and parallelism setters swept the same way.
