@@ -71,7 +71,10 @@ The live plan follows; historical plans remain as filed (round 78's in `plans/ro
 2. Depth (wave-1 CR02, MT02): a successor defaults counter that checks the value's unit and every number, help-checks
    every option in the flag cell, matches the engine exactly, checks H2 derivation and the run-time reader (V7), and
    treats supersedes as a row-to-row map; battery cases that grade the why, not only the exit.
-3. Carried: r90 R1 (`round75-instruments` `bad_rows=19`, L0 open); RV02 NOTE-1 (R03 wording).
+3. Operability (wave-1 SC02 F2): `json_array`'s per-row string append is quadratic in rows × the listener's served
+   length (64 registry rows of a 200 000-byte id: 15.9 s, ratios 2.11 → 2.45; `.ufo/waves/round-92/w1/SC02SuperlinearSweep.md`).
+4. Depth: superseding rows for R01 and R08 under KQ149 (every setter named or excluded), not prose only.
+5. Carried: r90 R1 (`round75-instruments` `bad_rows=19`, L0 open); RV02 NOTE-1 (R03 wording).
 
 ### Planned (round 92)
 

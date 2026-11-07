@@ -98,3 +98,6 @@ prints 18 lines — the parser's own four (1373, 2521, 2529, 3321), 4613 and 461
 - EX01 (held-out cells): no harm; base and M2 byte-equal where base completes. EX02 (no-python, awk portability): M2
   equal to base with and without python; `AWK_JSTR`/`served_persist` byte-identical under gawk, busybox 1.35.0 and mawk
   1.3.4 (scratch-only binaries). CN01: no sibling contradicts R01–R15.
+- SC02 (super-linear sweep): F1–F3 shapes linear at M2 (doubling ratios 1.0–1.8; base 2.7–4.6); one further quadratic
+  path outside C2's three: `json_array` copies the accumulated output per registry row (64 rows × a 200 000-byte served
+  id: 15.9 s, ratios 2.11 → 2.45 against a flat 2.0 for an array join). Routed to round 93; it does not falsify C2.

@@ -11,3 +11,19 @@ lib-base.sh LC_ALL=en_US.UTF-8 b'`\xff%s\xc3\xd0\xb6\xc3,'
 lib-base.sh LC_ALL=C b'`\xff%s\xc3\xd0\xb6\xc3,-'
 lib-new.sh LC_ALL=en_US.UTF-8 b'`\xff%s\xc3\xd0\xb6\xc3,-'
 lib-new.sh LC_ALL=C b'`\xff%s\xc3\xd0\xb6\xc3,-'
+
+# additional seeds 4-7 (L1 session job bg_3586, 2026-11-06 ~22:20-22:25 -03), same command
+SEED=4 jstr cases=3000 diffs=0 base_nondeterministic=0 stable_diffs=0
+SEED=4 served_persist cases=3000 diffs=0 base_nondeterministic=0 stable_diffs=0
+SEED=5 jstr cases=3000 diffs=0 base_nondeterministic=0 stable_diffs=0
+SEED=5 served_persist cases=3000 diffs=1 base_nondeterministic=1 stable_diffs=0
+SEED=6 jstr cases=3000 diffs=0 base_nondeterministic=0 stable_diffs=0
+STABLE-DIFF served_persist '/\x1f  \x1f\udcc3\\\udc85ж.gguf\x1f$\x1bж*.gguf.gguf' b'  \\\xc3\x85\xd0\xb6.gguf$\xd0\xb6*.gguf' b'  \xc3\\\x85\xd0\xb6.gguf$\xd0\xb6*.gguf'
+SEED=6 served_persist cases=3000 diffs=1 base_nondeterministic=0 stable_diffs=1
+SEED=7 jstr cases=3000 diffs=0 base_nondeterministic=0 stable_diffs=0
+SEED=7 served_persist cases=3000 diffs=0 base_nondeterministic=0 stable_diffs=0
+# locale check of the seed-6 stable diff (served_persist):
+lib-base.sh LC_ALL=en_US.UTF-8 b'  \\\xc3\x85\xd0\xb6.gguf$\xd0\xb6*.gguf'
+lib-base.sh LC_ALL=C b'  \xc3\\\x85\xd0\xb6.gguf$\xd0\xb6*.gguf'
+lib-new.sh LC_ALL=en_US.UTF-8 b'  \xc3\\\x85\xd0\xb6.gguf$\xd0\xb6*.gguf'
+lib-new.sh LC_ALL=C b'  \xc3\\\x85\xd0\xb6.gguf$\xd0\xb6*.gguf'
