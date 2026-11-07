@@ -1,0 +1,24 @@
+# PRE-AMENDMENT run (superseded; kept as the lesson M1 evidence). Counter draft v0 of tools/round92-linear-paths.py
+# (before freeze; it compared latest.tsv byte for byte, L4 40 000 entries, L5 8 000 ids). Output copied verbatim
+# from the L1 session job bg_2162 (2026-11-06, ~21:40-21:48 -03); the file itself was overwritten by the re-run.
+# rev=ed018ca0fa956c5052b3dc6b714a2cb72973da21 cmd: python3 tools/round92-linear-paths.py --repo . --rev ed018ca0fa956c5052b3dc6b714a2cb72973da21 --work /fast/scratch/hyaku/kama-r92/L1/c2
+LINEAR_PATHS_CELL D1-backslash-2000 ok=1 verdict=MODEL_MISMATCH reason=served-id-mismatch seconds=0.07 equal_to_base=1 rc_m=2 rc_base=2
+LINEAR_PATHS_CELL D2-quote-2000 ok=1 verdict=MODEL_MISMATCH reason=served-id-mismatch seconds=0.07 equal_to_base=1 rc_m=2 rc_base=2
+LINEAR_PATHS_CELL D3-router-50-unloaded-wild ok=1 verdict=MODEL_UNLOADED reason=router-unloaded seconds=0.13 equal_to_base=1 rc_m=2 rc_base=2
+LINEAR_PATHS_CELL D4-router-50-unloaded-then-loaded ok=1 verdict=MODEL_OK reason=matched seconds=0.08 equal_to_base=1 rc_m=0 rc_base=0
+LINEAR_PATHS_CELL D5-check-mixed-specials ok=1 verdict=MODEL_OK reason=matched seconds=0.10 equal_to_base=1 rc_m=0 rc_base=0
+LINEAR_PATHS_CELL D6-snapshot-mixed ok=1 seconds=0.23 equal_to_base=1 rc_m=0 rc_base=0
+LINEAR_PATHS_CELL D7-snapshot-50-paths ok=0 seconds=0.27 equal_to_base=0 rc_m=0 rc_base=0 rule_served=1
+LINEAR_PATHS_CELL D8-router-mixed-wild ok=1 verdict=MODEL_LOADING reason=router-loading seconds=0.10 equal_to_base=1 rc_m=2 rc_base=2
+LINEAR_PATHS_CELL D9-router-autoload-missing-files ok=1 verdict=MODEL_OK reason=router-unloaded-autoload seconds=0.12 equal_to_base=1 rc_m=0 rc_base=0
+LINEAR_PATHS_CELL L1-jstr-backslash ok=0 verdict=killed reason=- seconds=120.02 served_scaled=0
+LINEAR_PATHS_CELL L2-jstr-quote ok=0 verdict=killed reason=- seconds=120.10 served_scaled=0
+LINEAR_PATHS_CELL L3-router-wild ok=0 verdict=killed reason=- seconds=120.10 same_as_D3=0
+LINEAR_PATHS_CELL L4-router-same-id ok=0 verdict=MODEL_OK reason=matched seconds=32.47
+LINEAR_PATHS_CELL L5-snapshot-8000 ok=0 seconds=22.92 rc=0 served_len=55999 served_rule=1
+LINEAR_PATHS_CELL L6-snapshot-noslash ok=0 seconds=39.48 rc=2 served_len=200000 served_rule=1
+LINEAR_PATHS cells=15 mismatches=7 positive_mismatches=1 probe=rev probe_sha256=0aa43573be3a52fa22d9b419049814133324e423dcd22429f107ad28ee0a75da base_sha256=0aa43573be3a52fa22d9b419049814133324e423dcd22429f107ad28ee0a75da rev=ed018ca0fa956c5052b3dc6b714a2cb72973da21
+exit=1
+# Diagnosis (L1, before freeze): D7 failed base against itself because latest.tsv carries `#@snapshot_id <UTC second>`;
+# two runs straddling a second boundary differ (reproduced 9/12 in a loop). Amendment before freeze: compare latest.tsv
+# without that line (`stable()`); L4 raised to 60 000 and L5 to 16 000 so the base miss is not a 2.9 s margin.
