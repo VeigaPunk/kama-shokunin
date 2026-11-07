@@ -6192,3 +6192,7 @@ first-working round 93.
   candidates, a same-basename/same-size collision cell, a two-path-flag single entry, a two-invocation rewrite cell.
 - C2 counter (wave-1 CR02, MT02): 20/38 forged variants bind; 16/26 single-point counter mutants survive the committed
   battery; scope is ungraded outside `common/arg.cpp`.
+- C1 counter (wave-1 MT01, `.ufo/waves/round-93/w1/MT01ProbeMutants.md`): 4/16 single-point probe mutants killed (the
+  ones that change the repeat count's share of the deadline); 12 survive — key fields dropped one at a time, `lstat`,
+  undecided → invalid, no deadline — four of them flip a verdict on listings no cell holds (two distinct files of
+  equal size and mtime, 16 symlinks, 12 distinct slow files). Routed with CR01's cells to round 94.
