@@ -453,3 +453,4 @@ Round 93: a router listing's **repeat count** is not evidence — the probe grad
 many times as it grades one entry (`tools/round93-router-repeat.py`). Which start of llama-server listens on which port
 and runs how many slots is read from every setter line of the pinned sources, never from one default line
 (`SKILL.md` §Listen port and slot-count setters (round 93 revision), KQ149).
+The setter rows are bound to the pinned archive by `tools/round93-setter-rows.py`.
