@@ -1,0 +1,42 @@
+== hostile path strings ==
+SAME	nul-byte	base 0.02s rc=0	m1 0.02s rc=0
+  both='0\t-\n'
+SAME	lone-surrogate	base 0.02s rc=0	m1 0.02s rc=0
+  both='0\tmissing\n'
+SAME	newline-in-name	base 0.02s rc=0	m1 0.02s rc=0
+  both='0\tinvalid\n'
+SAME	tab-in-name	base 0.02s rc=0	m1 0.02s rc=0
+  both='0\tinvalid\n'
+SAME	path-4097	base 0.02s rc=0	m1 0.03s rc=0
+  both='0\t-\n'
+SAME	path-5000-components	base 0.02s rc=0	m1 0.02s rc=0
+  both='0\t-\n'
+SAME	dot	base 0.02s rc=0	m1 0.02s rc=0
+  both='0\t-\n'
+SAME	dotdot	base 0.02s rc=0	m1 0.02s rc=0
+  both='0\t-\n'
+SAME	root	base 0.02s rc=0	m1 0.02s rc=0
+  both='0\tinvalid\n'
+SAME	proc-self-fd	base 0.02s rc=0	m1 0.02s rc=0
+  both='0\tinvalid\n'
+SAME	dev-fd-0	base 0.02s rc=0	m1 0.02s rc=0
+  both='0\tinvalid\n'
+SAME	dev-stdin	base 0.03s rc=0	m1 0.03s rc=0
+  both='0\tinvalid\n'
+
+== false-green direction: valid file rewritten IN PLACE to invalid, size+mtime preserved ==
+  base: 0	- | 1	invalid | 2	invalid |   key-stable=True
+  m1: 0	- | 1	invalid | 2	- |   key-stable=True
+  => DIFF (false green: m1 keeps the stale ok)
+
+== bind-mount of ./ (unshare attempt) ==
+  unshare rc= 0 BIND_OK
+a	b.gguf 
+
+== distinct slow files (disclosed limit): 3 distinct slow files x3 each ==
+SAME	3-distinct-slow	base 1.62s rc=0	m1 1.58s rc=0
+  both='0\tinvalid\n1\tinvalid\n2\tinvalid\n'
+DIFF	3-distinct-slow-x3	base 4.03s rc=0	m1 1.37s rc=0
+  base='0\tinvalid\n1\tinvalid\n2\tinvalid\n3\tinvalid\n4\tinvalid\n5\tinvalid\n6\tinvalid\n7\tinvalid\n8\t-\n'
+  m1__='0\tinvalid\n1\tinvalid\n2\tinvalid\n3\tinvalid\n4\tinvalid\n5\tinvalid\n6\tinvalid\n7\tinvalid\n8\tinvalid\n'
+test3 rc=0

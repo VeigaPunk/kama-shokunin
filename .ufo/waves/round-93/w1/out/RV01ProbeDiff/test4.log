@@ -1,0 +1,58 @@
+== direct gguf_state / gguf_parse, one file per call ==
+SAME	missing-abs      base='missing'    m1='missing'
+SAME	dir              base='invalid'    m1='invalid'
+SAME	fifo             base='invalid'    m1='invalid'
+SAME	devnull          base='invalid'    m1='invalid'
+SAME	devzero          base='invalid'    m1='invalid'
+SAME	proc-version     base='invalid'    m1='invalid'
+SAME	symlink-proc     base='invalid'    m1='invalid'
+SAME	unreadable       base='-'          m1='-'
+SAME	unreadable-dir   base='-'          m1='-'
+SAME	valid-small      base='ok'         m1='ok'
+SAME	valid-0t         base='ok'         m1='ok'
+SAME	valid-real       base='ok'         m1='ok'
+SAME	trunc            base='invalid'    m1='invalid'
+SAME	badmagic         base='invalid'    m1='invalid'
+SAME	plain            base='invalid'    m1='invalid'
+SAME	ver1             base='invalid'    m1='invalid'
+SAME	ver4             base='invalid'    m1='invalid'
+SAME	ver0             base='invalid'    m1='invalid'
+SAME	nkv-huge         base='invalid'    m1='invalid'
+SAME	nt-huge          base='invalid'    m1='invalid'
+SAME	unk-tt           base='-'          m1='-'
+SAME	socket           base='invalid'    m1='invalid'
+SAME	link-broken      base='missing'    m1='missing'
+SAME	loop             base='-'          m1='-'
+SAME	link-dir         base='invalid'    m1='invalid'
+SAME	link-valid       base='ok'         m1='ok'
+SAME	dotdot           base='ok'         m1='ok'
+SAME	root             base='invalid'    m1='invalid'
+SAME	dot              base='invalid'    m1='invalid'
+SAME	proc-cmdline     base='invalid'    m1='invalid'
+SAME	sys              base='invalid'    m1='invalid'
+SAME	zeros            base='missing'    m1='missing'
+SAME	short4           base='missing'    m1='missing'
+SAME	hdronly          base='missing'    m1='missing'
+DIFFS: 0
+
+== 2048-candidate listings through the probe's own `timeout 8` ==
+  2048x slow      base: rc=124 8.01s lines=1639/2048 states={'invalid': 7, '-': 1632}
+  2048x slow      m1: rc=0 0.61s lines=2048/2048 states={'invalid': 2048}
+  2048x missing   base: rc=0 0.05s lines=2048/2048 states={'missing': 2048}
+  2048x missing   m1: rc=0 0.05s lines=2048/2048 states={'missing': 2048}
+  2048x valid0t   base: rc=0 0.09s lines=2048/2048 states={'-': 2048}
+  2048x valid0t   m1: rc=0 0.08s lines=2048/2048 states={'-': 2048}
+  2048x badmagic  base: rc=0 0.08s lines=2048/2048 states={'invalid': 2048}
+  2048x badmagic  m1: rc=0 0.08s lines=2048/2048 states={'invalid': 2048}
+
+== mid-call in-place rewrite of one inode, 3 reps ==
+  invalid->valid same size+mtime: stable=True
+     base ['0\tinvalid | 1\tinvalid | 2\t- | ', '0\tinvalid | 1\tinvalid | 2\t- | ', '0\tinvalid | 1\tinvalid | 2\t- | ']
+     m1   ['0\tinvalid | 1\tinvalid | 2\tinvalid | ', '0\tinvalid | 1\tinvalid | 2\tinvalid | ', '0\tinvalid | 1\tinvalid | 2\tinvalid | ']
+  valid->invalid same size+mtime (false-green dir): stable=True
+     base ['0\t- | 1\tinvalid | 2\tinvalid | ', '0\t- | 1\tinvalid | 2\tinvalid | ', '0\t- | 1\tinvalid | 2\tinvalid | ']
+     m1   ['0\t- | 1\tinvalid | 2\t- | ', '0\t- | 1\tinvalid | 2\t- | ', '0\t- | 1\tinvalid | 2\t- | ']
+  valid->invalid same size, mtime changes: stable=True
+     base ['0\t- | 1\tinvalid | 2\tinvalid | ', '0\t- | 1\tinvalid | 2\tinvalid | ', '0\t- | 1\tinvalid | 2\tinvalid | ']
+     m1   ['0\t- | 1\tinvalid | 2\tinvalid | ', '0\t- | 1\tinvalid | 2\tinvalid | ', '0\t- | 1\tinvalid | 2\tinvalid | ']
+test4 rc=0

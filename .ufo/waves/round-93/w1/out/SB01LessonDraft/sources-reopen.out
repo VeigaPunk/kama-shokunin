@@ -1,0 +1,48 @@
+# independent re-open of the round-93 Gate sources (SB01LessonDraft)
+# instant: 2026-11-07T02:59:40+00:00
+# method: curl -sfL --max-time 60 https://raw.githubusercontent.com/ggml-org/llama.cpp/b12177/<path>
+# every fetch exit 0; sha256 of the fetched bytes below; lane tip 54b8578f
+
+## common/http.h  sha256=949e44f9c592d1f894818765d8bf433e3cfd183430696464e4965447643d2de1  lines=332
+90:         parts.port = std::stoi(port_str);
+92:         parts.port = 80;
+94:         parts.port = 443;
+301:     serv_addr.sin_port = htons(0);
+316:     if (getsockname(sock, (struct sockaddr*)&serv_addr, &namelen) != 0) {
+324:     int port = ntohs(serv_addr.sin_port);
+
+## tools/server/server-connect.cpp  sha256=2a505b295d649e6e0e70840d0f949a66b06d18269282294e5fb804e0460cc9df  lines=297
+194: bool server_connect::start(const common_params & params, int port) {
+208:         "--port", std::to_string(port),
+
+## tools/server/server-http.h  sha256=29c53f7ffde226edf3e6f48463e4807f7e554ca12e476099f90e0ff18142978d  lines=117
+92:     int port    = 9931;
+
+## tools/server/server-models.h  sha256=304c013601e1a5abfc9bcc42173b3ec2db23e65e065a8249532c4ddda6a5a6a1  lines=465
+74: struct server_model_meta {
+80:     int port = 0;
+
+## common/arg.cpp  sha256=c69c0e0703dbd343aec148ff4a65a343da80f65064d9385bc60120ed765e6f67  lines=4815
+1373:         params.n_parallel = -1;     // auto by default
+2521:                 params.n_parallel = value;
+2526:             {"-np", "--parallel"}, "N",
+2529:                 params.n_parallel = value;
+2531:         ).set_env("LLAMA_ARG_N_PARALLEL"));
+3321:             params.port = value;
+4613:             params.port = 8011;
+4616:             params.n_parallel = 32;
+4753:             params.port = 8014;
+
+## tools/server/server.cpp  sha256=d4d343db7c1b648eb5358ae2b87966a5f78ce5c9b245c7fbfe9827ba6971f08b  lines=813
+341:     if (params.server_connect && !connect_proc.start(params, ctx_http.port)) {
+
+## tools/server/server-http.cpp  sha256=aad15b757323f36b81235182c4a0a35d448399012ae3ef4fed9902b716fa17ea  lines=991
+96:         port = std::stoi(getenv("AIP_HTTP_PORT", "8080"));
+116:     port = params.port;
+125:         port = gcp.port;
+508:         } else if (port == 0) {
+512:                 port = bound_port;
+
+## tools/server/server-models-sched.cpp  sha256=b786ea0917ec1d9578c273b6f3930cf9ba90865be7878c18d6337d2f1cfdd54a  lines=593
+423:         child_env.push_back(std::string(SERVER_ENV_ROUTER_PORT) + "=" + std::to_string(models.base_params.port));
+

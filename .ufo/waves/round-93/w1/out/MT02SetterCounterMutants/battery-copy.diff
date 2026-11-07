@@ -1,0 +1,26 @@
+--- controls/c2-forgeries.py
++++ c2-forgeries-MT02.py
+@@ -20,12 +20,14 @@
+     (the counter cannot tell a string from an assignment; that is the K2 reviewer read)
+ Usage: c2-forgeries.py <scratch> <pinned archive>
+ """
++import os
+ import re
+ import subprocess
+ import sys
+ from pathlib import Path
+ 
+ BASE = "5af794958b0fc08f574aa2e67650282269549b02"
++COUNTER = os.environ.get("C2_COUNTER", "tools/round93-setter-rows.py")
+ C = Path(".ufo/waves/round-93/controls")
+ scratch, archive = Path(sys.argv[1]), Path(sys.argv[2])
+ scratch.mkdir(parents=True, exist_ok=True)
+@@ -91,7 +93,7 @@
+     sk.write_text(skill0 + "\n" + section)
+     so = scratch / f"{name}-SOURCES.md"
+     so.write_text(srcs)
+-    p = subprocess.run([sys.executable, "tools/round93-setter-rows.py", "--repo", ".", "--rev", BASE,
++    p = subprocess.run([sys.executable, COUNTER, "--repo", ".", "--rev", BASE,
+                         "--work", str(scratch / name), "--archive", str(bad_archive if name == "V10" else archive),
+                         "--skill-file", str(sk), "--sources-file", str(so)], capture_output=True, text=True)
+     out = p.stdout

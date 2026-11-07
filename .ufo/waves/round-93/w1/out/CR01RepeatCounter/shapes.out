@@ -1,0 +1,41 @@
+SHAPE S1-basename-collision entries=64 two model dirs, both hold a file named slow.gguf; b/ is a good model
+SHAPE_ROW S1-basename-collision probe=M1 MODEL_OK/router-unloaded-autoload/rc=0/1.08s
+SHAPE_ROW S1-basename-collision probe=base MODEL_OK/router-unloaded-autoload/rc=0/4.67s
+SHAPE_ROW S1-basename-collision probe=key-basename MODEL_UNLOADED/router-model-invalid/rc=2/1.15s
+SHAPE_ROW S1-basename-collision probe=key-size MODEL_OK/router-unloaded-autoload/rc=0/1.18s
+SHAPE_ROW S1-basename-collision probe=key-size-mtime MODEL_OK/router-unloaded-autoload/rc=0/1.10s
+SHAPE S2-size-collision entries=64 corrupt and complete copies of one model are often the same size
+SHAPE_ROW S2-size-collision probe=M1 MODEL_OK/router-unloaded-autoload/rc=0/0.99s
+SHAPE_ROW S2-size-collision probe=base MODEL_OK/router-unloaded-autoload/rc=0/4.60s
+SHAPE_ROW S2-size-collision probe=key-size MODEL_UNLOADED/router-model-invalid/rc=2/0.83s
+SHAPE_ROW S2-size-collision probe=key-size-mtime MODEL_OK/router-unloaded-autoload/rc=0/0.86s
+SHAPE_ROW S2-size-collision probe=key-basename MODEL_OK/router-unloaded-autoload/rc=0/1.06s
+SHAPE S3-tail-beyond-64 entries=65 P02 = 63 bad + 1 good; one more entry is enough
+SHAPE_ROW S3-tail-beyond-64 probe=M1 MODEL_OK/router-unloaded-autoload/rc=0/0.95s
+SHAPE_ROW S3-tail-beyond-64 probe=base MODEL_OK/router-unloaded-autoload/rc=0/4.57s
+SHAPE_ROW S3-tail-beyond-64 probe=cap64-bad MODEL_OK/router-unloaded-autoload/rc=0/1.09s
+SHAPE_ROW S3-tail-beyond-64 probe=cap1024-bad MODEL_OK/router-unloaded-autoload/rc=0/1.35s
+SHAPE S4-cross-call-replace entries=1 first=all-MODEL_OK then os.replace(good->slow invalid)
+SHAPE_ROW S4-cross-call-replace probe=M1 first=MODEL_OK/router-unloaded-autoload/rc=0/0.39s second=MODEL_UNLOADED/router-model-invalid/rc=2/1.14s
+SHAPE_ROW S4-cross-call-replace probe=base first=MODEL_OK/router-unloaded-autoload/rc=0/0.31s second=MODEL_UNLOADED/router-model-invalid/rc=2/0.96s
+SHAPE_ROW S4-cross-call-replace probe=disk-cache-path first=MODEL_OK/router-unloaded-autoload/rc=0/0.35s second=MODEL_OK/router-unloaded-autoload/rc=0/0.25s
+SHAPE_ROW S4-cross-call-replace probe=disk-cache-identity first=MODEL_OK/router-unloaded-autoload/rc=0/0.32s second=MODEL_UNLOADED/router-model-invalid/rc=2/0.78s
+SHAPE S5-inplace-rewrite entries=1 inode_same=1 
+SHAPE_ROW S5-inplace-rewrite probe=M1 first=MODEL_OK/router-unloaded-autoload/rc=0/0.25s second=MODEL_UNLOADED/router-model-invalid/rc=2/0.76s
+SHAPE_ROW S5-inplace-rewrite probe=base first=MODEL_OK/router-unloaded-autoload/rc=0/0.26s second=MODEL_UNLOADED/router-model-invalid/rc=2/0.82s
+SHAPE_ROW S5-inplace-rewrite probe=key-devino first=MODEL_OK/router-unloaded-autoload/rc=0/0.24s second=MODEL_UNLOADED/router-model-invalid/rc=2/0.83s
+SHAPE_ROW S6-repeat ok-ok same=1 M1=MODEL_OK/router-unloaded-autoload/rc=0/0.28s repeat-invalid=MODEL_OK/router-unloaded-autoload/rc=0/0.26s
+SHAPE_ROW S6-repeat bad-ok same=1 M1=MODEL_OK/router-unloaded-autoload/rc=0/0.26s repeat-invalid=MODEL_OK/router-unloaded-autoload/rc=0/0.33s
+SHAPE_ROW S6-repeat ok-bad-bad same=1 M1=MODEL_OK/router-unloaded-autoload/rc=0/0.29s repeat-invalid=MODEL_OK/router-unloaded-autoload/rc=0/0.25s
+SHAPE_ROW S6-repeat missing-missing same=1 M1=MODEL_UNLOADED/router-model-missing/rc=2/0.26s repeat-invalid=MODEL_UNLOADED/router-model-missing/rc=2/0.29s
+SHAPE_ROW S6-repeat missing-bad same=1 M1=MODEL_UNLOADED/router-model-missing/rc=2/0.29s repeat-invalid=MODEL_UNLOADED/router-model-missing/rc=2/0.37s
+SHAPE_ROW S6-repeat bad-bad same=1 M1=MODEL_UNLOADED/router-model-invalid/rc=2/0.41s repeat-invalid=MODEL_UNLOADED/router-model-invalid/rc=2/0.27s
+SHAPE_ROW S6-repeat ok-missing same=1 M1=MODEL_OK/router-unloaded-autoload/rc=0/0.29s repeat-invalid=MODEL_OK/router-unloaded-autoload/rc=0/0.29s
+SHAPE_ROW S6-repeat ok same=1 M1=MODEL_OK/router-unloaded-autoload/rc=0/0.23s repeat-invalid=MODEL_OK/router-unloaded-autoload/rc=0/0.25s
+SHAPE_ROW S6-repeat bad same=1 M1=MODEL_UNLOADED/router-model-invalid/rc=2/0.34s repeat-invalid=MODEL_UNLOADED/router-model-invalid/rc=2/0.34s
+SHAPE S6-repeat diffs=0
+SHAPE S7-small-corrupt entries=1 one small invalid model, no valid file
+SHAPE_ROW S7-small-corrupt probe=M1 MODEL_UNLOADED/router-model-invalid/rc=2/0.22s
+SHAPE_ROW S7-small-corrupt probe=base MODEL_UNLOADED/router-model-invalid/rc=2/0.25s
+SHAPE_ROW S7-small-corrupt probe=ok-as-unknown MODEL_UNLOADED/router-model-invalid/rc=2/0.27s
+SHAPES_DONE

@@ -1,0 +1,864 @@
+
+######## common/arg.cpp:1373
+
+   1365:     // per-example default params
+   1366:     // we define here to make sure it's included in llama-gen-docs
+   1367:     if (ex == LLAMA_EXAMPLE_COMPLETION) {
+   1368:         params.use_jinja = false;   // disable jinja by default
+   1369:     } else if (ex == LLAMA_EXAMPLE_MTMD) {
+   1370:         params.use_jinja = false;   // disable jinja by default
+   1371:         params.sampling.temp = 0.2; // lower temp by default for better quality
+   1372:     } else if (ex == LLAMA_EXAMPLE_SERVER) {
+>> 1373:         params.n_parallel = -1;     // auto by default
+   1374:     } else if (ex == LLAMA_EXAMPLE_TOKENIZE) {
+   1375:         params.parse_special = true; // parse special tokens by default, like the old tokenize tool
+   1376:     } else if (ex == LLAMA_EXAMPLE_TTS) {
+   1377:         params.out_file = "output.wav";
+   1378:         params.sampling.penalty_repeat = 1.05f;
+   1379:         params.sampling.penalty_last_n = -1;
+
+######## common/arg.cpp:2515
+
+   2507:             GGML_UNUSED(params);
+   2508:             GGML_UNUSED(value);
+   2509:             LOG_WRN("DEPRECATED: --defrag-thold is deprecated and no longer necessary to specify\n");
+   2510:         }
+   2511:     ).set_env("LLAMA_ARG_DEFRAG_THOLD"));
+   2512:     if (ex == LLAMA_EXAMPLE_SERVER) {
+   2513:         // this is to make sure this option appears in the server-specific section of the help message
+   2514:         add_opt(common_arg(
+>> 2515:             {"-np", "--parallel"}, "N",
+   2516:             string_format("number of server slots (default: %d, -1 = auto)", params.n_parallel),
+   2517:             [](common_params & params, int value) {
+   2518:                 if (value == 0) {
+   2519:                     throw std::invalid_argument("error: invalid value for n_parallel\n");
+   2520:                 }
+   2521:                 params.n_parallel = value;
+
+######## common/arg.cpp:2521
+
+   2513:         // this is to make sure this option appears in the server-specific section of the help message
+   2514:         add_opt(common_arg(
+   2515:             {"-np", "--parallel"}, "N",
+   2516:             string_format("number of server slots (default: %d, -1 = auto)", params.n_parallel),
+   2517:             [](common_params & params, int value) {
+   2518:                 if (value == 0) {
+   2519:                     throw std::invalid_argument("error: invalid value for n_parallel\n");
+   2520:                 }
+>> 2521:                 params.n_parallel = value;
+   2522:             }
+   2523:         ).set_env("LLAMA_ARG_N_PARALLEL").set_examples({LLAMA_EXAMPLE_SERVER}));
+   2524:     } else {
+   2525:         add_opt(common_arg(
+   2526:             {"-np", "--parallel"}, "N",
+   2527:             string_format("number of parallel sequences to decode (default: %d)", params.n_parallel),
+
+######## common/arg.cpp:2523
+
+   2515:             {"-np", "--parallel"}, "N",
+   2516:             string_format("number of server slots (default: %d, -1 = auto)", params.n_parallel),
+   2517:             [](common_params & params, int value) {
+   2518:                 if (value == 0) {
+   2519:                     throw std::invalid_argument("error: invalid value for n_parallel\n");
+   2520:                 }
+   2521:                 params.n_parallel = value;
+   2522:             }
+>> 2523:         ).set_env("LLAMA_ARG_N_PARALLEL").set_examples({LLAMA_EXAMPLE_SERVER}));
+   2524:     } else {
+   2525:         add_opt(common_arg(
+   2526:             {"-np", "--parallel"}, "N",
+   2527:             string_format("number of parallel sequences to decode (default: %d)", params.n_parallel),
+   2528:             [](common_params & params, int value) {
+   2529:                 params.n_parallel = value;
+
+######## common/arg.cpp:2526
+
+   2518:                 if (value == 0) {
+   2519:                     throw std::invalid_argument("error: invalid value for n_parallel\n");
+   2520:                 }
+   2521:                 params.n_parallel = value;
+   2522:             }
+   2523:         ).set_env("LLAMA_ARG_N_PARALLEL").set_examples({LLAMA_EXAMPLE_SERVER}));
+   2524:     } else {
+   2525:         add_opt(common_arg(
+>> 2526:             {"-np", "--parallel"}, "N",
+   2527:             string_format("number of parallel sequences to decode (default: %d)", params.n_parallel),
+   2528:             [](common_params & params, int value) {
+   2529:                 params.n_parallel = value;
+   2530:             }
+   2531:         ).set_env("LLAMA_ARG_N_PARALLEL"));
+   2532:     }
+
+######## common/arg.cpp:2529
+
+   2521:                 params.n_parallel = value;
+   2522:             }
+   2523:         ).set_env("LLAMA_ARG_N_PARALLEL").set_examples({LLAMA_EXAMPLE_SERVER}));
+   2524:     } else {
+   2525:         add_opt(common_arg(
+   2526:             {"-np", "--parallel"}, "N",
+   2527:             string_format("number of parallel sequences to decode (default: %d)", params.n_parallel),
+   2528:             [](common_params & params, int value) {
+>> 2529:                 params.n_parallel = value;
+   2530:             }
+   2531:         ).set_env("LLAMA_ARG_N_PARALLEL"));
+   2532:     }
+   2533:     add_opt(common_arg(
+   2534:         {"-ns", "--sequences"}, "N",
+   2535:         string_format("number of sequences to decode (default: %d)", params.n_sequences),
+
+######## common/arg.cpp:2531
+
+   2523:         ).set_env("LLAMA_ARG_N_PARALLEL").set_examples({LLAMA_EXAMPLE_SERVER}));
+   2524:     } else {
+   2525:         add_opt(common_arg(
+   2526:             {"-np", "--parallel"}, "N",
+   2527:             string_format("number of parallel sequences to decode (default: %d)", params.n_parallel),
+   2528:             [](common_params & params, int value) {
+   2529:                 params.n_parallel = value;
+   2530:             }
+>> 2531:         ).set_env("LLAMA_ARG_N_PARALLEL"));
+   2532:     }
+   2533:     add_opt(common_arg(
+   2534:         {"-ns", "--sequences"}, "N",
+   2535:         string_format("number of sequences to decode (default: %d)", params.n_sequences),
+   2536:         [](common_params & params, int value) {
+   2537:             params.n_sequences = value;
+
+######## common/arg.cpp:3318
+
+   3310:                 }
+   3311:             }
+   3312:             if (params.hostnames.empty()) {
+   3313:                 throw std::invalid_argument("--host requires at least one address");
+   3314:             }
+   3315:         }
+   3316:     ).set_examples({LLAMA_EXAMPLE_SERVER}).set_env("LLAMA_ARG_HOST"));
+   3317:     add_opt(common_arg(
+>> 3318:         {"--port"}, "PORT",
+   3319:         string_format("port to listen (default: %d)", params.port),
+   3320:         [](common_params & params, int value) {
+   3321:             params.port = value;
+   3322:         }
+   3323:     ).set_examples({LLAMA_EXAMPLE_SERVER}).set_env("LLAMA_ARG_PORT"));
+   3324:     add_opt(common_arg(
+
+######## common/arg.cpp:3321
+
+   3313:                 throw std::invalid_argument("--host requires at least one address");
+   3314:             }
+   3315:         }
+   3316:     ).set_examples({LLAMA_EXAMPLE_SERVER}).set_env("LLAMA_ARG_HOST"));
+   3317:     add_opt(common_arg(
+   3318:         {"--port"}, "PORT",
+   3319:         string_format("port to listen (default: %d)", params.port),
+   3320:         [](common_params & params, int value) {
+>> 3321:             params.port = value;
+   3322:         }
+   3323:     ).set_examples({LLAMA_EXAMPLE_SERVER}).set_env("LLAMA_ARG_PORT"));
+   3324:     add_opt(common_arg(
+   3325:         {"--reuse-port"},
+   3326:         string_format("allow multiple sockets to bind to the same port (default: %s)", params.reuse_port ? "enabled" : "disabled"),
+   3327:         [](common_params & params) {
+
+######## common/arg.cpp:3323
+
+   3315:         }
+   3316:     ).set_examples({LLAMA_EXAMPLE_SERVER}).set_env("LLAMA_ARG_HOST"));
+   3317:     add_opt(common_arg(
+   3318:         {"--port"}, "PORT",
+   3319:         string_format("port to listen (default: %d)", params.port),
+   3320:         [](common_params & params, int value) {
+   3321:             params.port = value;
+   3322:         }
+>> 3323:     ).set_examples({LLAMA_EXAMPLE_SERVER}).set_env("LLAMA_ARG_PORT"));
+   3324:     add_opt(common_arg(
+   3325:         {"--reuse-port"},
+   3326:         string_format("allow multiple sockets to bind to the same port (default: %s)", params.reuse_port ? "enabled" : "disabled"),
+   3327:         [](common_params & params) {
+   3328:             params.reuse_port = true;
+   3329:         }
+
+######## common/arg.cpp:4613
+
+   4605:     // presets
+   4606: 
+   4607:     add_opt(common_arg(
+   4608:         {"--embd-gemma-default"},
+   4609:         string_format("use default EmbeddingGemma model (note: can download weights from the internet)"),
+   4610:         [](common_params & params) {
+   4611:             params.model.hf_repo = "ggml-org/embeddinggemma-300M-qat-q4_0-GGUF";
+   4612:             params.model.hf_file = "embeddinggemma-300M-qat-Q4_0.gguf";
+>> 4613:             params.port = 8011;
+   4614:             params.n_ubatch = 2048;
+   4615:             params.n_batch = 2048;
+   4616:             params.n_parallel = 32;
+   4617:             params.n_ctx = 2048*params.n_parallel;
+   4618:             params.verbose_prompt = true;
+   4619:             params.embedding = true;
+
+######## common/arg.cpp:4616
+
+   4608:         {"--embd-gemma-default"},
+   4609:         string_format("use default EmbeddingGemma model (note: can download weights from the internet)"),
+   4610:         [](common_params & params) {
+   4611:             params.model.hf_repo = "ggml-org/embeddinggemma-300M-qat-q4_0-GGUF";
+   4612:             params.model.hf_file = "embeddinggemma-300M-qat-Q4_0.gguf";
+   4613:             params.port = 8011;
+   4614:             params.n_ubatch = 2048;
+   4615:             params.n_batch = 2048;
+>> 4616:             params.n_parallel = 32;
+   4617:             params.n_ctx = 2048*params.n_parallel;
+   4618:             params.verbose_prompt = true;
+   4619:             params.embedding = true;
+   4620:         }
+   4621:     ).set_examples({LLAMA_EXAMPLE_EMBEDDING, LLAMA_EXAMPLE_SERVER}));
+   4622: 
+
+######## common/arg.cpp:4629
+
+   4621:     ).set_examples({LLAMA_EXAMPLE_EMBEDDING, LLAMA_EXAMPLE_SERVER}));
+   4622: 
+   4623:     add_opt(common_arg(
+   4624:         {"--fim-qwen-1.5b-default"},
+   4625:         string_format("use default Qwen 2.5 Coder 1.5B (note: can download weights from the internet)"),
+   4626:         [](common_params & params) {
+   4627:             params.model.hf_repo = "ggml-org/Qwen2.5-Coder-1.5B-Q8_0-GGUF";
+   4628:             params.model.hf_file = "qwen2.5-coder-1.5b-q8_0.gguf";
+>> 4629:             params.port = 8012;
+   4630:             params.n_ubatch = 1024;
+   4631:             params.n_batch = 1024;
+   4632:             params.n_ctx = 0;
+   4633:             params.n_cache_reuse = 256;
+   4634:         }
+   4635:     ).set_examples({LLAMA_EXAMPLE_SERVER}));
+
+######## common/arg.cpp:4643
+
+   4635:     ).set_examples({LLAMA_EXAMPLE_SERVER}));
+   4636: 
+   4637:     add_opt(common_arg(
+   4638:         {"--fim-qwen-3b-default"},
+   4639:         string_format("use default Qwen 2.5 Coder 3B (note: can download weights from the internet)"),
+   4640:         [](common_params & params) {
+   4641:             params.model.hf_repo = "ggml-org/Qwen2.5-Coder-3B-Q8_0-GGUF";
+   4642:             params.model.hf_file = "qwen2.5-coder-3b-q8_0.gguf";
+>> 4643:             params.port = 8012;
+   4644:             params.n_ubatch = 1024;
+   4645:             params.n_batch = 1024;
+   4646:             params.n_ctx = 0;
+   4647:             params.n_cache_reuse = 256;
+   4648:         }
+   4649:     ).set_examples({LLAMA_EXAMPLE_SERVER}));
+
+######## common/arg.cpp:4657
+
+   4649:     ).set_examples({LLAMA_EXAMPLE_SERVER}));
+   4650: 
+   4651:     add_opt(common_arg(
+   4652:         {"--fim-qwen-7b-default"},
+   4653:         string_format("use default Qwen 2.5 Coder 7B (note: can download weights from the internet)"),
+   4654:         [](common_params & params) {
+   4655:             params.model.hf_repo = "ggml-org/Qwen2.5-Coder-7B-Q8_0-GGUF";
+   4656:             params.model.hf_file = "qwen2.5-coder-7b-q8_0.gguf";
+>> 4657:             params.port = 8012;
+   4658:             params.n_ubatch = 1024;
+   4659:             params.n_batch = 1024;
+   4660:             params.n_ctx = 0;
+   4661:             params.n_cache_reuse = 256;
+   4662:         }
+   4663:     ).set_examples({LLAMA_EXAMPLE_SERVER}));
+
+######## common/arg.cpp:4673
+
+   4665:     add_opt(common_arg(
+   4666:         {"--fim-qwen-7b-spec"},
+   4667:         string_format("use Qwen 2.5 Coder 7B + 0.5B draft for speculative decoding (note: can download weights from the internet)"),
+   4668:         [](common_params & params) {
+   4669:             params.model.hf_repo = "ggml-org/Qwen2.5-Coder-7B-Q8_0-GGUF";
+   4670:             params.model.hf_file = "qwen2.5-coder-7b-q8_0.gguf";
+   4671:             params.speculative.draft.mparams.hf_repo = "ggml-org/Qwen2.5-Coder-0.5B-Q8_0-GGUF";
+   4672:             params.speculative.draft.mparams.hf_file = "qwen2.5-coder-0.5b-q8_0.gguf";
+>> 4673:             params.port = 8012;
+   4674:             params.n_ubatch = 1024;
+   4675:             params.n_batch = 1024;
+   4676:             params.n_ctx = 0;
+   4677:             params.n_cache_reuse = 256;
+   4678:         }
+   4679:     ).set_examples({LLAMA_EXAMPLE_SERVER}));
+
+######## common/arg.cpp:4689
+
+   4681:     add_opt(common_arg(
+   4682:         {"--fim-qwen-14b-spec"},
+   4683:         string_format("use Qwen 2.5 Coder 14B + 0.5B draft for speculative decoding (note: can download weights from the internet)"),
+   4684:         [](common_params & params) {
+   4685:             params.model.hf_repo = "ggml-org/Qwen2.5-Coder-14B-Q8_0-GGUF";
+   4686:             params.model.hf_file = "qwen2.5-coder-14b-q8_0.gguf";
+   4687:             params.speculative.draft.mparams.hf_repo = "ggml-org/Qwen2.5-Coder-0.5B-Q8_0-GGUF";
+   4688:             params.speculative.draft.mparams.hf_file = "qwen2.5-coder-0.5b-q8_0.gguf";
+>> 4689:             params.port = 8012;
+   4690:             params.n_ubatch = 1024;
+   4691:             params.n_batch = 1024;
+   4692:             params.n_ctx = 0;
+   4693:             params.n_cache_reuse = 256;
+   4694:         }
+   4695:     ).set_examples({LLAMA_EXAMPLE_SERVER}));
+
+######## common/arg.cpp:4703
+
+   4695:     ).set_examples({LLAMA_EXAMPLE_SERVER}));
+   4696: 
+   4697:     add_opt(common_arg(
+   4698:         {"--fim-qwen-30b-default"},
+   4699:         string_format("use default Qwen 3 Coder 30B A3B Instruct (note: can download weights from the internet)"),
+   4700:         [](common_params & params) {
+   4701:             params.model.hf_repo = "ggml-org/Qwen3-Coder-30B-A3B-Instruct-Q8_0-GGUF";
+   4702:             params.model.hf_file = "qwen3-coder-30b-a3b-instruct-q8_0.gguf";
+>> 4703:             params.port = 8012;
+   4704:             params.n_ubatch = 1024;
+   4705:             params.n_batch = 1024;
+   4706:             params.n_ctx = 0;
+   4707:             params.n_cache_reuse = 256;
+   4708:         }
+   4709:     ).set_examples({LLAMA_EXAMPLE_SERVER}));
+
+######## common/arg.cpp:4717
+
+   4709:     ).set_examples({LLAMA_EXAMPLE_SERVER}));
+   4710: 
+   4711:     add_opt(common_arg(
+   4712:         {"--gpt-oss-20b-default"},
+   4713:         string_format("use gpt-oss-20b (note: can download weights from the internet)"),
+   4714:         [](common_params & params) {
+   4715:             params.model.hf_repo = "ggml-org/gpt-oss-20b-GGUF";
+   4716:             params.model.hf_file = "gpt-oss-20b-mxfp4.gguf";
+>> 4717:             params.port = 8013;
+   4718:             params.n_ubatch = 2048;
+   4719:             params.n_batch = 32768;
+   4720:             params.n_parallel = 2;
+   4721:             params.n_ctx = 131072*params.n_parallel;
+   4722:             params.sampling.temp = 1.0f;
+   4723:             params.sampling.top_p = 1.0f;
+
+######## common/arg.cpp:4720
+
+   4712:         {"--gpt-oss-20b-default"},
+   4713:         string_format("use gpt-oss-20b (note: can download weights from the internet)"),
+   4714:         [](common_params & params) {
+   4715:             params.model.hf_repo = "ggml-org/gpt-oss-20b-GGUF";
+   4716:             params.model.hf_file = "gpt-oss-20b-mxfp4.gguf";
+   4717:             params.port = 8013;
+   4718:             params.n_ubatch = 2048;
+   4719:             params.n_batch = 32768;
+>> 4720:             params.n_parallel = 2;
+   4721:             params.n_ctx = 131072*params.n_parallel;
+   4722:             params.sampling.temp = 1.0f;
+   4723:             params.sampling.top_p = 1.0f;
+   4724:             params.sampling.top_k = 0;
+   4725:             params.sampling.min_p = 0.01f;
+   4726:             params.use_jinja = true;
+
+######## common/arg.cpp:4735
+
+   4727:         }
+   4728:     ).set_examples({LLAMA_EXAMPLE_SERVER, LLAMA_EXAMPLE_CLI}));
+   4729: 
+   4730:     add_opt(common_arg(
+   4731:         {"--gpt-oss-120b-default"},
+   4732:         string_format("use gpt-oss-120b (note: can download weights from the internet)"),
+   4733:         [](common_params & params) {
+   4734:             params.model.hf_repo = "ggml-org/gpt-oss-120b-GGUF";
+>> 4735:             params.port = 8013;
+   4736:             params.n_ubatch = 2048;
+   4737:             params.n_batch = 32768;
+   4738:             params.n_parallel = 2;
+   4739:             params.n_ctx = 131072*params.n_parallel;
+   4740:             params.sampling.temp = 1.0f;
+   4741:             params.sampling.top_p = 1.0f;
+
+######## common/arg.cpp:4738
+
+   4730:     add_opt(common_arg(
+   4731:         {"--gpt-oss-120b-default"},
+   4732:         string_format("use gpt-oss-120b (note: can download weights from the internet)"),
+   4733:         [](common_params & params) {
+   4734:             params.model.hf_repo = "ggml-org/gpt-oss-120b-GGUF";
+   4735:             params.port = 8013;
+   4736:             params.n_ubatch = 2048;
+   4737:             params.n_batch = 32768;
+>> 4738:             params.n_parallel = 2;
+   4739:             params.n_ctx = 131072*params.n_parallel;
+   4740:             params.sampling.temp = 1.0f;
+   4741:             params.sampling.top_p = 1.0f;
+   4742:             params.sampling.top_k = 0;
+   4743:             params.sampling.min_p = 0.01f;
+   4744:             params.use_jinja = true;
+
+######## common/arg.cpp:4753
+
+   4745:         }
+   4746:     ).set_examples({LLAMA_EXAMPLE_SERVER, LLAMA_EXAMPLE_CLI}));
+   4747: 
+   4748:     add_opt(common_arg(
+   4749:         {"--vision-gemma-4b-default"},
+   4750:         string_format("use Gemma 3 4B QAT (note: can download weights from the internet)"),
+   4751:         [](common_params & params) {
+   4752:             params.model.hf_repo = "ggml-org/gemma-3-4b-it-qat-GGUF";
+>> 4753:             params.port = 8014;
+   4754:             params.n_ctx = 0;
+   4755:             params.use_jinja = true;
+   4756:         }
+   4757:     ).set_examples({LLAMA_EXAMPLE_SERVER, LLAMA_EXAMPLE_CLI}));
+   4758: 
+   4759:     add_opt(common_arg(
+
+######## common/arg.cpp:4764
+
+   4756:         }
+   4757:     ).set_examples({LLAMA_EXAMPLE_SERVER, LLAMA_EXAMPLE_CLI}));
+   4758: 
+   4759:     add_opt(common_arg(
+   4760:         {"--vision-gemma-12b-default"},
+   4761:         string_format("use Gemma 3 12B QAT (note: can download weights from the internet)"),
+   4762:         [](common_params & params) {
+   4763:             params.model.hf_repo = "ggml-org/gemma-3-12b-it-qat-GGUF";
+>> 4764:             params.port = 8014;
+   4765:             params.n_ctx = 0;
+   4766:             params.use_jinja = true;
+   4767:         }
+   4768:     ).set_examples({LLAMA_EXAMPLE_SERVER, LLAMA_EXAMPLE_CLI}));
+   4769: 
+   4770:     add_opt(common_arg(
+
+######## common/common.h:464
+
+    456: 
+    457: struct common_params {
+    458:     int32_t n_predict             =    -1; // max. number of new tokens to predict, -1 == no limit
+    459:     int32_t n_ctx                 =     0; // context size, 0 == context the model was trained with
+    460:     int32_t n_batch               =  2048; // logical batch size for prompt processing (must be >=32 to use BLAS)
+    461:     int32_t n_ubatch              =   512; // physical batch size for prompt processing (must be >=32 to use BLAS)
+    462:     int32_t n_keep                =     0; // number of tokens to keep from initial prompt
+    463:     int32_t n_chunks              =    -1; // max number of chunks to process (-1 = unlimited)
+>>  464:     int32_t n_parallel            =     1; // number of parallel sequences to decode
+    465:     int32_t n_sequences           =     1; // number of sequences to decode
+    466:     int32_t n_outputs_max         =     0; // max outputs in a batch (0 = n_batch)
+    467:     int32_t n_outputs_max_per_seq =     1; // max outputs per sequence
+    468:     int32_t grp_attn_n            =     1; // group-attention factor
+    469:     int32_t grp_attn_w            =   512; // group-attention width
+    470:     int32_t n_print               =    -1; // print token count every n tokens (-1 = disabled)
+
+######## common/common.h:632
+
+    624:     // embedding
+    625:     bool embedding         = false; // get only sentence embedding
+    626:     int32_t embd_normalize = 2;     // normalisation for embeddings (-1=none, 0=max absolute int16, 1=taxicab, 2=euclidean, >2=p-norm)
+    627:     std::string embd_out   = "";    // empty = default, "array" = [[],[]...], "json" = openai style, "json+" = same "json" + cosine similarity matrix
+    628:     std::string embd_sep   = "\n";  // separator of embeddings
+    629:     std::string cls_sep    = "\t";  // separator of classification sequences
+    630: 
+    631:     // server params
+>>  632:     int32_t port                = 9931;          // server listens on this network port
+    633:     bool    reuse_port          = false;         // allow multiple sockets to bind to the same port
+    634:     int32_t timeout_read        = 3600;          // http read timeout in seconds
+    635:     int32_t timeout_write       = timeout_read;  // http write timeout in seconds
+    636:     int32_t sse_ping_interval   = 30;            // SSE ping interval in seconds
+    637:     int32_t n_threads_http      = -1;    // number of threads to process HTTP requests (TODO: support threadpool)
+    638:     int32_t n_cache_reuse       = 0;     // min chunk size to reuse from the cache via KV shifting
+
+######## common/http.h:90
+
+     82:         auto colon_pos = parts.host.find(':');
+     83:         if (colon_pos != std::string::npos) {
+     84:             port_str = parts.host.substr(colon_pos + 1);
+     85:             parts.host = parts.host.substr(0, colon_pos);
+     86:         }
+     87:     }
+     88: 
+     89:     if (!port_str.empty()) {
+>>   90:         parts.port = std::stoi(port_str);
+     91:     } else if (parts.scheme == "http") {
+     92:         parts.port = 80;
+     93:     } else if (parts.scheme == "https") {
+     94:         parts.port = 443;
+     95:     } else {
+     96:         throw std::runtime_error("unsupported URL scheme: " + parts.scheme);
+
+######## common/http.h:92
+
+     84:             port_str = parts.host.substr(colon_pos + 1);
+     85:             parts.host = parts.host.substr(0, colon_pos);
+     86:         }
+     87:     }
+     88: 
+     89:     if (!port_str.empty()) {
+     90:         parts.port = std::stoi(port_str);
+     91:     } else if (parts.scheme == "http") {
+>>   92:         parts.port = 80;
+     93:     } else if (parts.scheme == "https") {
+     94:         parts.port = 443;
+     95:     } else {
+     96:         throw std::runtime_error("unsupported URL scheme: " + parts.scheme);
+     97:     }
+     98: 
+
+######## common/http.h:94
+
+     86:         }
+     87:     }
+     88: 
+     89:     if (!port_str.empty()) {
+     90:         parts.port = std::stoi(port_str);
+     91:     } else if (parts.scheme == "http") {
+     92:         parts.port = 80;
+     93:     } else if (parts.scheme == "https") {
+>>   94:         parts.port = 443;
+     95:     } else {
+     96:         throw std::runtime_error("unsupported URL scheme: " + parts.scheme);
+     97:     }
+     98: 
+     99:     return parts;
+    100: }
+
+######## common/http.h:324
+
+    316:     if (getsockname(sock, (struct sockaddr*)&serv_addr, &namelen) != 0) {
+    317:         CLOSE_SOCKET(sock);
+    318: #ifdef _WIN32
+    319:         WSACleanup();
+    320: #endif
+    321:         return -1;
+    322:     }
+    323: 
+>>  324:     int port = ntohs(serv_addr.sin_port);
+    325: 
+    326:     CLOSE_SOCKET(sock);
+    327: #ifdef _WIN32
+    328:     WSACleanup();
+    329: #endif
+    330: 
+
+######## tools/server/server-connect.cpp:208
+
+    200: 
+    201:     // main() resolves this before anything can read it from /props
+    202:     const std::string & code = params.server_connect_code;
+    203:     GGML_ASSERT(!code.empty());
+    204: 
+    205:     const std::vector<std::string> args = {
+    206:         bin,
+    207:         "--host", upstream_host(params.hostnames),
+>>  208:         "--port", std::to_string(port),
+    209:         "--code", code,
+    210:         // the kernel closes our end of this pipe even if we are killed without cleanup
+    211:         // this is what stops the child from outliving us
+    212:         "--exit-on-stdin-eof",
+    213:     };
+    214: 
+
+######## tools/server/server-http.cpp:96
+
+     88:     std::string path_predict;
+     89:     int port;
+     90: 
+     91:     // Ref: https://docs.cloud.google.com/vertex-ai/docs/predictions/custom-container-requirements#aip-variables
+     92:     gcp_params() {
+     93:         enabled = getenv("AIP_MODE", "") == "PREDICTION";
+     94:         path_health = getenv("AIP_HEALTH_ROUTE", "", true); // default: using the route defined in server.cpp
+     95:         path_predict = getenv("AIP_PREDICT_ROUTE", "/predict", true);
+>>   96:         port = std::stoi(getenv("AIP_HTTP_PORT", "8080"));
+     97:     }
+     98: 
+     99:     static std::string getenv(const char * name, const std::string & default_value, bool ensure_leading_slash = false) {
+    100:         const auto * value = std::getenv(name);
+    101:         if (value == nullptr || value[0] == '\0') {
+    102:             return default_value;
+
+######## tools/server/server-http.cpp:116
+
+    108:         return val;
+    109:     }
+    110: };
+    111: 
+    112: bool server_http_context::init(const common_params & params) {
+    113:     const gcp_params gcp;
+    114: 
+    115:     path_prefix = params.api_prefix;
+>>  116:     port = params.port;
+    117: 
+    118:     if (gcp.enabled) {
+    119:         SRV_TRC("Google Cloud Platform compat: health route = %s, predict route = %s, port = %d\n", gcp.path_health.c_str(), gcp.path_predict.c_str(), gcp.port);
+    120: 
+    121:         if (port != gcp.port) {
+    122:             SRV_WRN("Google Cloud Platform compat: overriding server port %d with AIP_HTTP_PORT %d\n", port, gcp.port);
+
+######## tools/server/server-http.cpp:119
+
+    111: 
+    112: bool server_http_context::init(const common_params & params) {
+    113:     const gcp_params gcp;
+    114: 
+    115:     path_prefix = params.api_prefix;
+    116:     port = params.port;
+    117: 
+    118:     if (gcp.enabled) {
+>>  119:         SRV_TRC("Google Cloud Platform compat: health route = %s, predict route = %s, port = %d\n", gcp.path_health.c_str(), gcp.path_predict.c_str(), gcp.port);
+    120: 
+    121:         if (port != gcp.port) {
+    122:             SRV_WRN("Google Cloud Platform compat: overriding server port %d with AIP_HTTP_PORT %d\n", port, gcp.port);
+    123:         }
+    124: 
+    125:         port = gcp.port;
+
+######## tools/server/server-http.cpp:122
+
+    114: 
+    115:     path_prefix = params.api_prefix;
+    116:     port = params.port;
+    117: 
+    118:     if (gcp.enabled) {
+    119:         SRV_TRC("Google Cloud Platform compat: health route = %s, predict route = %s, port = %d\n", gcp.path_health.c_str(), gcp.path_predict.c_str(), gcp.port);
+    120: 
+    121:         if (port != gcp.port) {
+>>  122:             SRV_WRN("Google Cloud Platform compat: overriding server port %d with AIP_HTTP_PORT %d\n", port, gcp.port);
+    123:         }
+    124: 
+    125:         port = gcp.port;
+    126:     }
+    127: 
+    128:     pimpl->hosts = params.hostnames;
+
+######## tools/server/server-http.cpp:125
+
+    117: 
+    118:     if (gcp.enabled) {
+    119:         SRV_TRC("Google Cloud Platform compat: health route = %s, predict route = %s, port = %d\n", gcp.path_health.c_str(), gcp.path_predict.c_str(), gcp.port);
+    120: 
+    121:         if (port != gcp.port) {
+    122:             SRV_WRN("Google Cloud Platform compat: overriding server port %d with AIP_HTTP_PORT %d\n", port, gcp.port);
+    123:         }
+    124: 
+>>  125:         port = gcp.port;
+    126:     }
+    127: 
+    128:     pimpl->hosts = params.hostnames;
+    129:     size_t n_tcp_hosts = 0;
+    130:     for (const auto & host : pimpl->hosts) {
+    131:         if (!string_ends_with(host, ".sock")) {
+
+######## tools/server/server-http.cpp:512
+
+    504:             SRV_TRC("%s", "setting address family to AF_UNIX\n");
+    505:             srv->set_address_family(AF_UNIX);
+    506:             // AF_UNIX ignores the port, but bind_to_port requires a nonzero value.
+    507:             was_bound = srv->bind_to_port(host, 8080);
+    508:         } else if (port == 0) {
+    509:             const auto bound_port = srv->bind_to_any_port(host);
+    510:             was_bound = bound_port >= 0;
+    511:             if (was_bound) {
+>>  512:                 port = bound_port;
+    513:             }
+    514:         } else {
+    515:             was_bound = srv->bind_to_port(host, port);
+    516:         }
+    517:         if (!was_bound) {
+    518:             SRV_ERR("couldn't bind HTTP server socket, hostname: %s, port: %d\n", host.c_str(), port);
+
+######## tools/server/server-http.h:92
+
+     84:         virtual bool is_open() const = 0;
+     85:         virtual void close() = 0;
+     86:         virtual ~ws_conn() = default;
+     87:     };
+     88:     // the handler runs on its own HTTP thread for the whole lifetime of the connection
+     89:     using ws_handler_t = std::function<void(const server_http_req & req, ws_conn & conn)>;
+     90: 
+     91:     std::string path_prefix;
+>>   92:     int port    = 9931;
+     93:     bool is_ssl = false;
+     94: 
+     95:     server_http_context();
+     96:     ~server_http_context();
+     97: 
+     98:     bool init(const common_params & params);
+
+######## tools/server/server-models.cpp:69
+
+     61: 
+     62:     // thread-safe
+     63:     // kill_after > 0: force-kill the child after that many seconds
+     64:     void watch(const std::string & name, std::shared_ptr<server_subproc> proc, server_role_type role, int port, int kill_after = 0) {
+     65:         child_t c;
+     66:         c.name = name;
+     67:         c.proc = std::move(proc);
+     68:         c.role = role;
+>>   69:         c.port = port;
+     70:         if (kill_after > 0) {
+     71:             c.deadline = ggml_time_ms() + (int64_t) kill_after * 1000;
+     72:         }
+     73:         if (!c.proc->has_output()) {
+     74:             SRV_ERR("failed to get stdout/stderr of child process for name=%s\n", name.c_str());
+     75:             c.eof = true;
+
+######## tools/server/server-models.cpp:90
+
+     82:         push({ cmd_t::STOP, {}, name, stop_timeout, send_exit });
+     83:     }
+     84: 
+     85: private:
+     86:     struct child_t {
+     87:         std::string name;
+     88:         std::shared_ptr<server_subproc> proc;
+     89:         server_role_type role = SERVER_ROLE_INSTANCE;
+>>   90:         int port = 0;
+     91:         std::string buf[SERVER_SUBPROC_STREAMS]; // partial line of each pipe
+     92:         bool eof = false;     // output closed, waiting for the process to be reaped
+     93:         int64_t deadline = 0; // force-kill time in ms, 0 when no stop is pending
+     94:     };
+     95: 
+     96:     struct cmd_t {
+
+######## tools/server/server-models.cpp:316
+
+    308: 
+    309:     return env;
+    310: }
+    311: 
+    312: void server_model_meta::update_args(common_preset_context & ctx_preset, std::string bin_path) {
+    313:     // update params
+    314:     unset_reserved_args(preset, false);
+    315:     preset.set_option(ctx_preset, "LLAMA_ARG_HOST",  CHILD_ADDR);
+>>  316:     preset.set_option(ctx_preset, "LLAMA_ARG_PORT",  std::to_string(port));
+    317:     preset.set_option(ctx_preset, "LLAMA_ARG_ALIAS", name);
+    318:     // the child output goes through the router to its terminal, so it follows the router colors
+    319:     preset.set_option(ctx_preset, "LLAMA_ARG_LOG_COLORS", common_log_get_colors(common_log_main()) ? "on" : "off");
+    320:     // TODO: maybe validate preset before rendering ?
+    321:     // render args
+    322:     args = preset.to_args(bin_path);
+
+######## tools/server/server-models.cpp:866
+
+    858:     auto apply_hidden = [&]() {
+    859:         for (auto & [name, inst] : mapping) {
+    860:             inst.meta.hidden = hidden_models.count(name) > 0;
+    861:         }
+    862:     };
+    863:     // update_args() injects HOST/PORT/ALIAS/LOG_COLORS, so strip them before comparing presets
+    864:     auto preset_options_for_compare = [](common_preset p) {
+    865:         p.unset_option("LLAMA_ARG_HOST");
+>>  866:         p.unset_option("LLAMA_ARG_PORT");
+    867:         p.unset_option("LLAMA_ARG_ALIAS");
+    868:         p.unset_option("LLAMA_ARG_LOG_COLORS");
+    869:         return p.options;
+    870:     };
+    871: 
+    872:     // Phase 2: acquire the lock once for all mapping mutations.
+
+######## tools/server/server-models.cpp:1218
+
+   1210:     // Download workers do not use models_max slots.
+   1211:     if (opts.role == SERVER_ROLE_INSTANCE && sched->limits_exceeded(lk, name, /* verbose */ false)) {
+   1212:         throw std::runtime_error("model limit reached, try again later");
+   1213:     }
+   1214: 
+   1215:     // prepare new instance info
+   1216:     instance_t inst;
+   1217:     inst.meta             = meta;
+>> 1218:     inst.meta.port        = common_http_get_free_port();
+   1219:     inst.meta.status      = SERVER_MODEL_STATUS_LOADING;
+   1220:     inst.meta.loaded_info = json{};
+   1221:     inst.meta.last_used   = ggml_time_ms();
+   1222: 
+   1223:     if (inst.meta.port <= 0) {
+   1224:         throw std::runtime_error("failed to get a port number");
+
+######## tools/server/server-models.cpp:1292
+
+   1284:         }
+   1285:     }
+   1286: 
+   1287:     notify_sse("model_status", name, {
+   1288:         {"status", server_model_status_to_string(inst.meta.status)},
+   1289:     });
+   1290: 
+   1291:     auto proc = inst.subproc;
+>> 1292:     int  port = inst.meta.port;
+   1293:     mapping[name] = std::move(inst);
+   1294:     if (opts.role == SERVER_ROLE_INSTANCE) {
+   1295:         sched->on_spawned(lk, name);
+   1296:     }
+   1297:     monitor->watch(name, proc, opts.role, port);
+   1298:     cv.notify_all();
+
+######## tools/server/server-models.cpp:2157
+
+   2149:             json status {
+   2150:                 {"value",  server_model_status_to_string(meta.status)},
+   2151:                 {"args",   meta.args},
+   2152:             };
+   2153:             if (!meta.preset.name.empty()) {
+   2154:                 common_preset preset_copy = meta.preset;
+   2155:                 unset_reserved_args(preset_copy, false);
+   2156:                 preset_copy.unset_option("LLAMA_ARG_HOST");
+>> 2157:                 preset_copy.unset_option("LLAMA_ARG_PORT");
+   2158:                 preset_copy.unset_option("LLAMA_ARG_ALIAS");
+   2159:                 preset_copy.unset_option("LLAMA_ARG_TAGS");
+   2160:                 status["preset"] = preset_copy.to_ini();
+   2161:             }
+   2162:             if (meta.is_failed()) {
+   2163:                 status["exit_code"] = meta.exit_code;
+
+######## tools/server/server-models.h:80
+
+     72: }
+     73: 
+     74: struct server_model_meta {
+     75:     server_model_source source = SERVER_MODEL_SOURCE_CACHE;
+     76:     common_preset preset;
+     77:     std::string name;
+     78:     std::set<std::string> aliases; // additional names that resolve to this model
+     79:     std::set<std::string> tags;    // informational tags, not used for routing
+>>   80:     int port = 0;
+     81:     server_model_status status = SERVER_MODEL_STATUS_UNLOADED;
+     82:     int64_t last_used = 0; // for LRU unloading
+     83:     std::vector<std::string> args; // args passed to the model instance, will be populated by render_args()
+     84:     json loaded_info; // info to be reflected via /v1/models endpoint ; if in DOWNLOADING state, it should contain download progress info
+     85:     json progress; // reflect load or download progress info, if any
+     86:     int exit_code = 0; // exit code of the model instance process (only valid if status == FAILED)
+
+######## tools/server/server.cpp:127
+
+    119:         // see https://github.com/ggml-org/llama.cpp/issues/12836
+    120:         if (params.embedding && params.n_batch > params.n_ubatch) {
+    121:             SRV_WRN("embeddings enabled with n_batch (%d) > n_ubatch (%d)\n", params.n_batch, params.n_ubatch);
+    122:             SRV_WRN("setting n_batch = n_ubatch = %d to avoid assertion failure\n", params.n_ubatch);
+    123:             params.n_batch = params.n_ubatch;
+    124:         }
+    125: 
+    126:         if (params.n_parallel < 0) {
+>>  127:             SRV_TRC("%s", "n_parallel is set to auto, using n_parallel = 4 and kv_unified = true\n");
+    128: 
+    129:             params.n_parallel = 4;
+    130:             params.kv_unified = true;
+    131:         }
+    132:     }
+    133: 
+
+######## tools/server/server.cpp:129
+
+    121:             SRV_WRN("embeddings enabled with n_batch (%d) > n_ubatch (%d)\n", params.n_batch, params.n_ubatch);
+    122:             SRV_WRN("setting n_batch = n_ubatch = %d to avoid assertion failure\n", params.n_ubatch);
+    123:             params.n_batch = params.n_ubatch;
+    124:         }
+    125: 
+    126:         if (params.n_parallel < 0) {
+    127:             SRV_TRC("%s", "n_parallel is set to auto, using n_parallel = 4 and kv_unified = true\n");
+    128: 
+>>  129:             params.n_parallel = 4;
+    130:             params.kv_unified = true;
+    131:         }
+    132:     }
+    133: 
+    134:     // size the KV pool from --kv-unified-per-slot, unless the user pinned it with -c
+    135:     // or with -c 0 for max context

@@ -1,0 +1,48 @@
+== repeats of one slow invalid file (R01-R04 shape), ROUTER_PY output ==
+SAME	slow-x1	base 0.56s rc=0	m1 0.56s rc=0
+SAME	slow-x2	base 1.19s rc=0	m1 0.58s rc=0
+DIFF	slow-x8	base 4.05s rc=0	m1 0.67s rc=0
+  first divergence 6: base '6\t-' vs m1 '6\tinvalid'; 2/8 differ
+DIFF	slow-x9	base 4.03s rc=0	m1 0.6s rc=0
+  first divergence 7: base '7\t-' vs m1 '7\tinvalid'; 2/9 differ
+DIFF	slow-x10	base 4.05s rc=0	m1 0.55s rc=0
+  first divergence 7: base '7\t-' vs m1 '7\tinvalid'; 3/10 differ
+DIFF	slow-x16	base 4.05s rc=0	m1 0.57s rc=0
+  first divergence 7: base '7\t-' vs m1 '7\tinvalid'; 9/16 differ
+DIFF	slow-x64	base 4.16s rc=0	m1 0.55s rc=0
+  first divergence 7: base '7\t-' vs m1 '7\tinvalid'; 57/64 differ
+
+== R05 shape: 33 alias strings of one slow file x64 ==
+DIFF	slow-aliases-x64	base 4.19s rc=0	m1 0.62s rc=0
+  base distinct: ['', '0\tinvalid', '1\tinvalid', '10\t-']  m1 distinct: ['', '0\tinvalid', '1\tinvalid', '10\tinvalid']
+
+== R06 shape: -m ok --mmproj slow x64 ==
+DIFF	slow-mmproj-x64	base 4.2s rc=0	m1 0.65s rc=0
+  base distinct: ['', '0\tinvalid', '1\tinvalid', '10\t-']  m1 distinct: ['', '0\tinvalid', '1\tinvalid', '10\tinvalid']
+
+== P02 shape: 63x slow then one distinct valid ==
+DIFF	slow63-then-ok	base 4.17s rc=0	m1 0.58s rc=0
+  last 3 base: ['61\t-', '62\t-', '63\t-']  m1: ['61\tinvalid', '62\tinvalid', '63\t-']
+
+== mid-call in-place rewrite of the SAME inode ==
+  yslow parse ~ 1.31 s each side incl startup
+     rewrite: size 64 (was 64) ino same=True mtime_ns same=True ctime changed=True
+  same-size+same-mtime base: 0	invalid | 1	invalid | 2	- |   (1.34s)
+     rewrite: size 64 (was 64) ino same=True mtime_ns same=True ctime changed=True
+  same-size+same-mtime m1: 0	invalid | 1	invalid | 2	invalid |   (1.32s)
+  => same-size+same-mtime: DIFF
+     rewrite: size same, mtime_ns changed=True
+  same-size+new-mtime base: 0	invalid | 1	invalid | 2	- |   (1.29s)
+     rewrite: size same, mtime_ns changed=True
+  same-size+new-mtime m1: 0	invalid | 1	invalid | 2	- |   (1.26s)
+  => same-size+new-mtime: SAME
+     rewrite: size 4096 vs 64, mtime restored
+  diff-size+same-mtime base: 0	invalid | 1	invalid | 2	- |   (1.25s)
+     rewrite: size 4096 vs 64, mtime restored
+  diff-size+same-mtime m1: 0	invalid | 1	invalid | 2	- |   (1.28s)
+  => diff-size+same-mtime: SAME
+
+== replace by rename (new inode) between candidates ==
+  rename base: 0	invalid | 1	invalid | 2	- | 
+  rename m1: 0	invalid | 1	invalid | 2	- | 
+test2 rc=0
