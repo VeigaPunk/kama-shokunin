@@ -134,3 +134,10 @@ for starts another setter changes. Captured-by: K2 (fired). The plan's limit par
 for the *counter*; it did not stop the *decision* from claiming completeness. Fix: decisions scoped to the entry
 point they were swept for and to the setters a live run of the pinned binary confirms (config file, env, argv,
 presets, AIP, router child), routed to round 94 (SCORECARD §Planned item 5).
+
+**M9 — a claim about a time-bounded verdict measured only at natural load (C1 not verified, wave-1 SC02).** Class:
+load-invariance asserted from runs that never varied the load. Evidence: `w1/SC02ProbeVerdictSweep.md` F1 — the frozen
+C1 counter at M1 under synthetic load prints `positive_mismatches=1`, exit 1 (K1); the shared 4 s `DEADLINE` decides
+(F2). The round's own M7 (a control's named cell moving with load) was the same signal. Captured-by: K1 (fired under a
+non-author reproduction). Fix (round 94): any counter over a deadline-bounded verdict runs its cells at two loads, one
+synthetic, before freezing.

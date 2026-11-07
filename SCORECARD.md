@@ -6207,3 +6207,14 @@ first-working round 93.
 - C2 (wave-1 SC01, `.ufo/waves/round-93/w1/SC01SetterSweep.md`): K2 fires a second time — a `config.ini` sets the port
   and slot count of the pinned binary (measured 18099 / 7 slots) and R16/R17 omit it; `llama-cli`'s embedded server
   runs 1 slot on a free port. `SKILL.md` §Round 93 correction, second note; lesson M8.
+
+### Round-93 C1 verdict correction (appended after wave-1 SC02, received with WAVE-DONE; supersedes the C1 "verified" cells above)
+
+C1 is **not verified** (author). Wave-1 scout SC02 (`.ufo/waves/round-93/w1/SC02ProbeVerdictSweep.md` F1–F3) ran the
+frozen counter at M1 under synthetic host load: `mismatches=5 positive_mismatches=1`, exit 1 — K1's condition — with
+P04 flipping to `MODEL_OK` / `router-unloaded-autoload`; at a fixed load P04 flips 3/10 at base and 5/10 at M1. The
+deciding budget is `ROUTER_PY`'s per-call wall-clock `DEADLINE` (4 s): the memo removes the repeat-count dependence
+(SC02 F3: 1024 repeats, 0.71 s, all decided) but not the time dependence, so the verdict still turns on host load once
+one parse nears 4 s. Every natural-load measurement in this round passed (c1.out, c1-M1b.out, c1-tip*.out,
+fresh-clone-replay.out); the author takes the unfavourable reading of K1. Routed to round 94: a per-file budget or an
+explicit `undecided` reason instead of "undecidable stays loadable" under a shared deadline.
