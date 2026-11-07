@@ -443,3 +443,8 @@ answers captured on stub cells by `tools/round90-reason-capture.py`, checked by 
 Round 91: the probe's **time on a large answer** is part of the surface — a `/v1/models` answer under the 4 MiB cap
 is graded in linear time (`tools/round91-answer-time.py`). The engines' default timeouts and limits are read, never
 tuned (`SKILL.md` §Serving timeout and limit thresholds, with its round-91 correction).
+
+Round 92: the engines' defaults are read from the line **the binary uses** (KQ146) — llama-server's own argument
+parser and entry point (S596, S597) and the pinned `--help`, vLLM's run-time env readers — and are still never tuned
+(`SKILL.md` §Serving defaults (round 92 revision)). The probe's JSON escaping, router candidate list and snapshot
+persistence run in linear time on listener data (`tools/round92-linear-paths.py`).

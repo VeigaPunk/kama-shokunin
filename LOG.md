@@ -3756,3 +3756,22 @@ and wave-1 SN01 (207 s for a 4 MiB answer of 200 000 ids); the round-91 base con
   KQ146; falsifier `measured/kq146-help-check.out` (`disagree=1`, exit 1).
 - r90 R2 verified-at correction (`corpus/knowledge/probe-answer-bounds.md`); lesson `corpus/lessons/round-91.md` (M1–M3,
   driver-side double-dispatch note). Wave `w1` 12 seats canonical, `w1a2` duplicate spawned by the orchestrator (7 kept).
+
+## Round 92 — 2026-11-06 (serving defaults re-declared under KQ146; three probe paths made linear)
+
+Frozen plan `plans/round-92-claims.md` (freeze `309eadaf`; base `ed018ca0`). Motivating evidence: the round-91
+closure (`corpus/lessons/round-91-verifier-spotcheck.md`) R4 — T07 and six overreaching rows needed superseding rows —
+and R5 with wave-1 SC02 F1–F3 (`.ufo/waves/round-91/w1/SC02QuadraticSweep.md`: `jstr` 3.8 MB body killed at 180 s,
+`router_refine` 80 000 entries killed, `snapshot` 8 000 ids 51 s); the round-92 base control reproduces F1–F3
+(`.ufo/waves/round-92/controls/c2-base.out`: L1–L5 killed at 120 s, L6 54 s). Depth was the lowest axis (7).
+
+- **C1 depth (sourced S596, S597):** `SKILL.md` §Serving defaults (round 92 revision), R01–R15 superseding T01–T14
+  (`18153ebb`); counter `tools/round92-server-defaults.py` `rows=0 → rows=15 bound=15 help_checked=7 help_disagree=0
+  supersedes=14`, exit 0 (`measured/c1.out`). Pre-freeze battery 9/9 (`controls/c1-forgeries.out`; V1 the round-91
+  T07 row fails H1). K2 non-author read: wave-1 RV02 finds no misstated or overreaching row (three non-firing notes).
+- **C2 operability:** `tools/kama-probe.sh` `jstr` one awk pass, `router_refine` candidate array, `served_persist` one
+  awk pass (`fa8aedb7`); counter `tools/round92-linear-paths.py` `mismatches=6 → 0`, `positive_mismatches=0`, every
+  cell ≤ 3.5 s at load 79 (`measured/c2.out`); harm suites unchanged (`measured/harm-M.out`); L1 fuzz equivalence and
+  its two invalid-UTF-8 differences, both base defects (`measured/c2-fuzz-equivalence.out`, `c2-fuzz-classify.out`).
+- Round-91 R2 (S593/S595 dated correction in `corpus/SOURCES.md`), lesson `corpus/lessons/round-92.md` (M1–M3; M3
+  repeats round-91 M4: the round-90 reason receipt staled again and was re-bound 24/24), QUALITY KQ147, KQ148.

@@ -1861,3 +1861,15 @@ default, not the server's. `llama-server` b12177 defaults to `-np -1` (auto → 
 decisions overreach. Read `SKILL.md` §Round 91 correction and `corpus/knowledge/serving-thresholds.md` §Round 91
 correction; round-91 C2 is not verified (lesson M1, KQ146). The threshold table stays frontier-adjacent until a round
 re-binds it under KQ146.
+
+## Coverage and frontier — round 92 (appended, 2026-11-06)
+
+- **Core (re-bound under KQ146):** the serving defaults, fifteen rows R01–R15 superseding T01–T14
+  (`SKILL.md` §Serving defaults (round 92 revision); `corpus/knowledge/serving-thresholds.md` §Round 92 revision).
+  llama.cpp b12177 options equal the pinned `--help` (7/7); the server slot count is `-1` auto from the server parser
+  (S596 line 1373), resolved to 4 slots with unified KV outside the router role (S597 lines 126-130); vLLM defaults are
+  bound to the run-time `environment_variables` readers (S595 lines 812, 1144), not the `TYPE_CHECKING` lines.
+- **Core (probe):** JSON escaping (`jstr`), router autoload candidates and snapshot persistence of served ids are
+  linear in the answer (1.9 M-byte escape runs, 80 000 router entries, 16 000 persisted ids each ≤ 3.5 s; base killed).
+- **Frontier (not held):** a counter that tells a run-time reader from a declaration (control V7) and checks the
+  value's unit and derivation (wave-1 CR02); Ollama and vLLM defaults compared with a pinned binary; SGLang defaults.

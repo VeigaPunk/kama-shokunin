@@ -1,0 +1,13 @@
+# cmd (cwd scratch with lib-base.sh/lib-new.sh as in c2-fuzz-equivalence.out): SEED=s LC_ALL=en_US.UTF-8 python3 c2-fuzz-classify.py, s=1..3 (L1 run 2026-11-06 ~22:00-22:08 -03; output copied from the session job bg_3169)
+SEED=1 jstr cases=3000 diffs=0 base_nondeterministic=0 stable_diffs=0
+SEED=1 served_persist cases=3000 diffs=0 base_nondeterministic=0 stable_diffs=0
+SEED=2 jstr cases=3000 diffs=0 base_nondeterministic=0 stable_diffs=0
+SEED=2 served_persist cases=3000 diffs=1 base_nondeterministic=1 stable_diffs=0
+SEED=3 jstr cases=3000 diffs=0 base_nondeterministic=0 stable_diffs=0
+STABLE-DIFF served_persist '`\x1b\udcff\x1b%s\udcc3ж\udcc3\x01,,\n \x85\né%s\udcc3$%s-\né\\' b'`\xff%s\xc3\xd0\xb6\xc3,' b'`\xff%s\xc3\xd0\xb6\xc3,-'
+SEED=3 served_persist cases=3000 diffs=1 base_nondeterministic=0 stable_diffs=1
+# locale check of the one stable diff (same input; served_persist):
+lib-base.sh LC_ALL=en_US.UTF-8 b'`\xff%s\xc3\xd0\xb6\xc3,'
+lib-base.sh LC_ALL=C b'`\xff%s\xc3\xd0\xb6\xc3,-'
+lib-new.sh LC_ALL=en_US.UTF-8 b'`\xff%s\xc3\xd0\xb6\xc3,-'
+lib-new.sh LC_ALL=C b'`\xff%s\xc3\xd0\xb6\xc3,-'
