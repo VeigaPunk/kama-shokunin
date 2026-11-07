@@ -67,7 +67,7 @@ The live plan follows; historical plans remain as filed (round 78's in `plans/ro
    size, router and persist cells above every present count (90 000 entries + loaded last, 30 000 ids outside `/m/`),
    an id with a trailing space, a trailing-comma served id, a two-candidate autoload router, a DEL in a registry note
    and a multi-line expected id; replace the last `normalize_id` calls (expected ids) with the awk rule so no bash
-   pattern runs on invalid UTF-8 (`measured/c2-fuzz-diff-repro.out`: base returned memory garbage).
+   pattern runs on invalid UTF-8 (`.ufo/waves/round-92/measured/c2-fuzz-diff-repro.out`: base returned memory garbage).
 2. Depth (wave-1 CR02, MT02): a successor defaults counter that checks the value's unit and every number, help-checks
    every option in the flag cell, matches the engine exactly, checks H2 derivation and the run-time reader (V7), and
    treats supersedes as a row-to-row map; battery cases that grade the why, not only the exit.
@@ -143,7 +143,7 @@ The live plan follows; historical plans remain as filed (round 78's in `plans/ro
 
 ## Retired
 
-None. 6 axes and 60 capabilities remain active. Neither assigned axis is retired: the registered consumers still sample DEAD (`registry/history/latest.tsv`; restoring a serving runtime is operator-owned), while the lane-owned llama.cpp fixture reaches `MODEL_OK` on an unregistered loopback port (`.ufo/waves/round-78/measured/after/c3-live.json`), so the surface is not permanently gone. Retirement would need evidence of permanent absence or of saturation, and neither is observed.
+None. 6 axes and 61 capabilities remain active. Neither assigned axis is retired: the registered consumers still sample DEAD (`registry/history/latest.tsv`; restoring a serving runtime is operator-owned), while the lane-owned llama.cpp fixture reaches `MODEL_OK` on an unregistered loopback port (`.ufo/waves/round-78/measured/after/c3-live.json`), so the surface is not permanently gone. Retirement would need evidence of permanent absence or of saturation, and neither is observed.
 
 ## Move log
 

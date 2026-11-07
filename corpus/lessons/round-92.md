@@ -20,8 +20,10 @@ Rows opened 2026-11-06 by the L1 (`curl -sS -m 60`, receipt `.ufo/waves/round-92
 | S593 line 464 as the llama-server slot-count anchor | **reject** (shared struct overridden) | S593 URL — 2026-11-06 | `int32_t n_parallel            =     1; // number of parallel sequences to decode` (line 464) | KQ146: `arg.cpp:1373` overrides it for the server; control V1 (`help-default=-1`) fails it mechanically. Flip: a future pin's parser stops overriding it and `--help` prints 1. |
 
 `status` / `recheck` / `used-by` changes on existing rows: none (S593–S595 stay byte-identical; their limits are in the
-appended correction). S596, S597 are new rows (`mined`, recheck `on-release`, used-by SKILL §Serving defaults (round 92
-revision) and `corpus/knowledge/serving-thresholds.md`).
+appended correction). S596, S597 are new rows (`mined`, recheck `on-release`). Their `used-by` changed in place this
+round, old → new: `SKILL.md §Serving defaults (round 92 revision); corpus/knowledge/serving-thresholds.md` →
+`SKILL.md,corpus/knowledge/serving-thresholds.md` (the census reads comma-separated paths and printed E11 on the prose
+form; `sources-census.sh validate` exit 0 after the change).
 
 Assimilation: none (no `merge/kama/` theme taken; `considerthese/` not mined this round).
 
