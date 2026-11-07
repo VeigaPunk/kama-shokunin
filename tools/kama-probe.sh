@@ -574,9 +574,11 @@ class Unknown(Exception):
 
 
 # Round 93 (C1; r92 wave-1 SC02 F6): one regular file is parsed once per call, whatever path
-# string names it (identity = device, inode, size, mtime). Every candidate shares one deadline,
-# so a listing that repeated one slow invalid file spent the budget on copies and left the later
-# candidates undecided, i.e. loadable: the verdict flipped to MODEL_OK with the repeat count.
+# string names it (identity = device, inode, size, mtime, ctime). Every candidate shares one
+# deadline, so a listing that repeated one slow invalid file spent the budget on copies and left the
+# later candidates undecided, i.e. loadable: the verdict flipped to MODEL_OK with the repeat count.
+# ctime is in the key because utime() can restore mtime after an in-place rewrite but not ctime
+# (r93 wave-1 RV01 DEFECT-1: a same-size rewrite with mtime restored was served the stale state).
 SEEN = {}
 
 
@@ -587,7 +589,7 @@ def gguf_state(path):
         return gguf_parse(path)
     if not stat.S_ISREG(st.st_mode) or os.path.realpath(path).startswith(NO_OPEN):
         return gguf_parse(path)
-    key = (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns)
+    key = (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
     if key not in SEEN:
         SEEN[key] = gguf_parse(path)
     return SEEN[key]
