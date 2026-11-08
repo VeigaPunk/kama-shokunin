@@ -45,8 +45,9 @@ after C2 adds W18/W19 and the overcharge mutant (six new cells, five mutants, ce
        six cells; `cells=19`; SKILL's §Round 97 cites S620 and S621.
   17   SOURCES.md ids are unique (last-wins).
   18   The probe's tensor loop charges exactly the four declared call sites (name, nd, dims, type
-       + offset) and its preamble exactly three reads (magic, version, n_tensors/n_kv); a flat-6,
-       6+nd or +1/header parser fails the set equality.
+       + offset), no extra `steps[0] +=` (an amendment-1 term after SN01StepFlips measured that the
+       token filter alone is blind to an overcharging probe), and its preamble exactly three reads
+       (magic, version, n_tensors/n_kv); a flat-6, 6+nd or +1/header parser fails.
   19   The §Round 97 HEADING's count word equals the counter's graded-mutant count (round-97
        check-16 blindness: the heading line was never graded).
   20   The overcharge surface is named: the depth row and SKILL §Round 97 body name W18/W19 and
@@ -302,7 +303,8 @@ def main() -> int:
     sec97 = "\n".join(section(skill, "### Round 97 correction") or [])
     skill_variants = re.search(r"(\w+) probe variants", sec97)
     rdoc = docstring(rb or "")
-    doc_cells = re.search(r"adds (\w+) cells", rdoc)
+    # amendment 1 (SN01StepFlips): the docstring states the new-set size, not an added count.
+    doc_cells = re.search(r"new set = (\w+) cells", rdoc)
     ok = (len(new_cells) == 6 and len(mutants) == 5
           and depth_forgeries and WORDS.get(depth_forgeries.group(1).lower()) == len(mutants)
           and skill_variants and WORDS.get(skill_variants.group(1).lower()) == len(mutants)
@@ -338,7 +340,8 @@ def main() -> int:
     pre = probe.split("def gguf_parse", 1)[-1].split("for _ in range(n_kv):", 1)[0]
     pre_ok = ('rd(4) != b"GGUF"' in pre and "ver = u32()" in pre
               and "n_tensors, n_kv = u64(), u64()" in pre)
-    if charged != want_charged or not pre_ok:
+    overcharge = any("steps[0] +=" in l for l in loop)
+    if charged != want_charged or not pre_ok or overcharge:
         mismatches += 1
 
     # 19: the section HEADING's count word (never graded by the round-97 audit).
@@ -346,7 +349,9 @@ def main() -> int:
     heading = next((l for l in skill.splitlines()
                     if l.startswith("### Round 97 correction")), "")
     hm = re.search(r"the (\w+) graded forgeries", heading)
-    if not hm or WORDS.get(hm.group(1).lower()) != len(mutants) or len(mutants) != 5:
+    heads = [l for l in skill.splitlines() if l.startswith("### Round 97 correction")]
+    if (not hm or WORDS.get(hm.group(1).lower()) != len(mutants) or len(mutants) != 5
+            or len(heads) != 1):
         mismatches += 1
 
     # 20: the overcharge surface is named in the depth row, the §Round 97 body, the budget

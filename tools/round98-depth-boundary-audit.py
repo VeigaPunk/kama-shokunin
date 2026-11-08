@@ -129,6 +129,20 @@ def main() -> int:
     checks += 1
     if rows != 8:
         mismatches += 1
+    # Amendment 1 (SN01StepFlips): an overcharging probe keeps every row's REAL arithmetic and
+    # is therefore invisible above; grade that the parser charges no extra step per header.
+    checks += 1
+    probe_lines = probe.splitlines()
+    li = next((i for i, l in enumerate(probe_lines)
+               if l.startswith("            for _ in range(n_tensors):")), None)
+    loop = []
+    if li is not None:
+        for l in probe_lines[li + 1:]:
+            if l.strip().startswith("infos.append"):
+                break
+            loop.append(l)
+    if li is None or any("steps[0] +=" in l for l in loop):
+        mismatches += 1
 
     print(f"DEPTH_BOUNDARY98 rows={rows} checks={checks} mismatches={mismatches} "
           f"met={mismatches == 0} rev={rev}")

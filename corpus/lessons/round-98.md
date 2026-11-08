@@ -50,10 +50,15 @@ at base it prints `mismatches=4` (heading, counts, W18/W19, overcharge) with exi
 **M2 — a round-98 fixture cell sets was dropped by a patch that re-anchored past it.**
 Class: `vacuous`. Evidence: the first r97set control receipt printed `cells=16`, not 17 —
 `W01-slow-x1` had been dropped from the cells list when the W18/W19 rows were inserted (the
-`cells += [` list previously headed by W01). Captured-by: the counter's own control run (the
-`cells=` count in the summary line). Fix: W01 restored as the first slow-gated cell; the re-run
-prints `cells=17 … survived=1` (`controls/c2-legacy-mutants.out`). Shown able to fail: the 16-cell
-receipt stands in the wave dir as the red evidence.
+`cells += [` list previously headed by W01). Captured-by: the L1's read of the `cells=` summary
+line — the control run itself exited 0 (`ok=1`), because a control receipt grades "every run
+cell survived" and never compares the count to the expected 17 (the `want_cells` comparison is
+unreachable from `--control`). Fix: W01 restored as the first slow-gated cell; the re-run
+prints `cells=17 … survived=1` (`controls/c2-legacy-mutants.out`). Shown able to fail: the
+defective run's bytes were overwritten before commit — the only surviving evidence of it is the
+`cells=16` count the L1 read at the time (this paragraph), not a committed receipt. A
+counter-level fix (fail the control when `n != len(selected)`) is routed to the next successor
+counter, not added to the frozen one.
 
 ## Routed-defect answers
 

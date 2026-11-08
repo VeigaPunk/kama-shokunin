@@ -40,7 +40,7 @@ A measurement receipt is committed only after its producer exits.
 - **Measurement-time (committed with M1/M2/M3):** `measured/c1.out`, `measured/c2.out`,
   `measured/c3.out`, `controls/census-end.out`.
 
-## C1 — calibration (lowest axis, 7): the lane's graded self-assessments match the repo, heading included
+## C1 — calibration (lowest axis, 7): the lane's **20 named** self-assessment surfaces match the repo, heading included
 
 **Predicate (one sentence, same in the counter's docstring and in the receipt label):**
 
@@ -96,8 +96,9 @@ cells under the overcharge mutant and `caught=1` for each new cell under its nam
   that stops charging entirely also reddens them (it decides `invalid` too — no: an undercharged
   probe still decides `invalid`, green; the overcharge probe decides `-`, red; the flat-6 probe
   charges 6/header → needs 4 800 004 at nd=1, stays `invalid`, green — the overcharge class is
-  exactly the `+1` window 714,286 < T ≤ 833,332 at nd=1 and 500,000 < T ≤ 555,555 at nd=4, and both
-  new cells sit strictly inside it).
+  exactly the `+1` window 714,286 ≤ T ≤ 833,332 at nd=1 and 500,000 ≤ T ≤ 555,555 at nd=4, and both
+  new cells sit strictly inside it; the class is **uniform** ≥+1 per header — a conditional or
+  compensating overcharge is outside it).
 - **Cells (19, frozen in the counter's docstring):** the 17 round-97 cells unchanged plus W18, W19;
   both host loads in the predicate; natural-only in the controls. `--cells r97set` selects the 17
   round-97 cells for the do-nothing control.
@@ -119,9 +120,10 @@ cells under the overcharge mutant and `caught=1` for each new cell under its nam
   again unchanged. (d) The pass-level wrapper is still a wall clock (SC01), routed unchanged.
   (e) The predicate command carries the host-speed parameter `--slow-files 72`; K1 binds the
   counter's bytes, not the command sentence. (f) W18/W19 expect `invalid`: they pin the overcharge
-  class from the decidable side; they do not pin the budget's lower bound (W11 does, in the same
-  run). (g) `--probe-file` grades an override probe bound only by `probe_sha256`; `--allow-clock`
-  and `--runs < 1` are refused or excluded from the predicate.
+  class from the decidable side; the budget's lower bound is pinned by W14 (real `-`, undercharge
+  red) in the same run, not by W11, which sits outside the window (amendment 1, SN01/CR02).
+  (g) `--probe-file` grades an override probe bound only by `probe_sha256`; `--allow-clock` is a
+  red-control flag and `--runs < 1` is refused — neither reaches the predicate.
 
 ## C3 — depth (lowest axis, 7): the step-budget boundary table grades the overcharge window rows
 
