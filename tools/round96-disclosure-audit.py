@@ -45,7 +45,7 @@ def main() -> int:
     checks = 0
     mismatches = 0
 
-    m = re.search(r"MAX_STEPS = ([0-9_]+)", probe)
+    m = re.search(r"^MAX_STEPS = ([0-9_]+)", probe, re.M)
     max_steps = int(m.group(1).replace("_", "")) if m else None
     checks += 1
     if max_steps != 5_000_000 or "6 steps per tensor header" not in probe:

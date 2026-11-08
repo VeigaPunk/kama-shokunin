@@ -57,7 +57,7 @@ def main() -> int:
     checks = 0
     mismatches = 0
 
-    m = re.search(r"MAX_STEPS = ([0-9_]+)", probe)
+    m = re.search(r"^MAX_STEPS = ([0-9_]+)", probe, re.M)
     max_steps = int(m.group(1).replace("_", "")) if m else None
     if max_steps != 5_000_000:
         mismatches += 1
