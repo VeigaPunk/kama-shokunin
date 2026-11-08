@@ -61,7 +61,26 @@ tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.servic
 
 The live plan follows; historical plans remain as filed (round 78's in `plans/round-78-claims.md`, executed in the §Round 78 section below; round 77's at the end of the §Round 77 section).
 
-### Planned (round 94)
+### Planned (round 95)
+
+1. Operability (round-94 C1 residuals, amendment 1 + MT01): a work-proportional parse budget instead of the 15 s wall
+   slice (a single file's slice still flips at load, SC02 F2/MT01 NOTE-3); a wrapper ceiling derived from the candidate
+   count (40 distinct slow files truncate at 60 s, SC02 F3/M10); the counter's sanity gate must use a fixture the new
+   probe decides (SC02 F1: 25/41 attempts exit 2 at load1 240–424); `/props` must not decide the verdict (SC02 F4).
+2. Operability (round-94 counter coverage, CR01 + MT01): grade the per-invocation reset (M02 — an 8-distinct-slow cell;
+   the round-94 F1 control is false), a ctime-less memo key (M12), count overflow (M14) and the 60 s wrapper (M10);
+   CR01's F3/F6/F7/F8 survivors are the same family; word K1 to the counter's exit condition (`mismatches>0` exits 1).
+3. Depth (round-94 C2 not verified, SC01 F1/F2/F3): R20 — slot count per entry point including `cli` and `router-child`,
+   with `cli-server.h:43` (whole-struct copy) and `server-context.cpp:1489` (realisation) as population rows; R21 — R18
+   precedence, where the environment inherited by the router child beats `LLAMA_ARG_PORT` and argv (`AIP_HTTP_PORT`
+   measured). The population must admit whole-struct copies and config.ini section scoping (`[default]`/`[*]` only).
+4. Calibration (round-94 receipts, M5/M6): the freeze commit carries every receipt it names, and the frozen predicate
+   quotes the counter's literal output line. `round89-unloadable-cells.py` needs `LLAMA_CACHE`/`HF_HOME` isolation or a
+   fixture-owned cache (MT01 DEFECT-4).
+5. Carried: R1 (`round75-instruments` `bad_rows=19`, `unaccepted=22`, late-line-96 hash mismatch; L0 r87/r89 open); the
+   `round78-instruments` live-reconcile red caused by the host's non-lane Ollama listener on 8080.
+
+### Planned (round 94) — executed, kept as filed
 
 1. Operability (round-92 wave-1 SC02 F2/F3, closure R4): `json_array`'s string append is O(R²·L) in registry rows × the
    listener's served length and `print_table` pads every row to the widest listener cell; plus the round-92 C2 counter
@@ -6274,28 +6293,3 @@ round 94 by the `router-file-budget` row above; its evidence anchor `fe5f031c` a
 are the round-93 statement, and the round-94 key is five-field (`st_ctime_ns` added, `b3765799`).
 The `setter-rows` row below now reads **not verified** for round 94 (its decisions R18/R19 are
 superseded by the round-94 rows and their correction block).
-
-### Planned (round 95)
-
-1. Operability (round-94 C1 residuals, amendment 1 + MT01): a work-proportional parse budget instead
-   of the 15 s wall slice (a single file's slice still flips at load, SC02 F2/MT01 NOTE-3); a wrapper
-   ceiling derived from the candidate count (40 distinct slow files truncate at 60 s, SC02 F3/M10);
-   the sanity gate must use a fixture the new probe decides (SC02 F1: 25/41 attempts exit 2 at
-   load1 240–424); `/props` must not decide the verdict (SC02 F4: props_delay=6 grades
-   `MODEL_UNLOADED`).
-2. Operability (round-94 counter coverage, CR01 + MT01): grade the per-invocation reset (M02, an
-   8-distinct-slow cell), a ctime-less memo key (M12, mid-invocation rewrite), count overflow (M14,
-   2 M-tensor header), and the 60 s wrapper (M10); CR01's F3/F6/F7/F8 survivors are the same family.
-   K1 must be worded to the counter's exit condition (`mismatches>0` also exits 1).
-3. Depth (round-94 C2 not verified, SC01 F1/F2/F3): R20 — slot count per entry point including
-   `cli` and `router-child`, with `cli-server.h:43` (whole-struct copy) and `server-context.cpp:1489`
-   (realisation) as population rows; R21 — R18 precedence, where the environment inherited by the
-   router child beats `LLAMA_ARG_PORT` and argv (`AIP_HTTP_PORT` measured). Population must admit
-   whole-struct copies and the config.ini section scoping (`[default]`/`[*]` only).
-4. Calibration (round-94 receipts, M5/M6): the freeze commit carries every receipt it names, and the
-   frozen predicate quotes the counter's literal output line (no `entry_points=` token nothing
-   prints). `round89-unloadable-cells.py` needs an `LLAMA_CACHE`/`HF_HOME` isolation note or a
-   fixture-owned cache (MT01 DEFECT-4).
-5. Carried: R1 (`round75-instruments` `bad_rows=19`, `unaccepted=22`, late-line-96 hash mismatch; L0
-   r87/r89 open); the `round78-instruments` live-reconcile red caused by the host's non-lane Ollama
-   listener on 8080.
