@@ -543,11 +543,13 @@ PY
 # or --model-draft/-md path in status.args is absent or cannot pass the GGUF loader's
 # header checks (S584 ggml/src/gguf.cpp @ b12177; type sizes S585 gguf-py
 # GGML_QUANT_SIZES); `-` when nothing can be decided (no path, a relative path,
-# status.args[0] not a local file, unreadable file, unknown tensor type, parse budget or
-# deadline exceeded). Reads headers only; opens regular files only (O_NONBLOCK + fstat),
+# status.args[0] not a local file, unreadable file, unknown tensor type, step/byte budget
+# exhausted). Round 95 removed the wall clock from that decision: the state is a function of the
+# file's bytes alone, and the caller's `timeout` is derived from the candidate count. Reads
+# headers only; opens regular files only (O_NONBLOCK + fstat),
 # never under /proc, /sys or /dev.
 ROUTER_PY=$(cat <<'PY'
-import json, os, stat, struct, sys, time
+import json, os, stat, struct, sys
 
 QSIZES = {0: (1, 4), 1: (1, 2), 2: (32, 18), 3: (32, 20), 6: (32, 22), 7: (32, 24), 8: (32, 34),
           9: (32, 36), 10: (256, 84), 11: (256, 110), 12: (256, 144), 13: (256, 176),
@@ -558,16 +560,20 @@ QSIZES = {0: (1, 4), 1: (1, 2), 2: (32, 18), 3: (32, 20), 6: (32, 22), 7: (32, 2
           41: (128, 18), 42: (64, 18), 43: (1, 1)}
 SCALAR = {0: 1, 1: 1, 2: 2, 3: 2, 4: 4, 5: 4, 6: 4, 7: 1, 10: 8, 11: 8, 12: 8}
 MAX_KV, MAX_ARR, MAX_TENSORS, MAX_META = 100_000, 50_000_000, 1_000_000, 512 * 1024 ** 2
-# read/seek budget per file and a wall-clock deadline PER FILE: a hostile or
-# odd header becomes "undecidable" (no verdict change), never a stall (r89 SN01 F1).
-# Round 94 (C1; r93 wave-1 SC02): the deadline is per gguf_parse call, not per ROUTER_PY
-# invocation. The former single 4 s deadline was shared by every candidate, so one slow
-# file spent the whole call's budget and left later candidates undecided (-), which the
-# round-89 rule grades loadable: the verdict flipped MODEL_UNLOADED -> MODEL_OK under host
-# load. Each file now gets its own slice; MAX_STEPS stays the deterministic work bound.
+# Work bound per file: a hostile or odd header becomes "undecidable" (no verdict change),
+# never a stall (r89 SN01 F1).
+# Round 95 (C1; r94 closure SC02 F2, MT01 NOTE-3): the wall clock is GONE from the decision.
+# Rounds 93-94 bounded the parse with a clock (one shared 4 s call deadline, then a 15 s
+# per-file slice); either way a candidate's verdict depended on how loaded the host was, so
+# the same bytes graded `invalid` on an idle box and `-` (undecided -> loadable) under load.
+# Work is what must be bounded, and it is bounded deterministically: MAX_STEPS counts the
+# parser's read/seek steps and MAX_META caps the header position in bytes, so a hostile file
+# ends `-` after a fixed amount of work whatever the CPU contention. The pass-level limit is
+# derived from the candidate count in `router_file_states` (see the shell wrapper), not from
+# a constant. Disclosed, unchanged: a file whose declared tensor count exceeds MAX_TENSORS,
+# or that needs more than MAX_STEPS, is still `-` (undecidable -> loadable, round-89 rule).
 MAX_STEPS = 4_000_000
-PER_FILE_SECONDS = 15.0
-DEADLINE = time.monotonic() + PER_FILE_SECONDS
+MAX_STEP_BYTES = MAX_STEPS  # one need() call per bounded read/seek; kept for readers
 PATH_FLAGS = ("-m", "--model", "-mm", "--mmproj", "-md", "--model-draft")
 NO_OPEN = ("/proc/", "/sys/", "/dev/")
 
@@ -603,8 +609,6 @@ def gguf_state(path):
 
 
 def gguf_parse(path):
-    global DEADLINE
-    DEADLINE = time.monotonic() + PER_FILE_SECONDS
     try:
         st = os.stat(path)
     except FileNotFoundError:
@@ -631,7 +635,7 @@ def gguf_parse(path):
     with f:
         def need(n):
             steps[0] += 1
-            if steps[0] > MAX_STEPS or (steps[0] & 0xFFF) == 0 and time.monotonic() > DEADLINE:
+            if steps[0] > MAX_STEPS:
                 raise Unknown()
             pos = f.tell()
             if pos > MAX_META:
@@ -682,7 +686,8 @@ def gguf_parse(path):
             unpack = struct.Struct("<Q").unpack_from
             for _ in range(n):
                 if off + 8 > len(buf):
-                    if time.monotonic() > DEADLINE:
+                    steps[0] += 1
+                    if steps[0] > MAX_STEPS:
                         raise Unknown()
                     base += off
                     f.seek(base)
@@ -810,14 +815,20 @@ router_entries() { # $1 body file
   python3 -c "$ROUTER_PY" "$1" entries 2>/dev/null || true
 }
 
-router_file_states() { # $1 body file, $2... entry indexes -> "<index>\t<state>" lines
+router_file_states() { # $1 body file, $2 candidate count, $3... entry indexes -> "<index>\t<state>" lines
   [ "$HAVE_PY" -eq 1 ] || return 0
-  local body=$1; shift
-  # Round 94 (C1): the wrapper must outlast PER_FILE_SECONDS per distinct candidate file, or
-  # it would re-impose the shared-budget starvation the per-file deadline removed. 60 s allows
-  # several slow files; a listing that still exceeds it fails open (undecidable stays loadable).
+  local body=$1 ncand=$2; shift 2
+  # Round 95 (C1; r94 closure SC02 F3/M10): the pass-level limit is derived from the candidate
+  # count instead of the round-94 constant `timeout 60`. A constant cannot bound work: a listing
+  # of N distinct slow files took N x (that file's parse) whatever the constant was, so 40 files
+  # truncated the pass at 60 s, the truncated candidates stayed `-` (loadable) and the listing
+  # graded MODEL_OK for an invalid model. Per-candidate allowance covers the worst legitimate
+  # parse (MAX_STEPS work, measured ~4 s for a 1M-tensor header on the lane host, ~12 s under
+  # heavy load) with headroom; the base 20 s covers the interpreter start and the body read.
+  # Repeated paths share one memo entry, so ncand over-estimates the work and never under-estimates.
+  local limit=$((20 + 15 * ncand))
   if command -v timeout >/dev/null 2>&1; then
-    timeout 60 python3 -c "$ROUTER_PY" "$body" files "$@" 2>/dev/null || true
+    timeout "$limit" python3 -c "$ROUTER_PY" "$body" files "$@" 2>/dev/null || true
   else
     python3 -c "$ROUTER_PY" "$body" files "$@" 2>/dev/null || true
   fi
@@ -880,7 +891,7 @@ router_refine() {
       case "$fstate" in
         missing|invalid) nbad=$((nbad + 1)); [ -n "$unloadable" ] || unloadable="router-model-$fstate" ;;
       esac
-    done < <(router_file_states "$body" "${cand[@]}")
+    done < <(router_file_states "$body" "$ncand" "${cand[@]}")
     if [ "$nbad" -lt "$ncand" ]; then unloaded=1; fi
   fi
   if [ "$unloaded" -eq 1 ]; then
