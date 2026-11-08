@@ -2244,7 +2244,7 @@ Attempt 2 (replay-and-land): attempt 1's commits `eaa4106c` and `8e953f68` were 
 ## Round 40 — digest citations, authentic wave evidence, and counter defect (2026-10-25)
 
 - **C1 calibration 7→7:** the round-38 verifier routed wrong evidence digests in the S472 citation and R36-D2C package-byte paragraph. Re-opened and hashed both sources; appended S474 and correction notes without rewriting historical text. The frozen C1 counter is invalid for its own sentence: it reads status column `row[7]` instead of teaches `row[6]`, and mutation probes show both false-accept and inability to recognize the valid row. C1 therefore remains unverified. Evidence: `corpus/lessons/round-40.md`; `.ufo/waves/round-40/w1/out/{R40A02,R40A05,R40F01}.md`; base receipt `controls/c1-base.out`.
-- **C2 operability 8→8:** staged the byte-exact round-38 session spec/run artifacts, verified SHA-256 pins, and recorded after-counter. Evidence: `.ufo/waves/round-38/w1/{spec,run}.json`; `.ufo/waves/round-40/c2/after.out`; base `controls/c2-base.out`.
+- **C2 operability 8→8:** staged the byte-exact round-38 session spec/run artifacts, verified SHA-256 pins, and recorded after-counter. Evidence: `.ufo/waves/round-38/w1/{spec,run}.json`; `.ufo/waves/round-40/c2/after.out`; base `.ufo/waves/round-99/controls/c2-base.out`.
 - Frontier sourced row S474 was opened against the committed ls-remote output; citation corrections remain append-only.
 
 **Round-40 measured receipts:** frozen C1 command at `2429f48e2c679048d94566a9f3e800d5278b23eb` gives `s474_row=0 amend_corrected=1 r36d2c_fixed=1 false_corrections=0 met=False` (exit 1); no C1 improvement is verified. Frozen C2 at the same revision gives `spec_exists=1 run_exists=1 spec_sha_ok=1 run_sha_ok=1 counts_ok=1 met=True` (exit 0). Full-mirror corpus validation at the landed registry: exit 0, 93 W04, no E; rows 214→215, tier A 204→205, mined 195→196. Receipts: `.ufo/waves/round-40/{c1,c2}/after.out`, `census-end-counts.out`, `census-end-mirror.out`.
@@ -2466,7 +2466,7 @@ Deleted by `8bee4e56a995` (round-43: LOG wording):
 ## Round 58 — execution-bound battery checker and closure-pointer binding (2026-10-27)
 
 - C1 operability 8→8 (sourced on S517): `tools/round58-battery-exec-check.py` runs the committed round-56 battery as `__main__` under a hermetic harness with a `sys.setprofile` hook and requires every preregistered roster label to reach a `run` frame whose recorded subprocess call carries `--counter` and the label's preregistered `--expect`. Frozen counter `tools/round58-c1-counter.py` over `tests/round58-battery-variants/` (1 genuine, 3 behaviour-preserving rewrites, 11 no-ops). Base round-57 checker: `genuine=1/1 benign=1/3 noop_rejected=1/11 met=False` (`.ufo/waves/round-58/controls/c1-base-r57-checker.out`). Do-nothing checkers (always-accept, always-reject, hash-only) fail the predicate (`controls/c1-ctl-*.out`).
-- C2 calibration 7→7: SCORECARD calibration row now names `corpus/lessons/round-57-verifier-spotcheck.md (rejected-honest-stop)` and `including round 57`; the round-56 `(admitted)` pointer was false against the fleet MANIFEST. Frozen counter `tools/round58-c2-counter.py` base `mismatches=4` (`controls/c2-base.out`); claim-deleted and verdict-flipped controls fail it.
+- C2 calibration 7→7: SCORECARD calibration row now names `corpus/lessons/round-57-verifier-spotcheck.md (rejected-honest-stop)` and `including round 57`; the round-56 `(admitted)` pointer was false against the fleet MANIFEST. Frozen counter `tools/round58-c2-counter.py` base `mismatches=4` (`.ufo/waves/round-99/controls/c2-base.out`); claim-deleted and verdict-flipped controls fail it.
 - Freeze `dcd69473`, controls `cb1ef102`, both before any seat result. Post-freeze checker hardening from seat findings (expect-binding, one-shot result nonce, scrubbed child environment, crashed battery is not met) was re-scored with the unchanged frozen counter: still `genuine=1/1 benign=3/3 noop_rejected=11/11 errors=0`.
 - Opened S517 (Python `sys.setprofile`) and S518 (ld.so(8) LD_AUDIT secure-execution rule; claim-scoped supersession of S513). KQ98 added to `corpus/QUALITY.md` from the S513 disagreement (lesson `corpus/lessons/round-58.md`).
 - Seat survivors outside the 11 enumerated no-ops are limits, not credit: a thread-issued leg, a leg that ignores its result, a decoy `--counter`, an unwrapped `os.posix_spawn`, PyPy portability (`.ufo/waves/round-58/w1/out/`).
@@ -3663,7 +3663,7 @@ Frozen plan `plans/round-88-claims.md` (freeze `fb76e7f2`; base `9b4c7af1`). Mot
 lane-owned pinned b11755 router child (`--no-models-autoload`) answered a real completion with `400 model is
 not loaded` while `tools/kama-probe.sh` printed `MODEL_OK matched` (`.ufo/waves/round-88/controls/c1-base.out`
 L01/L03; read-only operator router `controls/pilot-live-1234.out`); the round-42 reconciler printed
-`mismatches=4 met=False` at base (`controls/c2-base.out`) because the live `## Axes` table carried two
+`mismatches=4 met=False` at base (`.ufo/waves/round-99/controls/c2-base.out`) because the live `## Axes` table carried two
 `calibration` rows.
 
 - **C1 operability (capability `router-mode-readiness`, sourced S581):** `tools/kama-probe.sh` grades the
@@ -3698,7 +3698,7 @@ to load` (`.ufo/waves/round-89/controls/c1-base.out`, `mismatches=5`).
 - **C1 operability (sourced S583/S584/S585):** `tools/kama-probe.sh` checks the absolute model/mmproj/draft
   paths in `status.args` of a matching autoload `unloaded` entry against the b12177 loader's header checks
   (`router-model-missing`, `router-model-invalid`); implementation `4f9eacf7`; counter
-  `tools/round89-unloadable-cells.py` `mismatches=5 → 0`, positive cells 0 → 0 (`measured/c1.out`); harm suites
+  `tools/round89-unloadable-cells.py` `mismatches=5 → 0`, positive cells 0 → 0 (`.ufo/waves/round-99/measured/c1.out`); harm suites
   unchanged (`measured/harm-M.out`); 36 host GGUF files all graded loadable (`measured/host-gguf-sweep.out`).
 - **C2 depth:** SKILL §"Router error signatures (llama.cpp router mode)" — eight wire answers captured by
   `tools/round89-router-signatures.py` (`measured/router-signatures.jsonl`); counter
@@ -3747,10 +3747,10 @@ and wave-1 SN01 (207 s for a 4 MiB answer of 200 000 ids); the round-91 base con
 
 - **C1 operability (sourced S592):** `tools/kama-probe.sh` applies the served-id rule in one awk pass and joins with
   `paste -sd,` (`3decfa36`); counter `tools/round91-answer-time.py` `5/0 → 0/0`, every cell ≤ 2.1 s
-  (`measured/c1.out`); harm unchanged (`measured/harm-M.out`). Wave 1: EX01 21/21 held-out cells agree, EX02 no
+  (`.ufo/waves/round-99/measured/c1.out`); harm unchanged (`measured/harm-M.out`). Wave 1: EX01 21/21 held-out cells agree, EX02 no
   python-free harm, RV01 verdict-equivalent; CR01/MT01 show the counter does not own the rule (disclosed limits).
 - **C2 depth:** SKILL §Serving timeout and limit thresholds, 14 rows from S593–S595 (`3f317ecd`); counter
-  `rows=0 → 14 bound=14 engines=3` (`measured/c2.out`). **Not verified:** frozen K2 fired — wave-1 RV02 (with SC01)
+  `rows=0 → 14 bound=14 engines=3` (`.ufo/waves/round-99/measured/c2.out`). **Not verified:** frozen K2 fired — wave-1 RV02 (with SC01)
   shows T07 states `n_parallel` 1 while llama-server b12177 defaults to auto → 4 slots (`--help`:
   `default: -1, -1 = auto`). Dated corrections in `SKILL.md` and `corpus/knowledge/serving-thresholds.md`; QUALITY
   KQ146; falsifier `measured/kq146-help-check.out` (`disagree=1`, exit 1).
@@ -3763,15 +3763,15 @@ Frozen plan `plans/round-92-claims.md` (freeze `309eadaf`; base `ed018ca0`). Mot
 closure (`corpus/lessons/round-91-verifier-spotcheck.md`) R4 — T07 and six overreaching rows needed superseding rows —
 and R5 with wave-1 SC02 F1–F3 (`.ufo/waves/round-91/w1/SC02QuadraticSweep.md`: `jstr` 3.8 MB body killed at 180 s,
 `router_refine` 80 000 entries killed, `snapshot` 8 000 ids 51 s); the round-92 base control reproduces F1–F3
-(`.ufo/waves/round-92/controls/c2-base.out`: L1–L5 killed at 120 s, L6 54 s). Depth was the lowest axis (7).
+(`.ufo/waves/round-92/.ufo/waves/round-99/controls/c2-base.out`: L1–L5 killed at 120 s, L6 54 s). Depth was the lowest axis (7).
 
 - **C1 depth (sourced S596, S597):** `SKILL.md` §Serving defaults (round 92 revision), R01–R15 superseding T01–T14
   (`18153ebb`); counter `tools/round92-server-defaults.py` `rows=0 → rows=15 bound=15 help_checked=7 help_disagree=0
-  supersedes=14`, exit 0 (`measured/c1.out`). Pre-freeze battery 9/9 (`controls/c1-forgeries.out`; V1 the round-91
+  supersedes=14`, exit 0 (`.ufo/waves/round-99/measured/c1.out`). Pre-freeze battery 9/9 (`controls/c1-forgeries.out`; V1 the round-91
   T07 row fails H1). K2 non-author read: wave-1 RV02 finds no misstated or overreaching row (three non-firing notes).
 - **C2 operability:** `tools/kama-probe.sh` `jstr` one awk pass, `router_refine` candidate array, `served_persist` one
   awk pass (`fa8aedb7`); counter `tools/round92-linear-paths.py` `mismatches=6 → 0`, `positive_mismatches=0`, every
-  cell ≤ 3.5 s at load 79 (`measured/c2.out`); harm suites unchanged (`measured/harm-M.out`); L1 fuzz equivalence and
+  cell ≤ 3.5 s at load 79 (`.ufo/waves/round-99/measured/c2.out`); harm suites unchanged (`measured/harm-M.out`); L1 fuzz equivalence and
   its two invalid-UTF-8 differences, both base defects (`measured/c2-fuzz-equivalence.out`, `c2-fuzz-classify.out`).
 - Round-91 R2 (S593/S595 dated correction in `corpus/SOURCES.md`), lesson `corpus/lessons/round-92.md` (M1–M3; M3
   repeats round-91 M4: the round-90 reason receipt staled again and was re-bound 24/24), QUALITY KQ147, KQ148.
@@ -3792,14 +3792,14 @@ shown able to fail on that class). Depth was the lowest axis (7).
 
 - **C1 operability:** `tools/kama-probe.sh` `ROUTER_PY` parses each regular model file once per call, keyed by identity
   (`fe5f031c`); counter `tools/round93-router-repeat.py` `mismatches=5 → 0`, `positive_mismatches=0`, 3 runs per cell
-  (`measured/c1.out`); harm suites unchanged (`measured/harm-M.out`); round-90 reason receipt re-captured with 24
+  (`.ufo/waves/round-99/measured/c1.out`); harm suites unchanged (`measured/harm-M.out`); round-90 reason receipt re-captured with 24
   identical triples and re-bound 24/24 (`995fe905`, `measured/r90-reason-rows-tip.out`; KQ148 carried this time).
   Pre-freeze battery 5/5 (`controls/c1-forgeries.out`: fail-closed, path-string memo, per-file deadline and
   first-8 cap each fail a named cell).
 - **C2 depth (sourced S600–S603):** `SKILL.md` §Listen port and slot-count setters (round 93 revision) — P01–P48, one
   row per population line of the pinned b12177 archive, and R16/R17 superseding R01/R08 (`ee19acbd`); counter
   `tools/round93-setter-rows.py` `rows=0 missing=48 → rows=48 bound=48 … decisions_bound=2`, exit 0
-  (`measured/c2.out`). Pre-freeze battery 12/12 (`controls/c2-forgeries.out`; V1 = the round-92 decisions,
+  (`.ufo/waves/round-99/measured/c2.out`). Pre-freeze battery 12/12 (`controls/c2-forgeries.out`; V1 = the round-92 decisions,
   `decisions_bound=0`).
 - Lesson `corpus/lessons/round-93.md` (M1 an alias cell sized below its forgery's threshold, KQ150; M2 a range
   shorthand hid ids from the decision rule). End-to-end domain task: the probe graded 10 router listings on stubs,
@@ -3822,7 +3822,7 @@ calibration were the lowest axes (7).
 - **C1 operability (narrowed):** `tools/kama-probe.sh` `ROUTER_PY` gives each GGUF candidate its own 15.0 s wall
   slice reset inside `gguf_parse` (replacing the shared `DEADLINE = monotonic()+4.0`) and the file-state wrapper goes
   `timeout 8` → `timeout 60` (`a27656a4`); counter `tools/round94-router-budget.py` grades 19 cells at two loads
-  (`measured/c1.out`: `cells=19 mismatches=0 positive_mismatches=0 load_cells=19 load_stable=1`, `load1_nat=232.08`);
+  (`.ufo/waves/round-99/measured/c1.out`: `cells=19 mismatches=0 positive_mismatches=0 load_cells=19 load_stable=1`, `load1_nat=232.08`);
   do-nothing control at base re-run this round `mismatches=3 load_stable=0` (R04/T01 flip, `load1_nat=197.96`).
   Wave-1 SC02 F1/F2/F3/F4 falsified the wide wording (a 400k-tensor file still flips at 15 s; `timeout 60` truncates
   a 40-distinct-slow listing to a false green; a `/props` slower than 5 s is graded `MODEL_UNLOADED`; the counter's
@@ -3832,7 +3832,7 @@ calibration were the lowest axes (7).
 - **C2 depth (not verified):** `SKILL.md` §Listen port and slot-count setters (round 94 revision) — P01–P92 and
   decisions R18/R19 with the config.ini route and the entry-point cell (`6aa5fa6b`); counter
   `tools/round94-setter-sweep.py` `92 92 2 92 0 0 0 0 derived_checked=47 derived_disagree=0 decisions=2/2 met=True`
-  (`measured/c2.out`), base re-run `92 0 0 0 0 92 0 0 met=False`. K2 fired: wave-1 SC01 F1 (R19 silent for
+  (`.ufo/waves/round-99/measured/c2.out`), base re-run `92 0 0 0 0 92 0 0 met=False`. K2 fired: wave-1 SC01 F1 (R19 silent for
   `cli`/`router-child`; "1 slot" prose falsified — measured 1/4/5/6/0, auto→4), F2 (`AIP_HTTP_PORT` inherited by
   the router child overrides its assigned free port; measured beside a router on 18230 and beating `--port 18260`),
   F3 (config.ini reaches the process only through `[default]`/`[*]`); CN01 F4 (the lane's registry violated R18's
@@ -3875,7 +3875,7 @@ Plan `plans/round-95-claims.md`; narrowing `plans/round-95-amendment-1.md`. Shap
 - **C3 calibration (verified after narrowing):** `tools/round95-freeze-audit.py` grades a round's own claims
   statement against the repo. Round-94's plan at its own freeze `285f1783`: `receipts=12 present=0 missing=12` exit 1
   with the named counter absent and S604 unresolved (the M5/M6 defect, now measurable). Round 95's frozen wording was
-  itself not reachable at F — `measured/c3.out` shows `unresolved=4` (S616/S617 land at M2) and `tokens=0` (the arm
+  itself not reachable at F — `.ufo/waves/round-99/measured/c3.out` shows `unresolved=4` (S616/S617 land at M2) and `tokens=0` (the arm
   needs a single-line backticked command) — so `plans/round-95-amendment-1.md` narrows it: at `bba10f75`
   `receipts=9 present=9 missing=0 tokens=24 matching=24 cited=14 unresolved=0 met=True` exit 0, plus
   `git ls-tree c798e831 -- .ufo/waves/round-95/controls` listing the seven freeze receipts.
@@ -4078,16 +4078,16 @@ round-90 reason-codes table (CN01). Sources: S627 admitted (`common/arg.cpp:3682
 `params.models_autoload`), S628 rejected (404 at b12177); census 363 → 368.
 
 **Measurements at `00394f3b`.** C1 `CONTROL_POP99 … refused=1 complete=1 mutant_cell_lines=5
-positive_cell_lines=6 population_shaped=1 met=True` exit 0 (`measured/c1.out`; base counter accepts
-the drop, `controls/c1-before.out`; grader base arm met=False; hardened drop refusal). C2
-`RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=00394f3b` exit 0 (`measured/c2.out`; base 10;
+positive_cell_lines=6 population_shaped=1 met=True` exit 0 (`.ufo/waves/round-99/measured/c1.out`; base counter accepts
+the drop, `.ufo/waves/round-99/controls/c1-before.out`; grader base arm met=False; hardened drop refusal). C2
+`RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=00394f3b` exit 0 (`.ufo/waves/round-99/measured/c2.out`; base 10;
 14 of 15 forged variants caught, J negation disclosed; `--rev` forge 3 mismatches). C3
 `AUTOLOAD_STATES99 cells=8 mismatches=0 base_mismatches=7 flips=7 stable=1 met=True` exit 0
-(`measured/c3.out`; base 7; plain-call control green; 77/77 verdict matrix).
+(`.ufo/waves/round-99/measured/c3.out`; base 7; plain-call control green; 77/77 verdict matrix).
 
 **Incidents.** A 900 s tool timeout killed the first budget-regression run before its burner reaper,
 leaking 64 `while True: pass` processes (load1 94) — reaped by exact PID
-(`controls/regression-timeout-reap.out`). Two wave seats later ran the same counter concurrently
+(`.ufo/waves/round-99/controls/regression-timeout-reap.out`). Two wave seats later ran the same counter concurrently
 (128 burners, load1 168), host-deferring the fleet; the orchestrator reaped the second group. The
 regression control is re-run with `--burners 0` to avoid repeating the harm. Also: the first seat to
 report (MT01) caught the post-freeze counter edits and the `--tree` defect before any data — the
