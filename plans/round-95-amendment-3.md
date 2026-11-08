@@ -38,7 +38,10 @@ repair, so the claim is filed on the property the repaired probe and the frozen 
 
 At M1b `c810f51e`, `python3 tools/round95-router-budget.py --repo . --rev c810f51e --work <scratch>` prints
 `ROUTER_BUDGET95 cells=10 mismatches=0 positive_mismatches=0 load_cells=10 load_stable=1 budget=work probe=rev …`
-and exits 0 (`.ufo/waves/round-95/measured/c1-m1b.out`), the counter's bytes identical to the freeze commit
+and exits 0 (`.ufo/waves/round-95/measured/c1-m1b.out`: `cells=10 mismatches=0 positive_mismatches=0 load_cells=10
+load_stable=1 budget=work probe=rev … w03_seconds=99.7 load1_nat=137.85`, W03 graded `MODEL_UNLOADED
+router-model-invalid` at 99.66 s natural and 179.25 s under the burners — inside the 1020 s path-priced allowance),
+the counter's bytes identical to the freeze commit
 `c798e831`; every cell's verdict and reason are identical at natural load and under the counter's synthetic CPU
 load and equal that cell's frozen expectation; and the pass-level allowance is proportional to the number of model
 paths the candidate entries name (the `count` verb), not to their count.
