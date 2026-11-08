@@ -49,6 +49,23 @@ DEFECT 2); that `--skip-load` receipts carry load evidence (CR01 DEFECT 3 — th
 load_stable=1` in `controls/c1-base.out` is **nominal**, and only its natural-load `W03` mismatch is evidence);
 and that a slow `/props` answer does not decide the verdict (round-94 SC02 F4, still reproduced).
 
+## Added after the twelfth seat reported (`w1/SC02LiveRouter.md`)
+
+- **F2 (live confirmation of C1's win).** On a real lane-owned b12177 router with 40 distinct invalid fixtures, the
+  round-94 probe graded `MODEL_OK/router-unloaded-autoload` in both repetitions at 60.33 s / 60.43 s (its constant
+  `timeout 60` truncating the pass) while the round-95 tip graded `MODEL_UNLOADED/router-model-invalid` at 133.42 s /
+  158.35 s inside its derived ceiling, with the router oracle rejecting all 40 files. The stub discriminator is real
+  on a live router.
+- **F1 (BLOCKER against the tip's disclosed limit as worded).** With per-element charging the tip spends **6 steps
+  per tensor header**, so a 700 000-tensor file needs 4.2 M steps > `MAX_STEPS` and its state is `-` (undecidable →
+  loadable): the tip graded `MODEL_OK/router-unloaded-autoload` for all 8 fixtures while the router oracle reports
+  `failed=true exit_code=1`. The effective tensor ceiling is therefore ≈666 666 tensors, **not** the
+  `MAX_TENSORS = 1 000 000` that the plan's disclosed limit (a) named, and the branch that bites first on a live
+  listing is graded by no frozen cell (`W09` uses 1 200 000 tensors and exercises the `MAX_TENSORS` branch instead).
+  Corrected limit: *a candidate that needs more than `MAX_STEPS` steps — on the round-95 probe that includes a file
+  with more than ~666 666 tensor headers — is `-` and therefore loadable.* Routed to round 96 with the cell that
+  would grade it (a 700 000-tensor fixture must grade `MODEL_UNLOADED` or the counter must say what it decides).
+
 ## Consequence
 
 C1 is filed **verified on the three numbered properties above**, with the plan's wider sentence withdrawn by this
