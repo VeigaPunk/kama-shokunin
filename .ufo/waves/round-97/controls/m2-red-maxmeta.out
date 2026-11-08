@@ -1,0 +1,10 @@
+# round-97 M2 red side: the pre-fix maxmeta layout (an extra u32 before the u64 length)
+# makes the real probe and the MAX_META-100MiB mutant agree, so the W16 cell cannot discriminate.
+# Command: python3 - <<'PY' ... (module rb = tools/round97-router-budget.py; probe = e057166e:tools/kama-probe.sh)
+#   old = GGUF + KV key + struct.pack("<II", 8, 0) + struct.pack("<Q", 160MiB) + payload + bad tensor
+#   new = rb.gguf_maxmeta(); each fixture graded with probe=none and probe=maxmeta (rb.apply_mutant)
+M2_PROOF fixture=old-layout probe=none verdict=MODEL_UNLOADED reason=router-model-invalid
+M2_PROOF fixture=old-layout probe=maxmeta verdict=MODEL_UNLOADED reason=router-model-invalid
+M2_PROOF fixture=new-layout probe=none verdict=MODEL_UNLOADED reason=router-model-invalid
+M2_PROOF fixture=new-layout probe=maxmeta verdict=MODEL_OK reason=router-unloaded-autoload
+m2_red_side=1 (old layout cannot discriminate; new layout flips the mutant)

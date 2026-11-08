@@ -35,7 +35,9 @@ A measurement receipt is committed only after its producer exits.
 **Predicate (one sentence, same in the counter's docstring and in the receipt label):**
 
 `python3 tools/round97-self-assessment-audit.py --repo . --rev <M1>` prints
-`SELF_ASSESS97 checks=14 mismatches=0 met=True` and exits 0 at the measured commit M1.
+`SELF_ASSESS97 checks=18 mismatches=0 met=True rev=<resolved>` and exits 0 at the measured commit
+M1; the numbers are those of amendment 2, which strengthened the counter after wave 1 (RV01, CR01,
+CR02).
 
 - **Before (the defect).** (a) SCORECARD's live `depth` row declares `SKILL.md` sha256
   `340ef84b…` with 2254 lines and `grep -c '^## ' SKILL.md` → 58, while the tree at base has 2441
@@ -50,18 +52,25 @@ A measurement receipt is committed only after its producer exits.
   ceilings; S621's `teaches` opens `supersedes S618 —` with the `5 + nd` arithmetic; SCORECARD's
   `depth` row matches the committed `SKILL.md` bytes; the round-96 identity and receipts quoted in
   SCORECARD are true.
-- **Checks (14, frozen in the counter's docstring):** depth row digest / line count / section count;
-  adjacency row digest / pipe count; the `router-byte-decided` capability pointer (resolves, is an
-  ancestor, its `.ufo/waves/…` evidence path exists at the pointer); the probe's `5 + nd` sentence
-  and the absence of the constant-6 sentence; every per-rank ceiling in the probe comment; every
-  ceiling and the S620/S621 citations in `SKILL.md`; S621's supersession cell; S620's spec/A/mined
-  cells; `tools/round96-router-budget.py` byte-identical at `f175a902` and named there; the two
-  round-96 C2/C3 receipt summaries present in their own files and quoted in SCORECARD.
+- **Checks (18, frozen in the counter's docstring; amendment 2 added 4 and strengthened 3):** depth
+  row digest / line count / section count; adjacency row exists with its digest / pipe count; the
+  `router-byte-decided` capability row's pointer and "measured against" commits both ancestors, the
+  pointer strictly earlier, both evidence paths present at the pointer; the probe's `5 + nd`
+  sentence, no constant-6 sentence, and no "binding" line naming 1,000,000 or 6 steps/header; all
+  five per-rank ceilings in the probe comment; the §Round 96 table's five rows recomputed; S621's
+  supersession cell; S620's spec/A/mined cells; the round-96 identity and C1 receipt summary;
+  the round-96 C2/C3 receipt needles; the two round-97 counters' docstrings against the probe's
+  constants and the `4 + T x (5 + nd)` formula; the count statements (four cells/mutants, `cells=17`,
+  W14–W17) in SCORECARD's depth row, SKILL §Round 97 and the counter docstring; SOURCES id
+  uniqueness; the probe's tensor-loop and preamble charge sites.
 - **Do-nothing control:** `controls/c1-base.out` — the same counter at base `40763bd2`. Expected
-  `mismatches>0` (the stale depth cells, the constant-6 sentence, the missing S621 citation). A
-  green base run means the counter cannot discriminate and the claim is void.
-- **Kill rules:** K1 the counter's bytes change after the freeze commit; K2 `mismatches>0` at M1;
-  K3 a check is green at base and green at M1 for the same reason (no discriminator).
+  `mismatches=10` with v2 (the stale depth cells, the capability row's relative evidence path, the
+  constant-6 sentence and missing ceilings, the missing S620/S621 rows, and the count/docstring
+  checks). A green base run means the counter cannot discriminate and the claim is void.
+- **Kill rules:** K1 the counter's bytes change after the amendment-2 commit (the freeze the
+  measurement binds to); K2 `mismatches>0` at M1; K3 the whole counter is green at base (the
+  do-nothing control) — checks that were already true at base (the adjacency row, the round-96
+  identity and receipts) are the claim's unchanged surfaces, not a discriminator (RV01 §2.9).
 - **Disclosed limits.** The audit grades exactly the 14 named surfaces; other SCORECARD rows
   (the operability/freshness/coverage/calibration prose, the superseded rows, PROVINCE.md) are not
   graded, and the wave's non-author read remains the semantic gate. S618 stays `mined` as history
@@ -71,7 +80,9 @@ A measurement receipt is committed only after its producer exits.
 
 **Predicate:**
 
-`python3 tools/round97-router-budget.py --repo . --rev <M2> --work <scratch>` prints
+`python3 tools/round97-router-budget.py --repo . --rev <M2> --work <scratch> --slow-files 72`
+(amendment 1: the W03 host-speed parameter; the guard fired at 55.0 s with the default count)
+prints
 `ROUTER_BUDGET97 cells=17 mismatches=0 positive_mismatches=0 load_cells=17 load_stable=1 budget=work …`
 and exits 0 at M2; and the three control receipts print `survived=1` for the 13 legacy cells and
 `caught=1` for the three new cells, one per mutant.
@@ -93,31 +104,42 @@ and exits 0 at M2; and the three control receipts print `survived=1` for the 13 
   anchor does not match; `--control --expect survived|caught` gives the survival and catch receipts.
 - **Cells (17, frozen in the counter's docstring):** the 13 round-96 cells unchanged plus W14, W15,
   W16, W17; both host loads in the predicate; natural-only in the controls.
-- **Do-nothing control:** `controls/c2-legacy-mutants.out` — the 13-cell set with each of the four
-  mutants: `survived=1` (the old set cannot discriminate). `controls/c2-new-mutants.out` — the four
-  new cells with each mutant: `caught=1`. A `caught=0` receipt means the counter is void for that mutant.
-- **Kill rules:** K1 the counter's bytes change after the freeze; K2 `positive_mismatches>0` or
-  `load_stable=0` or `cells!=17` at M2; K3 any mutant `survived=1` on the new cells or `caught=1` on
-  the legacy set.
+- **Do-nothing control:** two files. `controls/c2-legacy-mutants.out` — the 13-cell set with each
+  of the four mutants: `survived=1` (the old set cannot discriminate). `controls/c2-new-mutants.out`
+  — the four new cells with the real probe (`survived=1`) and with each mutant, `--expect-cell`
+  naming the cell that must redden: `flat6` → W15-700k-nd4, `undercharge` → W14-900k-nd1,
+  `maxmeta` → W16-maxmeta, `nopreamble` → W17-833333-nd1, each `cell_ok=0 caught=1`. A
+  `cell_ok=1` receipt means the counter is void for that mutant.
+- **Kill rules:** K1 the counter's bytes change after the amendment-2 commit; K2
+  `positive_mismatches>0` or `load_stable=0` or `cells!=17` at M2; K3 any mutant's named cell is
+  green on the new set or any legacy cell is red on the legacy set.
 - **Disclosed limits.** (a) The four named forgery classes are the graded ones; a probe that
   charges a wrong number of steps inside a single header (not preamble, header, dims, or cap) is not
-  graded. (b) The ctime memo component is not graded: the probe parses each path once
+  graded, and a probe that reddens a different cell is not credited to the named one (the control
+  names its cell). (b) The ctime memo component is not graded: the probe parses each path once
   per invocation, so no listing can rewrite an inode between two parses of one process — the shape is
   unobservable from the outside, not merely untested. (c) A slow `/props` answer still decides the
   verdict (r94 SC02 F4), routed again unchanged. (d) The pass-level wrapper is still a wall clock
-  (SC01), routed unchanged.
+  (SC01), routed unchanged. (e) The predicate command carries amendment 1's `--slow-files 72`;
+  K1 binds the counter's bytes, not the command sentence. (f) The four new cells are one-sided
+  (three expect `-`), so their `survived=1` alone does not pin the budget's lower bound; the
+  predicate's legacy W11 does, in the same run. (g) `--probe-file` grades an override probe bound
+  only by `probe_sha256`; `--allow-clock` and `--runs < 1` are refused or excluded from the
+  predicate (amendment 2 addendum).
 
 ## C3 — depth (lowest axis, 7): the step-budget boundary table states the two rank classes
 
 **Predicate:**
 
 `python3 tools/round97-depth-boundary-audit.py --repo . --rev <M3>` prints
-`DEPTH_BOUNDARY97 rows=6 checks=<c> mismatches=0 met=True` and exits 0 at M3.
+`DEPTH_BOUNDARY97 rows=6 checks=10 mismatches=0 met=True rev=<resolved>` and exits 0 at M3;
+`rows != 6` exits 1 (amendment 2).
 
 - **Before.** The round-96 table states the per-rank ceilings but not the two boundary classes the
   round-97 counter grades, and its prose cannot answer "does this file decide?" for the named files
   (900 000 tensors at nd=1; 700 000 at nd=4). The reader must re-parse the probe.
-- **After.** `SKILL.md` §Round 97 correction carries six boundary rows — (833,332, nd=1) `invalid`,
+- **After.** `SKILL.md` §Round 97 correction carries six boundary rows for a KV-free file at rank
+  ≤ 4 (KV work charges ≥4 steps per entry; `nd > 4` is `invalid` before pricing) — (833,332, nd=1) `invalid`,
   (833,333, nd=1) `-`, (900,000, nd=1) `-`, (700,000, nd=4) `-`, (555,555, nd=4) `invalid`,
   (555,556, nd=4) `-` — each with `steps = 4 + T x (5 + nd)`, the `<=`/`>` comparison against
   `5,000,000` and the verdict; it cites S620 (spec) and S621 (the corrected code row).
@@ -135,8 +157,8 @@ and exits 0 at M2; and the three control receipts print `survived=1` for the 13 
   b12177, supersedes S618), both opened this round; the Gate block carries the digest and quote.
 - **Frontier step (§2b):** census before → after recorded with
   `scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama`; rows 358 → 361
-  (S619 rejected, S620 admitted, S621 correction of S618). The lesson carries `## Gate` (one admit,
-  two rejects, every new row's URL/access date/quote) and `## Mistakes` M1–M4.
+  (S619 rejected, S620 admitted, S621 correction of S618). The lesson carries `## Gate` (two admits — S620 and the S621
+  correction — and two rejects — S619 and the 404 path — with every new row's URL/access date/quote) and `## Mistakes` M1–M4.
 - **Assimilation:** none from `merge/kama/`; `considerthese/2026-11-07.md` proposal 3 is mined as
   `QUALITY.md` KQ152 (a file-identity memo is not frozen without a mutation receipt).
 - **Carried, not claimed:** R1 `round75-instruments` red (`APPEND_DEBT … bad_rows=19`, L0 r87/r89

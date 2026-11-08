@@ -4,7 +4,7 @@
 PREDICATE (frozen: plans/round-97-claims.md section C3):
 
     `python3 tools/round97-depth-boundary-audit.py --repo . --rev <M3>` prints
-    `DEPTH_BOUNDARY97 rows=<n> mismatches=0 met=True` and exits 0 at the measured commit M3;
+    `DEPTH_BOUNDARY97 rows=6 checks=<c> mismatches=0 met=True rev=<resolved>` and exits 0 at M3;
     the counter's own bytes never change after the freeze commit (kill rule K1).
 
 Round-96's depth table states the per-rank ceilings but not the two boundary classes the
@@ -80,7 +80,7 @@ def main() -> int:
     if start is None:
         checks += 1
         mismatches += 1
-        print(f"DEPTH_BOUNDARY97 rows=0 mismatches={mismatches} met=False")
+        print(f"DEPTH_BOUNDARY97 rows=0 mismatches={mismatches} met=False rev={rev}")
         return 1
     section = []
     for l in lines[start + 1:]:
@@ -114,15 +114,24 @@ def main() -> int:
 
     # The table must be sourced on the spec and the superseding code row, and name the
     # budget it compares against.
+    sect = "\n".join(section)
     checks += 1
-    if "S620" not in "\n".join(section) or "S621" not in "\n".join(section):
+    if "S620" not in sect or "S621" not in sect:
         mismatches += 1
     checks += 1
-    if "{:,}".format(max_steps) not in "\n".join(section):
+    if "{:,}".format(max_steps) not in sect:
+        mismatches += 1
+    # The table's class caveat: the rows are KV-free files at rank <= 4 (CR01 boundary review).
+    checks += 1
+    if "KV-free" not in sect or "nd > 4" not in sect:
+        mismatches += 1
+    # The claimed row count is enforced, not descriptive (CR02 C3 clause 1).
+    checks += 1
+    if rows != 6:
         mismatches += 1
 
     print(f"DEPTH_BOUNDARY97 rows={rows} checks={checks} mismatches={mismatches} "
-          f"met={mismatches == 0}")
+          f"met={mismatches == 0} rev={rev}")
     return 0 if mismatches == 0 else 1
 
 

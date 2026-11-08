@@ -1,0 +1,22 @@
+# C1 predicate runs (frozen tool, lane repo, 2026-11-08)
+$ python3 tools/round97-self-assessment-audit.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --rev 40763bd2
+SELF_ASSESS97 checks=14 mismatches=9 met=False
+exit=1
+$ python3 tools/round97-self-assessment-audit.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --rev 9e605d41
+SELF_ASSESS97 checks=14 mismatches=0 met=True
+exit=0
+$ python3 tools/round97-self-assessment-audit.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --rev master
+SELF_ASSESS97 checks=14 mismatches=0 met=True
+exit=0
+# master moved during the wave: 9e605d41 (freeze) -> e057166e (amendment 1, C2 host-speed slow-files 72)
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin log --oneline -2
+e057166e round-97 amendment 1: C2 host-speed slow-files 72 (guard fired before any cell scored)
+9e605d41 round-97 freeze: three counters, 5 + nd disclosures, S619-S621, boundary table, KQ152
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff --stat 9e605d41 e057166e -- tools/round97-self-assessment-audit.py
+(empty; C1 counter bytes identical)
+# Instrumented copy (frozen bytes + fail-list print), base:
+SELF_ASSESS97 checks=14 mismatches=9 met=False fails=[1, 2, 3, 6, 7, 8, 9, 10, 11]
+# Instrumented copy, M1 e057166e:
+SELF_ASSESS97 checks=14 mismatches=0 met=True fails=[]
+SELF_ASSESS97 checks=14 mismatches=9 met=False fails=[1, 2, 3, 6, 7, 8, 9, 10, 11]
+SELF_ASSESS97 checks=14 mismatches=0 met=True fails=[]

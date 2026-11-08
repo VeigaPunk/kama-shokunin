@@ -1,0 +1,39 @@
+mutant=E2
+fixture_toplevel=/fast/scratch/hyaku/kama-r97/EX01SelfAssessControl/lane-clone
+rev=d5bde62906d4080995467f962aed4e1ad5d6b03d subject=mutant E2: graded ceiling comment states 900,001 at nd=1; correct 833,332 kept on a non-graded line
+
+--- fixture diff vs master ---
+diff --git a/tools/kama-probe.sh b/tools/kama-probe.sh
+index 6b3730e7..f89bec14 100755
+--- a/tools/kama-probe.sh
++++ b/tools/kama-probe.sh
+@@ -574,7 +574,7 @@ MAX_KV, MAX_ARR, MAX_TENSORS, MAX_META = 100_000, 50_000_000, 1_000_000, 512 * 1
+ # or that needs more than MAX_STEPS, is still `-` (undecidable -> loadable, round-89 rule).
+ # The binding ceiling is `5 + nd` steps per tensor header: name u64+skip 2, nd u32 1, one
+ # u64 dim per rank (`nd`), tensor type+offset 2 = 5 + nd. The preamble costs 4 steps, so
+-# MAX_STEPS = 5 000 000 admits (5 000 000 - 4) // (5 + nd) tensor headers: 833,332 at nd=1,
++# MAX_STEPS = 5 000 000 admits (5 000 000 - 4) // (5 + nd) tensor headers: 900,001 at nd=1,
+ # 714,285 at nd=2, 624,999 at nd=3, 555,555 at nd=4 (S620; round-97 C1/C3). A constant
+ # 6 steps/header is only the nd=1 case and misstates every rank-2+ file (round-96 closure
+ # routed defect 1, CR02 B2-B5). The old 1 000 000 sentence (the MAX_TENSORS constant) was
+@@ -586,6 +586,7 @@ MAX_STEPS = 5_000_000  # Round 96 (SC02 F1): a constant-6 budget made a 700 000-
+ # the rank, never named independently)
+ MAX_STEP_BYTES = MAX_STEPS  # one need() call per bounded read/seek; kept for readers
+ PATH_FLAGS = ("-m", "--model", "-mm", "--mmproj", "-md", "--model-draft")
++# ceiling parity note: 833,332 714,285 624,999 555,555
+ NO_OPEN = ("/proc/", "/sys/", "/dev/")
+ 
+ 
+
+--- canonical tools/round97-self-assessment-audit.py (lane tool, fixture tree) ---
+SELF_ASSESS97 checks=14 mismatches=0 met=True
+c1_exit=0
+
+--- scratch per-check observer (copy of the frozen tool with P/F reporting) ---
+PERCHECK 1:P 2:P 3:P 4:P 5:P 6:P 7:P 8:P 9:P 10:P 11:P 12:P 13:P 14:P
+SELF_ASSESS97 checks=14 mismatches=0 met=True
+observer_exit=0
+
+--- cross-check only: tools/round97-depth-boundary-audit.py (C3) ---
+DEPTH_BOUNDARY97 rows=6 checks=8 mismatches=0 met=True
+c3_exit=0

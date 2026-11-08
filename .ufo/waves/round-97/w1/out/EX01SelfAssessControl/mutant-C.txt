@@ -1,0 +1,31 @@
+mutant=C
+fixture_toplevel=/fast/scratch/hyaku/kama-r97/EX01SelfAssessControl/lane-clone
+rev=aa79007d6d636b0b0c97cda293c30012437efc9f subject=mutant C: S621 teaches cell reverted to the constant-6 sentence
+
+--- fixture diff vs master ---
+diff --git a/corpus/SOURCES.md b/corpus/SOURCES.md
+index ac905903..721f5606 100644
+--- a/corpus/SOURCES.md
++++ b/corpus/SOURCES.md
+@@ -373,7 +373,7 @@ global. Every row was opened in round 10 (2026-10-19); the round lesson
+ | S618 | llama.cpp ggml/include/ggml.h at tag b12177 — https://raw.githubusercontent.com/ggml-org/llama.cpp/b12177/ggml/include/ggml.h | code | A | That the tensor descriptor carries per-dimension element counts `ne[]` and byte strides `nb[]`, with the first stride equal to the block size in bytes | Tag b12177, line 690, sha256 590e00a522b8791235353a8c7388d67ff2fe929554f1834c58528b82afd67392, opened 2026-11-08: "nb[0] = ggml_type_size(type)" (line 697) | the header cost a parser pays per tensor is five width-tagged fields over a name, so 6 read/seek steps per header is the budget against which MAX_STEPS is sized | mined | 2026-11-08 | on-release | SKILL.md |
+ | S619 | llama.cpp gguf-py/README.md at tag b12177 — https://raw.githubusercontent.com/ggml-org/llama.cpp/b12177/gguf-py/README.md | docs | C | Whether the Python writer's README states the GGUF header field order and widths a parser pays | Tag b12177, line 3, sha256 f759ed01b8899c392cee7f1bc9012356090dd46014898c2cface1cca5f1e18af, opened 2026-11-08: "This is a Python package for writing binary files in the [GGUF](https://github.com/ggml-org/ggml/pull/302)" (lines 3-4) | REJECTED: documents the Python writer, not the file layout the probe parses, and grounds no step cost; flip: the page states the header field order and widths | rejected | 2026-11-08 | on-release | — |
+ | S620 | GGUF specification, ggml docs/gguf.md at commit 57e2c2ca — https://raw.githubusercontent.com/ggml-org/ggml/57e2c2ca2a7cae756b1c4dfafa0cdfef9051d234/docs/gguf.md | spec | A | That a GGUF tensor info is five fields — name, n_dimensions, dimensions[n_dimensions], type, offset — so a parser pays `5 + nd` reads per header and the rank ceiling is per rank | Commit 57e2c2ca, lines 305-325, sha256 1dead27b6a522709f0127d194e58c21dbbbf00ba1c64fe37c54d1a9048b05020, opened 2026-11-08: "uint64_t dimensions[n_dimensions];" (line 313; "Currently at most 4" line 310) | the header cost a parser pays per tensor is five width-tagged fields plus one per dimension, and the GGUF rank is at most 4 | mined | 2026-11-08 | on-release | SKILL.md, corpus/lessons/round-97.md |
+-| S621 | llama.cpp ggml/include/ggml.h at tag b12177, corrected reading of S618 — https://raw.githubusercontent.com/ggml-org/llama.cpp/b12177/ggml/include/ggml.h | code | A | The per-rank tensor-descriptor arithmetic the probe prices | Tag b12177, lines 695-697, sha256 590e00a522b8791235353a8c7388d67ff2fe929554f1834c58528b82afd67392, opened 2026-11-08: "nb[0] = ggml_type_size(type)" (line 697; "int64_t ne[GGML_MAX_DIMS];" line 695; S618's anchor line 690 was the struct header) | supersedes S618 — the header cost is `5 + nd` read/seek steps, not a constant 6: `ne[GGML_MAX_DIMS]` is one element count per rank, so dims cost `nd`; ceiling `(5 000 000 - 4) / (5 + nd)` | mined | 2026-11-08 | on-release | SKILL.md, corpus/lessons/round-97.md |
++| S621 | llama.cpp ggml/include/ggml.h at tag b12177, corrected reading of S618 — https://raw.githubusercontent.com/ggml-org/llama.cpp/b12177/ggml/include/ggml.h | code | A | The per-rank tensor-descriptor arithmetic the probe prices | Tag b12177, lines 695-697, sha256 590e00a522b8791235353a8c7388d67ff2fe929554f1834c58528b82afd67392, opened 2026-11-08: "nb[0] = ggml_type_size(type)" (line 697; "int64_t ne[GGML_MAX_DIMS];" line 695; S618's anchor line 690 was the struct header) | supersedes S618 — the header cost a parser pays per tensor is five width-tagged fields over a name, so 6 read/seek steps per header is the budget against | mined | 2026-11-08 | on-release | SKILL.md, corpus/lessons/round-97.md |
+ 
+ ## Paths
+ 
+
+--- canonical tools/round97-self-assessment-audit.py (lane tool, fixture tree) ---
+SELF_ASSESS97 checks=14 mismatches=1 met=False
+c1_exit=1
+
+--- scratch per-check observer (copy of the frozen tool with P/F reporting) ---
+PERCHECK 1:P 2:P 3:P 4:P 5:P 6:P 7:P 8:P 9:P 10:F 11:P 12:P 13:P 14:P
+SELF_ASSESS97 checks=14 mismatches=1 met=False
+observer_exit=1
+
+--- cross-check only: tools/round97-depth-boundary-audit.py (C3) ---
+DEPTH_BOUNDARY97 rows=6 checks=8 mismatches=0 met=True
+c3_exit=0

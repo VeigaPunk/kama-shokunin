@@ -10,7 +10,7 @@ PREDICATE (frozen: plans/round-97-claims.md section C2):
 
 Successor to tools/round96-router-budget.py (13 cells, frozen, never edited). Round-96's
 closing wave (MT01 G1) proved four probe mutants survive every one of its 13 cells because
-every fixture's complete parse is also `-`. Round 97 adds three cells past that:
+every fixture's complete parse is also `-`. Round 97 adds four cells past that:
 
   W14-900k-nd1     900 000 tensor headers, nd=1 -> 4 + 6 x 900 000 = 5 400 004 steps > MAX_STEPS,
                    so the real probe grades `-` (loadable). A probe that stopped charging per
@@ -90,7 +90,7 @@ Cells (expect `good`; verdict/reason read from `check --json` rows[0]):
   W03-slow-x40       40 entries naming 40 DISTINCT slow files     MODEL_UNLOADED router-model-invalid
                      (40 x ~2.0 s = ~82 s on the lane host: past the round-94 60 s constant)
                      ^ discriminator: round-94 base truncates this pass at its constant `timeout 60`
-                     (the counter refuses to claim it unless the natural pass costs >= 1.5 x 60 s)
+                     (the counter refuses to claim it unless the natural pass costs >= 1.25 x 60 s)
   W04-ok-x8          8 entries -m ok.gguf                         MODEL_OK router-unloaded-autoload
   W05-slow-then-ok   7 distinct slow files, then ok2 last          MODEL_OK router-unloaded-autoload
   W06-missing-x8     8 entries -m <missing>                       MODEL_UNLOADED router-model-missing
@@ -145,7 +145,7 @@ LEGACY_CELLS = {"W01-slow-x1", "W02-slow-x8", "W03-slow-x40", "W04-ok-x8", "W05-
                 "W10-rewrite", "W11-700k", "W12-strings", "W13-budget-kill"}
 NEW_CELLS = {"W14-900k-nd1", "W15-700k-nd4", "W16-maxmeta", "W17-833333-nd1"}
 RUNS = 2
-KILL = 1200
+KILL = 3600
 CAP = 4194304
 TENSORS = 600_000
 MID_TENSORS = 700_000
@@ -171,8 +171,10 @@ MUTANTS = {
                  b"1_000_000, 512 * 1024 ** 2",
                  b"MAX_KV, MAX_ARR, MAX_TENSORS, MAX_META = 100_000, 50_000_000, "
                  b"1_000_000, 100 * 1024 ** 2")],
-    "nopreamble": [(b"        def need(n):\n            steps[0] += 1\n",
-                    b"        def need(n):\n            steps[0] += 0 if steps[0] < 4 else 1\n")],
+    "nopreamble": [(b"    steps = [0]\n    with f:\n        def need(n):\n            steps[0] += 1\n",
+                    b"    steps = [0]\n    calls = [0]\n    with f:\n        def need(n):\n"
+                    b"            calls[0] += 1\n"
+                    b"            steps[0] += 0 if calls[0] <= 4 else 1\n")],
 }
 
 
@@ -511,6 +513,7 @@ def evaluate_pass(R: Runner, w: Path, label: str, n_runs: int, n_slow: int = SLO
         good = all(v == wv and r == wr for _, v, r, _ in runs)
         verdicts = [(v, r) for _, v, r, _ in runs]
         detail = " ".join(f"run{i + 1}={v}/{r}/{dt:.2f}s" for i, (_, v, r, dt) in enumerate(runs))
+        detail += f" entries={n_slow}"
         print(f"ROUTER_BUDGET97_CELL {label} {cid} ok={int(good)} want={wv}/{wr} {detail}", flush=True)
         results[cid] = (good, verdicts, wv, wr)
         durations[cid] = max((dt for _, _, _, dt in runs), default=0.0)
@@ -577,6 +580,9 @@ def main() -> int:
                     help="natural pass only; grades mutant survival/catch, never the predicate")
     ap.add_argument("--expect", choices=("survived", "caught"),
                     help="with --control: every selected cell ok (survived) or at least one red (caught)")
+    ap.add_argument("--expect-cell",
+                    help="with --control: the named cell must be green (survived) or red (caught), "
+                         "not merely some cell")
     ap.add_argument("--skip-load", action="store_true",
                     help="natural pass only (red-control runs: the W03 discriminator is load-independent)")
     ap.add_argument("--allow-clock", action="store_true",
@@ -584,6 +590,9 @@ def main() -> int:
     a = ap.parse_args()
     if a.control and (not a.expect or a.mutant == "none" and a.expect == "caught"):
         print("ROUTER_BUDGET97 usage: --control requires --expect and, for `caught`, a --mutant")
+        return 64
+    if a.runs < 1:
+        print("ROUTER_BUDGET97 usage: --runs must be >= 1 (a zero-run pass grades nothing)")
         return 64
     runs = 1 if a.control else a.runs
     selected = {"all": None, "legacy": LEGACY_CELLS, "new": NEW_CELLS}[a.cells]
@@ -623,9 +632,22 @@ def main() -> int:
                 n = len(natural)
                 survived = int(n_ok == n)
                 caught = int(n_ok < n)
-                ok = survived if a.expect == "survived" else caught
+                cell = "-"
+                cell_ok = None
+                if a.expect_cell:
+                    if a.expect_cell not in natural:
+                        print(f"ROUTER_BUDGET97 could-not-evaluate: --expect-cell {a.expect_cell} "
+                              f"is not in the selected cells")
+                        return 2
+                    cell = a.expect_cell
+                    cell_ok = int(natural[cell][0])
+                    ok = cell_ok if a.expect == "survived" else (1 - cell_ok)
+                else:
+                    ok = survived if a.expect == "survived" else caught
                 print(f"ROUTER_BUDGET97_CONTROL cells={n} cells_ok={n_ok} mutant={a.mutant} "
-                      f"expect={a.expect} survived={survived} caught={caught} "
+                      f"slow_files={a.slow_files} runs={runs} "
+                      f"expect={a.expect} expect_cell={cell} cell_ok="
+                      f"{'-' if cell_ok is None else cell_ok} survived={survived} caught={caught} "
                       f"probe={mode} probe_sha256={sha256(mbytes)} rev={rev} ok={ok}")
                 return 0 if ok else 1
             # The round-94 probe truncated this pass at its constant 60 s; if the pass is cheaper than
@@ -670,7 +692,8 @@ def main() -> int:
     want_cells = CELLS if selected is None else len(selected)
     print(f"ROUTER_BUDGET97 cells={len(cids)} mismatches={mismatches} "
           f"positive_mismatches={positive_mismatches} load_cells={len(cids)} load_stable={load_stable} "
-          f"budget=work probe={mode} mutant={a.mutant} probe_sha256={sha256(mbytes)} "
+          f"budget=work probe={mode} mutant={a.mutant} slow_files={a.slow_files} runs={runs} "
+          f"probe_sha256={sha256(mbytes)} "
           f"base_sha256={sha256(bbytes)} rev={rev} w03_seconds={w03:.1f} "
           f"load1_nat={loadavg()} burners={a.burners}")
     return 0 if (mismatches == 0 and load_stable == 1 and len(cids) == want_cells) else 1

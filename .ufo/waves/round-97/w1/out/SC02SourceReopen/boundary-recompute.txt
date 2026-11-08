@@ -1,0 +1,68 @@
+# SC02SourceReopen — S620/S621 arithmetic recomputation from the fetched sources (2026-11-08)
+
+## gguf.md @ 57e2c2ca, struct gguf_tensor_info_t (lines 305-325):
+305	struct gguf_tensor_info_t {
+306	    // The name of the tensor. It is a standard GGUF string, with the caveat that
+307	    // it must be at most 64 bytes long.
+308	    gguf_string_t name;
+309	    // The number of dimensions in the tensor.
+310	    // Currently at most 4, but this may change in the future.
+311	    uint32_t n_dimensions;
+312	    // The dimensions of the tensor.
+313	    uint64_t dimensions[n_dimensions];
+314	    // The type of the tensor.
+315	    ggml_type type;
+316	    // The offset of the tensor's data in this file in bytes.
+317	    //
+318	    // This offset is relative to `tensor_data`, not to the start
+319	    // of the file, to make it easier for writers to write the file.
+320	    // Readers should consider exposing this offset relative to the
+321	    // file to make it easier to read the data.
+322	    //
+323	    // Must be a multiple of `ALIGNMENT`. That is, `align_offset(offset) == offset`.
+324	    uint64_t offset;
+325	};
+
+## gguf.md line 232-237 — gguf_string_t (name is a length-prefixed string => 2 reads: u64 len + skip)
+232	struct gguf_string_t {
+233	    // The length of the string, in bytes.
+234	    uint64_t len;
+235	    // The string as a UTF-8 non-null-terminated string.
+236	    char string[len];
+237	};
+
+## ggml.h @ b12177, lines 690-699:
+690	    struct ggml_tensor {
+691	        enum ggml_type type;
+692	
+693	        struct ggml_backend_buffer * buffer;
+694	
+695	        int64_t ne[GGML_MAX_DIMS]; // number of elements
+696	        size_t  nb[GGML_MAX_DIMS]; // stride in bytes:
+697	                                   // nb[0] = ggml_type_size(type)
+698	                                   // nb[1] = nb[0]   * (ne[0] / ggml_blck_size(type)) + padding
+699	                                   // nb[i] = nb[i-1] * ne[i-1]
+
+## ggml.h line 222 — GGML_MAX_DIMS
+222	#define GGML_MAX_DIMS           4
+
+## probe read-by-read price of one tensor header (tools/kama-probe.sh:747-752)
+  skip(u64()) name -> u64() 1 step + skip 1 step = 2
+  nd = u32()           -> 1 step
+  ne = [u64() for _ in range(nd)] -> nd steps
+  tt, off = u32(), u64() -> 2 steps
+  total = 2 + 1 + nd + 2 = 5 + nd
+
+## recomputed ceilings from MAX_STEPS = 5_000_000, preamble 4
+  nd=0 steps/header=5 ceiling=999,999
+  nd=1 steps/header=6 ceiling=833,332
+  nd=2 steps/header=7 ceiling=714,285
+  nd=3 steps/header=8 ceiling=624,999
+  nd=4 steps/header=9 ceiling=555,555
+
+  T=833332 nd=1 steps=4,999,996 -> <= budget (invalid)
+  T=833333 nd=1 steps=5,000,002 -> > budget (-)
+  T=900000 nd=1 steps=5,400,004 -> > budget (-)
+  T=700000 nd=4 steps=6,300,004 -> > budget (-)
+  T=555555 nd=4 steps=4,999,999 -> <= budget (invalid)
+  T=555556 nd=4 steps=5,000,008 -> > budget (-)

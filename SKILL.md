@@ -2457,14 +2457,17 @@ not. The six rows below are the two boundary classes the round-96 table does not
 | 555,555 | nd=4 | 4,999,999 | <= budget | invalid |
 | 555,556 | nd=4 | 5,000,008 | > budget | - |
 
-Read it as one rule: the ceiling is `(5,000,000 - 4) / (5 + nd)` per rank, so a 900,000-tensor
-`nd=1` file and a 700,000-tensor `nd=4` file are both `-` (loadable) even though the first is
-under `MAX_TENSORS`, and a 700,000-tensor `nd=1` file decides `invalid`. A green round-96
-receipt does not prove this arithmetic is enforced: three probe variants survive all 13 of its
-cells — one that stopped charging per header (parses 900,000 headers fully), one that charges
-a constant 6 steps per header regardless of rank (decides the 700,000 `nd=4` file), and one
-whose `MAX_META` is 100 MiB instead of 512 MiB (grades the 160 MiB-header file `-`). The
-round-97 counter `tools/round97-router-budget.py` grades each with W14, W15 and W16
-respectively. Sourced on S620 (GGUF spec, ggml `57e2c2ca`: `gguf_tensor_info_t` carries `name`,
+Read it as one rule for the class the rows cover — a KV-free file at `nd <= 4`: the ceiling is
+`(5,000,000 - 4) / (5 + nd)` per rank, so a 900,000-tensor `nd=1` file and a 700,000-tensor
+`nd=4` file are both `-` (loadable) even though the first is under `MAX_TENSORS`, and a
+700,000-tensor `nd=1` file decides `invalid`. A file with KV entries pays at least 4 more steps
+per entry (a string value 5), and a header whose `nd > 4` is `invalid` before a step is charged,
+so the rows do not bound those classes. A green round-96 receipt does not prove this arithmetic
+is enforced: four probe variants survive all 13 of its cells — one that stopped charging per
+header (parses 900,000 headers fully), one that charges a constant 6 steps per header regardless
+of rank (decides the 700,000 `nd=4` file), one whose `MAX_META` is 100 MiB instead of 512 MiB
+(grades the 160 MiB-header file `-`), and one that drops the four preamble steps (decides the
+833,333-header nd=1 file). The round-97 counter `tools/round97-router-budget.py` grades each with
+W14-900k-nd1, W15-700k-nd4, W16-maxmeta and W17-833333-nd1 respectively. Sourced on S620 (GGUF spec, ggml `57e2c2ca`: `gguf_tensor_info_t` carries `name`,
 `n_dimensions`, `dimensions[n_dimensions]`, `type`, `offset` — the five fields the probe prices)
 and S621 (supersedes S618's constant-6 cell; the `5 + nd` arithmetic above).

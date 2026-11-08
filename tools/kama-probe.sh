@@ -574,8 +574,9 @@ MAX_KV, MAX_ARR, MAX_TENSORS, MAX_META = 100_000, 50_000_000, 1_000_000, 512 * 1
 # or that needs more than MAX_STEPS, is still `-` (undecidable -> loadable, round-89 rule).
 # The binding ceiling is `5 + nd` steps per tensor header: name u64+skip 2, nd u32 1, one
 # u64 dim per rank (`nd`), tensor type+offset 2 = 5 + nd. The preamble costs 4 steps, so
-# MAX_STEPS = 5 000 000 admits (5 000 000 - 4) // (5 + nd) tensor headers: 833,332 at nd=1,
-# 714,285 at nd=2, 624,999 at nd=3, 555,555 at nd=4 (S620; round-97 C1/C3). A constant
+# MAX_STEPS = 5 000 000 admits (5 000 000 - 4) // (5 + nd) tensor headers: 999,999 at nd=0,
+# 833,332 at nd=1, 714,285 at nd=2, 624,999 at nd=3, 555,555 at nd=4 (S620; round-97 C1/C3). A
+# constant
 # 6 steps/header is only the nd=1 case and misstates every rank-2+ file (round-96 closure
 # routed defect 1, CR02 B2-B5). The old 1 000 000 sentence (the MAX_TENSORS constant) was
 # never the binding ceiling (round-95 amendment 4, SC02 F1). KV and string-array work also

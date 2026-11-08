@@ -1,0 +1,31 @@
+mutant=E1
+fixture_toplevel=/fast/scratch/hyaku/kama-r97/EX01SelfAssessControl/lane-clone
+rev=af7bf3fd1b1431c3a9b6ce06ea55c165f461d2dd subject=mutant E1: probe comment says 'a constant six steps per tensor header'; 5 + nd still present elsewhere in the file
+
+--- fixture diff vs master ---
+diff --git a/tools/kama-probe.sh b/tools/kama-probe.sh
+index 6b3730e7..34ff8e6b 100755
+--- a/tools/kama-probe.sh
++++ b/tools/kama-probe.sh
+@@ -572,7 +572,7 @@ MAX_KV, MAX_ARR, MAX_TENSORS, MAX_META = 100_000, 50_000_000, 1_000_000, 512 * 1
+ # derived from the candidate count in `router_file_states` (see the shell wrapper), not from
+ # a constant. Disclosed, unchanged: a file whose declared tensor count exceeds MAX_TENSORS,
+ # or that needs more than MAX_STEPS, is still `-` (undecidable -> loadable, round-89 rule).
+-# The binding ceiling is `5 + nd` steps per tensor header: name u64+skip 2, nd u32 1, one
++# The binding ceiling is a constant six steps per tensor header: name u64+skip 2, nd u32 1, one
+ # u64 dim per rank (`nd`), tensor type+offset 2 = 5 + nd. The preamble costs 4 steps, so
+ # MAX_STEPS = 5 000 000 admits (5 000 000 - 4) // (5 + nd) tensor headers: 833,332 at nd=1,
+ # 714,285 at nd=2, 624,999 at nd=3, 555,555 at nd=4 (S620; round-97 C1/C3). A constant
+
+--- canonical tools/round97-self-assessment-audit.py (lane tool, fixture tree) ---
+SELF_ASSESS97 checks=14 mismatches=0 met=True
+c1_exit=0
+
+--- scratch per-check observer (copy of the frozen tool with P/F reporting) ---
+PERCHECK 1:P 2:P 3:P 4:P 5:P 6:P 7:P 8:P 9:P 10:P 11:P 12:P 13:P 14:P
+SELF_ASSESS97 checks=14 mismatches=0 met=True
+observer_exit=0
+
+--- cross-check only: tools/round97-depth-boundary-audit.py (C3) ---
+DEPTH_BOUNDARY97 rows=6 checks=8 mismatches=0 met=True
+c3_exit=0
