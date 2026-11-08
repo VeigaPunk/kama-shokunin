@@ -3847,3 +3847,40 @@ calibration were the lowest axes (7).
   N = 2…256 distinct slow files and located the probe's 60 s wrapper ceiling at N≈21–24.
 - **After wave 1:** five wave findings landed as this log's repairs — S604 line, SKILL §Round 94 correction,
   registry citations (rows 35–37), lesson dispositions + M4–M7, and this round's SCORECARD section.
+
+## Round 95 — 2026-11-08 (L1 KamaR95)
+
+Base `2011161d5e5612fa953708cf54084b7f10ce99b1`; freeze `c798e831d6703428563a70789d1252dc39503d60`;
+M1 `f63256607916cdeb35580a7af315b5f4b54eba18`; M2 `beef89229c0d6c5b42f1ed937b857648c535c6cf`;
+amendment/measure `719214fa8439e4486b2db898f9776120ca14547d`, `bba10f75b18c7219446da7d2bca81995a381fd7a`.
+Plan `plans/round-95-claims.md`; narrowing `plans/round-95-amendment-1.md`. Shape: one v1 wave, 12 seats
+(2 reviewer, 2 critic, 1 mutation-tester, 1 sentinel, 2 scout, 2 executor, 1 connector, 1 scribe).
+
+- **C1 operability (verified):** the router file-state decision no longer reads a clock. `ROUTER_PY`'s per-file
+  15 s slice and the shared 4 s deadline before it were replaced by a deterministic work bound (`MAX_STEPS`
+  4 000 000 steps, `MAX_META` 512 MiB header position); `router_file_states` runs under `20 + 15 * ncand` seconds
+  instead of the constant `timeout 60`. Counter `tools/round95-router-budget.py` (10 cells, natural + synthetic-load
+  passes): base `a27656a4` `cells=10 mismatches=1 positive_mismatches=1` exit 1 with W03 `MODEL_OK` at 60.20 s
+  (forty distinct slow files truncated, every truncated candidate loadable) → M1 `cells=10 mismatches=0
+  positive_mismatches=0 load_cells=10 load_stable=1 budget=work` exit 0 with W03 `MODEL_UNLOADED` at 81.7 s.
+  Disclosed: a candidate over `MAX_TENSORS`/`MAX_STEPS` stays `-`; the wrapper is still a wall clock at the pass
+  level; a slow `/props` still decides the verdict (round-94 SC02 F4, routed).
+- **C2 depth (verified as instrument coverage):** `SKILL.md` §Listen port and slot-count setters (round 95 revision)
+  — population 92 → 106 (config.ini section scoping, the `common_params` whole-struct carrier at
+  `tools/cli/cli-server.h:43`, the `params_base.n_parallel` realisation reads), and the decision model is one
+  `R20`/`R21` row per entry point (9 rows) instead of one row per parameter, each graded for an exact id set and for
+  its entry's precedence tokens. Counter `tools/round95-setter-sweep.py`: base `population=106 rows=0 missing=106
+  met=False` exit 1 → M2 `population=106 rows=106 bound=106 unbound=0 missing=0 duplicates=0 fabricated=0
+  derived_disagree=0 entries=7 decisions=9 decisions_bound=9 met=True` exit 0.
+- **C3 calibration (verified after narrowing):** `tools/round95-freeze-audit.py` grades a round's own claims
+  statement against the repo. Round-94's plan at its own freeze `285f1783`: `receipts=12 present=0 missing=12` exit 1
+  with the named counter absent and S604 unresolved (the M5/M6 defect, now measurable). Round 95's frozen wording was
+  itself not reachable at F — `measured/c3.out` shows `unresolved=4` (S616/S617 land at M2) and `tokens=0` (the arm
+  needs a single-line backticked command) — so `plans/round-95-amendment-1.md` narrows it: at `bba10f75`
+  `receipts=9 present=9 missing=0 tokens=24 matching=24 cited=14 unresolved=0 met=True` exit 0, plus
+  `git ls-tree c798e831 -- .ufo/waves/round-95/controls` listing the seven freeze receipts.
+- **Frontier step:** census 355 → 357 rows (S616 `tools/server/server-context.cpp`, S617
+  `tools/server/server-schema.cpp`, both @ b12177 with measured sha256), exit 0; one rejection
+  (`tools/cli/README.md` line 56 states `--parallel` default 1, which round-94's measurement falsified for the
+  embedded server; flip recorded); lesson `corpus/lessons/round-95.md` carries `## Gate` and `## Mistakes`
+  (M1 a discriminator that did not discriminate, M2 registry rows outside the table, M3 an invented digest tail).
