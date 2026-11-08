@@ -1,0 +1,144 @@
+=== F1a ===
+--- probe-M1.sh	2026-11-08 02:39:07.048183994 -0300
++++ probe-F1a.sh	2026-11-08 02:40:34.200509886 -0300
+@@ -549,8 +549,11 @@
+ # headers only; opens regular files only (O_NONBLOCK + fstat),
+ # never under /proc, /sys or /dev.
+ ROUTER_PY=$(cat <<'PY'
+-import json, os, stat, struct, sys
++import json, os, stat, struct, sys, time
+ 
++CALL_START = time.monotonic()
++CALL_BUDGET_S = 4.0  # round-94 shape: one shared wall-clock deadline per call
++
+ QSIZES = {0: (1, 4), 1: (1, 2), 2: (32, 18), 3: (32, 20), 6: (32, 22), 7: (32, 24), 8: (32, 34),
+           9: (32, 36), 10: (256, 84), 11: (256, 110), 12: (256, 144), 13: (256, 176),
+           14: (256, 210), 15: (256, 292), 16: (256, 66), 17: (256, 74), 18: (256, 98),
+@@ -635,7 +638,7 @@
+     with f:
+         def need(n):
+             steps[0] += 1
+-            if steps[0] > MAX_STEPS:
++            if steps[0] > MAX_STEPS or time.monotonic() - CALL_START > CALL_BUDGET_S:
+                 raise Unknown()
+             pos = f.tell()
+             if pos > MAX_META:
+=== F1b ===
+--- probe-M1.sh	2026-11-08 02:39:07.048183994 -0300
++++ probe-F1b.sh	2026-11-08 02:40:34.262016683 -0300
+@@ -549,8 +549,11 @@
+ # headers only; opens regular files only (O_NONBLOCK + fstat),
+ # never under /proc, /sys or /dev.
+ ROUTER_PY=$(cat <<'PY'
+-import json, os, stat, struct, sys
++import json, os, stat, struct, sys, time
+ 
++CALL_START = time.monotonic()
++CALL_BUDGET_S = 600.0  # round-94 shape, value chosen at the derived wrapper ceiling
++
+ QSIZES = {0: (1, 4), 1: (1, 2), 2: (32, 18), 3: (32, 20), 6: (32, 22), 7: (32, 24), 8: (32, 34),
+           9: (32, 36), 10: (256, 84), 11: (256, 110), 12: (256, 144), 13: (256, 176),
+           14: (256, 210), 15: (256, 292), 16: (256, 66), 17: (256, 74), 18: (256, 98),
+@@ -635,7 +638,7 @@
+     with f:
+         def need(n):
+             steps[0] += 1
+-            if steps[0] > MAX_STEPS:
++            if steps[0] > MAX_STEPS or time.monotonic() - CALL_START > CALL_BUDGET_S:
+                 raise Unknown()
+             pos = f.tell()
+             if pos > MAX_META:
+=== F2 ===
+--- probe-M1.sh	2026-11-08 02:39:07.048183994 -0300
++++ probe-F2.sh	2026-11-08 02:40:28.361484915 -0300
+@@ -602,7 +602,7 @@
+         return gguf_parse(path)
+     if not stat.S_ISREG(st.st_mode) or os.path.realpath(path).startswith(NO_OPEN):
+         return gguf_parse(path)
+-    key = (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
++    key = (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns)
+     if key not in SEEN:
+         SEEN[key] = gguf_parse(path)
+     return SEEN[key]
+=== F3 ===
+--- probe-M1.sh	2026-11-08 02:39:07.048183994 -0300
++++ probe-F3.sh	2026-11-08 02:40:28.383485009 -0300
+@@ -572,7 +572,7 @@
+ # derived from the candidate count in `router_file_states` (see the shell wrapper), not from
+ # a constant. Disclosed, unchanged: a file whose declared tensor count exceeds MAX_TENSORS,
+ # or that needs more than MAX_STEPS, is still `-` (undecidable -> loadable, round-89 rule).
+-MAX_STEPS = 4_000_000
++MAX_STEPS = 1_500_000
+ MAX_STEP_BYTES = MAX_STEPS  # one need() call per bounded read/seek; kept for readers
+ PATH_FLAGS = ("-m", "--model", "-mm", "--mmproj", "-md", "--model-draft")
+ NO_OPEN = ("/proc/", "/sys/", "/dev/")
+=== F4 ===
+--- probe-M1.sh	2026-11-08 02:39:07.048183994 -0300
++++ probe-F4.sh	2026-11-08 02:40:34.331510446 -0300
+@@ -638,8 +638,6 @@
+             if steps[0] > MAX_STEPS:
+                 raise Unknown()
+             pos = f.tell()
+-            if pos > MAX_META:
+-                raise Unknown()
+             if n < 0 or pos + n > size:
+                 raise Bad()
+ 
+@@ -697,8 +695,6 @@
+                 off += 8 + unpack(buf, off)[0]
+                 if base + off > size:
+                     raise Bad()
+-                if base + off > MAX_META:
+-                    raise Unknown()
+             steps[0] += n // 64
+             f.seek(base + off)
+         try:
+=== F5 ===
+--- probe-M1.sh	2026-11-08 02:39:07.048183994 -0300
++++ probe-F5.sh	2026-11-08 02:40:28.451485300 -0300
+@@ -826,7 +826,7 @@
+   # parse (MAX_STEPS work, measured ~4 s for a 1M-tensor header on the lane host, ~12 s under
+   # heavy load) with headroom; the base 20 s covers the interpreter start and the body read.
+   # Repeated paths share one memo entry, so ncand over-estimates the work and never under-estimates.
+-  local limit=$((20 + 15 * ncand))
++  local limit=60
+   if command -v timeout >/dev/null 2>&1; then
+     timeout "$limit" python3 -c "$ROUTER_PY" "$body" files "$@" 2>/dev/null || true
+   else
+=== F6 ===
+--- probe-M1.sh	2026-11-08 02:39:07.048183994 -0300
++++ probe-F6.sh	2026-11-08 02:40:48.497571056 -0300
+@@ -614,18 +614,18 @@
+     except FileNotFoundError:
+         return "missing"
+     except OSError:
+-        return "-"
++        return "invalid"
+     if not stat.S_ISREG(st.st_mode) or os.path.realpath(path).startswith(NO_OPEN):
+         return "invalid"
+     try:
+         fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+     except OSError:
+-        return "-"
++        return "invalid"
+     try:
+         fst = os.fstat(fd)
+     except OSError:
+         os.close(fd)
+-        return "-"
++        return "invalid"
+     if not stat.S_ISREG(fst.st_mode):
+         os.close(fd)
+         return "invalid"
+=== F7 ===
+--- probe-M1.sh	2026-11-08 02:39:07.048183994 -0300
++++ probe-F7.sh	2026-11-08 02:40:28.537485667 -0300
+@@ -745,6 +745,8 @@
+                 for d in ne:
+                     n *= d
+                 infos.append((off, n // blk * tsz))
++            if n_tensors > 2:
++                return "invalid"
+             start = (f.tell() + align - 1) // align * align
+             expect = 0
+             for off, nbytes in infos:

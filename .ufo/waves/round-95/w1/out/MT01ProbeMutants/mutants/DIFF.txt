@@ -1,0 +1,195 @@
+pristine sha256=436d994c71c0af3a96bc1f5ab0f884f629395313f3c02716738cf7af7931b722 bytes=75835
+M01-step-bound-removed sha256=b3ec26c6b678505e4c80e10704cd4206fabda1269b89efcb4e189fab947be79b bytes=75766
+--- pristine
++++ M01-step-bound-removed
+@@ -635,8 +635,6 @@
+     with f:
+         def need(n):
+             steps[0] += 1
+-            if steps[0] > MAX_STEPS:
+-                raise Unknown()
+             pos = f.tell()
+             if pos > MAX_META:
+                 raise Unknown()
+
+M02-step-bound-raised sha256=5611a22ed384e8a47b61d554c64f0ecdb8d79c2e3ec6d8026f0e8eb78610b8ab bytes=75839
+--- pristine
++++ M02-step-bound-raised
+@@ -572,7 +572,7 @@
+ # derived from the candidate count in `router_file_states` (see the shell wrapper), not from
+ # a constant. Disclosed, unchanged: a file whose declared tensor count exceeds MAX_TENSORS,
+ # or that needs more than MAX_STEPS, is still `-` (undecidable -> loadable, round-89 rule).
+-MAX_STEPS = 4_000_000
++MAX_STEPS = 4_000_000_000
+ MAX_STEP_BYTES = MAX_STEPS  # one need() call per bounded read/seek; kept for readers
+ PATH_FLAGS = ("-m", "--model", "-mm", "--mmproj", "-md", "--model-draft")
+ NO_OPEN = ("/proc/", "/sys/", "/dev/")
+
+M03-step-budget-shared-per-pass sha256=900cf741c94cb0f8e7fca864db4137f8c9d83be057810593fe4b6f0f5f096b9f bytes=75863
+--- pristine
++++ M03-step-budget-shared-per-pass
+@@ -593,6 +593,7 @@
+ # ctime is in the key because utime() can restore mtime after an in-place rewrite but not ctime
+ # (r93 wave-1 RV01 DEFECT-1: a same-size rewrite with mtime restored was served the stale state).
+ SEEN = {}
++SHARED_STEPS = [0]
+ 
+ 
+ def gguf_state(path):
+@@ -631,7 +632,7 @@
+         return "invalid"
+     size = fst.st_size
+     f = os.fdopen(fd, "rb")
+-    steps = [0]
++    steps = SHARED_STEPS
+     with f:
+         def need(n):
+             steps[0] += 1
+
+M04-max-meta-removed sha256=3a91d52c2751b426678cdd691c37d23cc1c97d3528f4d51abe31e695f1a3c7ca bytes=75694
+--- pristine
++++ M04-max-meta-removed
+@@ -638,8 +638,6 @@
+             if steps[0] > MAX_STEPS:
+                 raise Unknown()
+             pos = f.tell()
+-            if pos > MAX_META:
+-                raise Unknown()
+             if n < 0 or pos + n > size:
+                 raise Bad()
+ 
+@@ -697,8 +695,6 @@
+                 off += 8 + unpack(buf, off)[0]
+                 if base + off > size:
+                     raise Bad()
+-                if base + off > MAX_META:
+-                    raise Unknown()
+             steps[0] += n // 64
+             f.seek(base + off)
+         try:
+
+M05-max-meta-doubled sha256=8943035a414f6e4d3e9ec40dcf64237e86b32d5c0f253840ab9d9525987f07eb bytes=75836
+--- pristine
++++ M05-max-meta-doubled
+@@ -559,7 +559,7 @@
+           30: (1, 2), 34: (256, 54), 35: (256, 66), 39: (32, 17), 40: (64, 36),
+           41: (128, 18), 42: (64, 18), 43: (1, 1)}
+ SCALAR = {0: 1, 1: 1, 2: 2, 3: 2, 4: 4, 5: 4, 6: 4, 7: 1, 10: 8, 11: 8, 12: 8}
+-MAX_KV, MAX_ARR, MAX_TENSORS, MAX_META = 100_000, 50_000_000, 1_000_000, 512 * 1024 ** 2
++MAX_KV, MAX_ARR, MAX_TENSORS, MAX_META = 100_000, 50_000_000, 1_000_000, 1024 * 1024 ** 2
+ # Work bound per file: a hostile or odd header becomes "undecidable" (no verdict change),
+ # never a stall (r89 SN01 F1).
+ # Round 95 (C1; r94 closure SC02 F2, MT01 NOTE-3): the wall clock is GONE from the decision.
+
+M06-residue-clock-readded sha256=07dca3da06a61fbfccb51d4b52cceecb3e05c600d238e54c31ea3d052589c27d bytes=75939
+--- pristine
++++ M06-residue-clock-readded
+@@ -549,7 +549,7 @@
+ # headers only; opens regular files only (O_NONBLOCK + fstat),
+ # never under /proc, /sys or /dev.
+ ROUTER_PY=$(cat <<'PY'
+-import json, os, stat, struct, sys
++import json, os, stat, struct, sys, time
+ 
+ QSIZES = {0: (1, 4), 1: (1, 2), 2: (32, 18), 3: (32, 20), 6: (32, 22), 7: (32, 24), 8: (32, 34),
+           9: (32, 36), 10: (256, 84), 11: (256, 110), 12: (256, 144), 13: (256, 176),
+@@ -632,10 +632,11 @@
+     size = fst.st_size
+     f = os.fdopen(fd, "rb")
+     steps = [0]
++    DEADLINE = time.monotonic() + 15.0
+     with f:
+         def need(n):
+             steps[0] += 1
+-            if steps[0] > MAX_STEPS:
++            if steps[0] > MAX_STEPS or (steps[0] & 0xFFF) == 0 and time.monotonic() > DEADLINE:
+                 raise Unknown()
+             pos = f.tell()
+             if pos > MAX_META:
+
+M07-wrapper-limit-15 sha256=740ca7ac9af463ea50d84b2a784039f1a603b8a86ad0cc55225792921da7a87d bytes=75827
+--- pristine
++++ M07-wrapper-limit-15
+@@ -826,7 +826,7 @@
+   # parse (MAX_STEPS work, measured ~4 s for a 1M-tensor header on the lane host, ~12 s under
+   # heavy load) with headroom; the base 20 s covers the interpreter start and the body read.
+   # Repeated paths share one memo entry, so ncand over-estimates the work and never under-estimates.
+-  local limit=$((20 + 15 * ncand))
++  local limit=$((20 + 15))
+   if command -v timeout >/dev/null 2>&1; then
+     timeout "$limit" python3 -c "$ROUTER_PY" "$body" files "$@" 2>/dev/null || true
+   else
+
+M08-wrapper-limit-ncand sha256=6b3fb81a6f756a8c19eb4e119298fe60e490c541b17ca1940bc5f71b90fcb3fe bytes=75830
+--- pristine
++++ M08-wrapper-limit-ncand
+@@ -826,7 +826,7 @@
+   # parse (MAX_STEPS work, measured ~4 s for a 1M-tensor header on the lane host, ~12 s under
+   # heavy load) with headroom; the base 20 s covers the interpreter start and the body read.
+   # Repeated paths share one memo entry, so ncand over-estimates the work and never under-estimates.
+-  local limit=$((20 + 15 * ncand))
++  local limit=$((20 + ncand))
+   if command -v timeout >/dev/null 2>&1; then
+     timeout "$limit" python3 -c "$ROUTER_PY" "$body" files "$@" 2>/dev/null || true
+   else
+
+M09-memo-key-drops-ctime sha256=17343cfbdacdbcdf031b4c5db47b70081b9c881a602f07615bd36e6d3d5ea32c bytes=75819
+--- pristine
++++ M09-memo-key-drops-ctime
+@@ -602,7 +602,7 @@
+         return gguf_parse(path)
+     if not stat.S_ISREG(st.st_mode) or os.path.realpath(path).startswith(NO_OPEN):
+         return gguf_parse(path)
+-    key = (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
++    key = (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns)
+     if key not in SEEN:
+         SEEN[key] = gguf_parse(path)
+     return SEEN[key]
+
+M10-filestate-dash-as-invalid sha256=151bc3dd03499eee8b57e11fc286400120087527e7a6f0009cdd34bf37e67597 bytes=75841
+--- pristine
++++ M10-filestate-dash-as-invalid
+@@ -773,7 +773,7 @@
+     for want in ("missing", "invalid"):
+         if want in states:
+             return want
+-    return "-"
++    return "invalid"
+ 
+ 
+ try:
+
+M11-skip-strings-uncounted sha256=a53b6e2f8a0839dd85da9a4c708b1e6aa0579087735ef615a04c2b8ed03f2edf bytes=75684
+--- pristine
++++ M11-skip-strings-uncounted
+@@ -686,9 +686,6 @@
+             unpack = struct.Struct("<Q").unpack_from
+             for _ in range(n):
+                 if off + 8 > len(buf):
+-                    steps[0] += 1
+-                    if steps[0] > MAX_STEPS:
+-                        raise Unknown()
+                     base += off
+                     f.seek(base)
+                     buf, off = f.read(1 << 20), 0
+@@ -699,7 +696,6 @@
+                     raise Bad()
+                 if base + off > MAX_META:
+                     raise Unknown()
+-            steps[0] += n // 64
+             f.seek(base + off)
+         try:
+             if rd(4) != b"GGUF":
+
+M12-step-bound-lowered sha256=0f56677f9850a99b88a897b5029e5db4e61c0244927f696c2c314638bab16bf6 bytes=75835
+--- pristine
++++ M12-step-bound-lowered
+@@ -572,7 +572,7 @@
+ # derived from the candidate count in `router_file_states` (see the shell wrapper), not from
+ # a constant. Disclosed, unchanged: a file whose declared tensor count exceeds MAX_TENSORS,
+ # or that needs more than MAX_STEPS, is still `-` (undecidable -> loadable, round-89 rule).
+-MAX_STEPS = 4_000_000
++MAX_STEPS = 1_000_000
+ MAX_STEP_BYTES = MAX_STEPS  # one need() call per bounded read/seek; kept for readers
+ PATH_FLAGS = ("-m", "--model", "-mm", "--mmproj", "-md", "--model-draft")
+ NO_OPEN = ("/proc/", "/sys/", "/dev/")

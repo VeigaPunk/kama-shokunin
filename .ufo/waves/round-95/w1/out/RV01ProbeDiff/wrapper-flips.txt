@@ -1,0 +1,41 @@
+# RV01ProbeDiff — same bytes, same command, different host load -> different file-state line
+# Command (both): ./new-run.sh body_1arr.json 1 0
+#   body_1arr.json: one router entry, status.value=unloaded, status.args=["/usr/bin/true","-m",
+#   <abs>/arr49m_bad.gguf]; the file is a 392 MB GGUF v3 whose single KV is an array of
+#   49,000,000 zero-length strings; its true state is `invalid` (bad tensor offset after the array),
+#   reached at 766,014 charged steps (8.4 s user CPU, measured; direct ROUTER_PY call).
+# Wrapper limit for ncand=1: 20+15*1 = 35 s (logged by PATH shim: limit=35).
+
+NEW 1arr run1          load1=157.42->155.46 wall=28.5s lines=1 [0	invalid]
+NEW 1arr run2          load1=155.46->154.01 wall=35.1s lines=0 []          <- killed at 35s
+NEW 1arr run3          load1=154.01->158.76 wall=35.0s lines=0 []          <- killed at 35s
+NEW 1arr run4          load1=158.76->158.74 wall=33.0s lines=1 [0	invalid]
+NEW 1arr lowload run1  load1=97.29->92.91   wall=9.2s  lines=1 [0	invalid]
+NEW 1arr lowload run2  load1=92.91->89.91   wall=9.0s  lines=1 [0	invalid]
+BASE 1arr            (round-94 ROUTER_PY, per-file 15 s clock) wall=15.1s lines=1 [0	-]
+
+# No line for index 0 => router_refine nbad=0 < ncand=1 => unloaded=1
+# => RT_VERDICT=MODEL_OK, reason router-unloaded-autoload (tools/kama-probe.sh:889-899).
+# One line `0 invalid` => nbad=1 == ncand=1 => RT_VERDICT=MODEL_UNLOADED, router-model-invalid.
+# Same bytes, same listing, both outcomes observed at load1 155-158.
+
+# Multipath candidate (ncand=1): one entry with three DISTINCT paths (-m, --mmproj, -md),
+# each a 200 MB GGUF whose single KV is an array of 25,000,000 zero-length strings (8.4 s CPU
+# for 3 paths measured; per-path wall 10.1-15.15 s).
+NEW 3path run1         load1=146.07->143.35 wall=34.7s lines=1 [0	invalid]
+NEW 3path run2         load1=143.35->144.25 wall=35.1s lines=0 []
+NEW 3path run3         load1=144.25->143.08 wall=35.1s lines=0 []
+BASE 3path             load1=143.08->149.58 wall=45.3s lines=1 [0	-]   (each path cut at 15 s)
+BASE 3path run1        load1=109.53->109.52 wall=18.7s lines=1 [0	invalid]
+BASE 3path run2        load1=109.52->107.80 wall=14.4s lines=1 [0	invalid]
+BASE 3path mid-load    load1=142.00->148.26 wall=30.4s lines=1 [0	invalid] (each path 10.1 s)
+# base 3path completed `invalid` in 30.4 s (pass ceiling 60 s) while new's ceiling for ncand=1 is 35 s:
+# a candidate whose three paths total >35 s and <60 s with each path <15 s is base-green / new-truncated.
+
+# Three candidates, three distinct 49M-element files (ncand=3 -> limit 65 s):
+NEW 3arr run1          load1=106.24->104.35 wall=33.3s lines=3 [0 invalid 1 invalid 2 invalid]
+NEW 3arr run2          load1=104.35->105.81 wall=27.1s lines=3 [0 invalid 1 invalid 2 invalid]
+BASE 3arr              load1=105.81->109.53 wall=18.4s lines=3 [0 invalid 1 invalid 2 invalid]
+# At load1 155-158 a single such file alone took 24.7-35.1 s wall; at 15 s/candidate the ncand=3
+# pass (65 s) is under the measured 3 x 24.7 s = 74 s, so the same cell truncates at high load.
+NEW 3path mid-load     load1=148.26->148.31 wall=35.0s lines=0 []          <- killed at 35s

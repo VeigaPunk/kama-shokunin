@@ -3884,3 +3884,21 @@ Plan `plans/round-95-claims.md`; narrowing `plans/round-95-amendment-1.md`. Shap
   (`tools/cli/README.md` line 56 states `--parallel` default 1, which round-94's measurement falsified for the
   embedded server; flip recorded); lesson `corpus/lessons/round-95.md` carries `## Gate` and `## Mistakes`
   (M1 a discriminator that did not discriminate, M2 registry rows outside the table, M3 an invented digest tail).
+- **Wave-1 findings and the in-round repairs (appended after the wave, 2026-11-08).** Eleven of twelve seats
+  reported; `SC02LiveRouter` (live-router comparison) was still running when the report filed and has no report —
+  the wave never settled (`w1-results.json` absent), recorded as a conformance defect. The wave falsified C1's
+  first revision and repaired it in-round: `RV01` reproduced a base-green/new-red regression (one candidate naming
+  three 200 MB-class paths got a 35 s allowance for ~39 s of work) and showed `MAX_STEPS` under-pricing string
+  arrays (766 014 steps for 8 s CPU) → `c810f51e` charges one step per string element and prices the pass allowance
+  by model paths (`20 + 25 * npaths`), re-measured green at M1b. `CR01` (five BLOCKERs) and `MT01` (7/12 survivors)
+  show the frozen counter does not grade `MAX_STEPS`/`MAX_META`, cannot observe the memo key through `W10`, and that
+  the margin guard turns truncating mutants into exit 2; `SC01` holds that the pass wrapper is still a clock;
+  `SN01` finds no BLOCKER/DEFECT against `c810f51e` and confirms no hostile file stalls. `plans/round-95-amendment-4.md`
+  files C1 on three narrowed properties and routed the five instrument gaps. `RV02` falsified four statements of the
+  section's prose (router-child slots, the `[*]` token, the `:43` copy's port, `R21 other`) → `SKILL.md` §Round 95
+  correction c1–c4 (`37820b5b`). `CR02` found `entries=` outside `met` and the carrier rows outside every decision
+  set → amendment 2. `EX01` found the freeze-audit status arm dead (`cells[8]` vs `cells[7]`) and its token arm
+  name-only → amendment 2. `CN01` found the registry's `R18` citations stale → `5fcca5b4`. `EX02` reports all seven
+  K2 harm suites plus a live GET identical at base and tip. The wave's `SC02LiveRouter` seat leaked 64 CPU burners
+  from its own scratch (cwd `kama-r95/SC02LiveRouter`, PPID 1487); the L1 reaped all 64 and records it here as a
+  seat-reaper defect.

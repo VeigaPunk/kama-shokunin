@@ -1,0 +1,41 @@
+valid3(3 tensors,data present)         M1=0	- F3=0	- F6=0	- F7=0	invalid
+ok(1 tensor)                           M1=0	- F3=0	- F6=0	- F7=0	-
+slow(600k tensors)                     M1=0	invalid F3=0	- F6=0	invalid F7=0	invalid
+unreadable(mode 000)                   M1=0	- F3=0	- F6=0	invalid F7=0	-
+Traceback (most recent call last):
+  File "/fast/scratch/hyaku/kama-r95/CR01BudgetCounter/probe-tests/oracle-test.py", line 35, in <module>
+    print("oracle_fixture_class:", {p.name: rb.fixture_class(p) for _, p in tests})
+                                            ~~~~~~~~~~~~~~~~^^^
+  File "/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round95-router-budget.py", line 165, in fixture_class
+    b = path.read_bytes()
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 777, in read_bytes
+    with self.open(mode='rb', buffering=0) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 771, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [Errno 13] Permission denied: '/fast/scratch/hyaku/kama-r95/CR01BudgetCounter/probe-tests/unreadable.gguf'
+ORACLE fixture_class valid3.gguf => invalid
+ORACLE fixture_class ok.gguf => ok
+ORACLE fixture_class slow.gguf => invalid
+ORACLE fixture_class unreadable.gguf => ok
+bigmeta size 600001001
+Traceback (most recent call last):
+  File "<stdin>", line 23, in <module>
+NameError: name 'OUT' is not defined
+bigmeta(>512MiB header position) M1 => '0\t-' rc=0 err=''
+bigmeta(>512MiB header position) F4 => '0\t-' rc=0 err=''
+bigmeta(>512MiB header position) F7 => '0\t-' rc=0 err=''
+bigmeta(>512MiB header position) M1 => '0\t-' rc=0 err=''
+bigmeta(>512MiB header position) F4 => '0\t-' rc=0 err=''
+bigmeta(>512MiB header position) F7 => '0\t-' rc=0 err=''
+len(string)=1000 size=4000 off=128(expect 0) -> M1='0\t-' F4='0\t-'
+len(string)=536800000 size=536900000 off=128(expect 0) -> M1='0\t-' F4='0\t-'
+len(string)=600000000 size=600001000 off=128(expect 0) -> M1='0\t-' F4='0\t-'
+len(string)=1000 off=128 size=4000 -> M1='0\tinvalid' F4='0\tinvalid'
+len(string)=536800000 off=128 size=536900000 -> M1='0\tinvalid' F4='0\tinvalid'
+len(string)=600000000 off=128 size=600001000 -> M1='0\t-' F4='0\tinvalid'
+len(string)=600000000 off=0 size=600001000 -> M1='0\t-' F4='0\t-'
+ORACLE trunc24 => ok
+PROBE trunc24 M1 => '0\tinvalid'
+PROBE trunc24 F7 => '0\tinvalid'

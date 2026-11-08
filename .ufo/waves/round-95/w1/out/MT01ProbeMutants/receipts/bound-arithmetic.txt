@@ -1,0 +1,6 @@
+MAX_STEPS=4000000 MAX_META=536870912 MAX_TENSORS=1000000
+slow.gguf tensors=600000 needs/tensor=5 + 4 header = 3000004 steps -> bound binds: False
+t900k.gguf tensors=900000 -> 4500004 steps -> bound binds: True
+big.gguf tensors=1200000 -> 6000004 steps, but MAX_TENSORS check fires first (1200000 > 1000000)
+string-array charge ceiling under MAX_META: strings<=floor(536870912/8)=67108864 -> n//64=1048576 steps -> binds: False
+=> the skip_strings charge (M11) cannot fire MAX_STEPS while MAX_META bounds the position

@@ -1,0 +1,250 @@
+# HARM SUITE RECEIPT - round 95, claim C1 kill rule K2 (receipt=harm-base)
+receipt=harm-base
+claim=C1 kill-rule K2 (a harm suite regressing against the base receipt)
+seat=EX02HarmSuites round=95 wave=w1
+lane=/home/vgpnk/Projects/shokunin/kama-shokunin
+revision_under_test=2011161d5e5612fa953708cf54084b7f10ce99b1
+probe=tools/kama-probe.sh probe_sha256=27065a5c487ec819a975cc96d3c990ab5161d0e55d82be02a87dde86974ed3b4
+host_nproc=32 (multi-agent box; other seats' waves run concurrently)
+load1_samples=50.19 (wave start) 43.71 (live GET) 136.52 (base round93, counter) 143.35/143.24 (tip round93) 142.90->142.86 (tip round89) 107.74/104.21/104.47/106.46/109.52 (paired A/B round91)
+scratch=/fast/scratch/hyaku/kama-r95/EX02HarmSuites (seat-exclusive; removed before yield)
+isolation=LLAMA_CACHE/HF_HOME=<empty dir in seat scratch> for every suite (round-94 MT01 DEFECT-4); TMPDIR=<seat scratch>/tmp; no suite was skipped for runtime
+live_endpoint_policy=GET only on 127.0.0.1:1234; no POST, load, unload or completion was sent
+probe_bytes=materialised with `git show 2011161d5e5612fa953708cf54084b7f10ce99b1:tools/kama-probe.sh` (sha256 verified); this is base revision B of plans/round-95-claims.md, and its probe sha256 equals the probe_sha256 recorded in the frozen do-nothing control controls/c1-base.out (27065a5c...)
+suite_verdicts=8/8 pass at this revision (7 suites + read-only live GET); regressions_vs_base=0
+
+=== S1 tests/probe-verdicts/check.py ===
+command=python3 tests/probe-verdicts/check.py --probe <probe> --json  (document on stdout, summary on stderr)
+revision=2011161d5e5612fa953708cf54084b7f10ce99b1
+exit=0 tests=77 passes=77 failures=0 wall=45.9s
+[PASS] AuthAndDead.401-authentication-error-envelope (AuthAndDead): verdict=UNAUTHORIZED_SERVICE reason=http-401 exit=2 (expected UNAUTHORIZED_SERVICE/http-401/2) requests=[GET /v1/models, GET /]
+[PASS] AuthAndDead.403-authentication-error-envelope (AuthAndDead): verdict=UNAUTHORIZED_SERVICE reason=http-403 exit=2 (expected UNAUTHORIZED_SERVICE/http-403/2) requests=[GET /v1/models, GET /]
+[PASS] AuthAndDead.401-carrying-loading-envelope (AuthAndDead): verdict=UNAUTHORIZED_SERVICE reason=http-401 exit=2 (expected UNAUTHORIZED_SERVICE/http-401/2) requests=[GET /v1/models, GET /]
+[PASS] AuthAndDead.403-carrying-loading-envelope (AuthAndDead): verdict=UNAUTHORIZED_SERVICE reason=http-403 exit=2 (expected UNAUTHORIZED_SERVICE/http-403/2) requests=[GET /v1/models, GET /]
+[PASS] AuthAndDead.401-plain-text-body (AuthAndDead): verdict=UNAUTHORIZED_SERVICE reason=http-401 exit=2 (expected UNAUTHORIZED_SERVICE/http-401/2) requests=[GET /v1/models, GET /]
+[PASS] AuthAndDead.closed-port-connection-refused (AuthAndDead): verdict=DEAD reason=connection-refused exit=2 (expected DEAD/connection-refused/2)
+[PASS] AuthAndDead.raw-accept-then-close (AuthAndDead): verdict=NOT_HTTP reason=empty-reply exit=2 (expected NOT_HTTP/empty-reply/2) requests=[GET /v1/models]
+[PASS] EnvelopeShapes.InvalidJsonBody (EnvelopeShapes): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] EnvelopeShapes.TopLevelArray (EnvelopeShapes): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] EnvelopeShapes.ErrorAsString (EnvelopeShapes): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] EnvelopeShapes.MissingCode (EnvelopeShapes): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] EnvelopeShapes.CodeAsString (EnvelopeShapes): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] EnvelopeShapes.ExtraFieldsAllowed (EnvelopeShapes): verdict=MODEL_LOADING reason=llamacpp-loading exit=2 (expected MODEL_LOADING/llamacpp-loading/2) requests=[GET /v1/models, GET /health]
+[PASS] EnvelopeShapes.NestedEnvelope (EnvelopeShapes): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] EnvelopeShapes.Padding64KiB (EnvelopeShapes): verdict=MODEL_LOADING reason=llamacpp-loading exit=2 (expected MODEL_LOADING/llamacpp-loading/2) requests=[GET /v1/models, GET /health]
+[PASS] EnvelopeShapes.BomPrefixedJson (EnvelopeShapes): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] ForeignControls.html-index (ForeignControls): verdict=FOREIGN_SERVICE reason=html-non-model exit=2 (expected FOREIGN_SERVICE/html-non-model/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] ForeignControls.openmetrics-text (ForeignControls): verdict=FOREIGN_SERVICE reason=non-model-2xx exit=2 (expected FOREIGN_SERVICE/non-model-2xx/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] ForeignControls.json-no-model-array (ForeignControls): verdict=FOREIGN_SERVICE reason=schema-unrecognized exit=2 (expected FOREIGN_SERVICE/schema-unrecognized/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] ForeignControls.json-data-object-not-array (ForeignControls): verdict=FOREIGN_SERVICE reason=schema-unrecognized exit=2 (expected FOREIGN_SERVICE/schema-unrecognized/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] ForeignControls.not-found-json (ForeignControls): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] ForeignControls.server-error-json (ForeignControls): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] ForeignControls.code-integer-500 (ForeignControls): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] ForeignControls.html-body-sniff-text-plain (ForeignControls): verdict=FOREIGN_SERVICE reason=html-non-model exit=2 (expected FOREIGN_SERVICE/html-non-model/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] LoadingEnvelope.canonical-alias (LoadingEnvelope): verdict=MODEL_LOADING reason=llamacpp-loading exit=2 (expected MODEL_LOADING/llamacpp-loading/2) requests=[GET /v1/models, GET /health]
+[PASS] LoadingEnvelope.wildcard-expect (LoadingEnvelope): verdict=MODEL_LOADING reason=llamacpp-loading exit=2 (expected MODEL_LOADING/llamacpp-loading/2) requests=[GET /v1/models, GET /health]
+[PASS] LoadingEnvelope.dash-expect (LoadingEnvelope): verdict=MODEL_LOADING reason=llamacpp-loading exit=2 (expected MODEL_LOADING/llamacpp-loading/2) requests=[GET /v1/models, GET /health]
+[PASS] LoadingEnvelope.no-server-header (LoadingEnvelope): verdict=MODEL_LOADING reason=llamacpp-loading exit=2 (expected MODEL_LOADING/llamacpp-loading/2) requests=[GET /v1/models, GET /health]
+[PASS] LoadingEnvelope.plain-json-content-type (LoadingEnvelope): verdict=MODEL_LOADING reason=llamacpp-loading exit=2 (expected MODEL_LOADING/llamacpp-loading/2) requests=[GET /v1/models, GET /health]
+[PASS] LoadingEnvelope.key-order-permuted (LoadingEnvelope): verdict=MODEL_LOADING reason=llamacpp-loading exit=2 (expected MODEL_LOADING/llamacpp-loading/2) requests=[GET /v1/models, GET /health]
+[PASS] LoadingEnvelope.pretty-printed-body (LoadingEnvelope): verdict=MODEL_LOADING reason=llamacpp-loading exit=2 (expected MODEL_LOADING/llamacpp-loading/2) requests=[GET /v1/models, GET /health]
+[PASS] LoadingEnvelope.every-non-frontend-path (LoadingEnvelope): verdict=MODEL_LOADING reason=llamacpp-loading exit=2 (expected MODEL_LOADING/llamacpp-loading/2) requests=[GET /v1/models, GET /health]
+[PASS] LoadingRace.HealthAlreadyOk (LoadingRace): verdict=MODEL_LOADING reason=llamacpp-loading exit=2 (expected MODEL_LOADING/llamacpp-loading/2) requests=[GET /v1/models, GET /health]
+[PASS] LoadingRace.HealthExplicit404 (LoadingRace): verdict=MODEL_LOADING reason=llamacpp-loading exit=2 (expected MODEL_LOADING/llamacpp-loading/2) requests=[GET /v1/models, GET /health]
+[PASS] LoadingRace.HealthUnlisted (LoadingRace): verdict=MODEL_LOADING reason=llamacpp-loading exit=2 (expected MODEL_LOADING/llamacpp-loading/2) requests=[GET /v1/models, GET /health]
+[PASS] LoadingRace.HealthAlsoLoading (LoadingRace): verdict=MODEL_LOADING reason=llamacpp-loading exit=2 (expected MODEL_LOADING/llamacpp-loading/2) requests=[GET /v1/models, GET /health]
+[PASS] LoadingRace.HealthConnClosed (LoadingRace): verdict=MODEL_LOADING reason=llamacpp-loading exit=2 (expected MODEL_LOADING/llamacpp-loading/2) requests=[GET /v1/models, GET /health]
+[PASS] LoadingRace.InverseHealthLoadingModelsOk (LoadingRace): verdict=MODEL_OK reason=matched exit=0 (expected MODEL_OK/matched/0) requests=[GET /v1/models, GET /health]
+[PASS] LoadingRace.InverseWildcardExpect (LoadingRace): verdict=MODEL_OK reason=expected-wildcard exit=0 (expected MODEL_OK/expected-wildcard/0) requests=[GET /v1/models, GET /health]
+[PASS] LoadingRace.InverseHealthLoadingIdMismatch (LoadingRace): verdict=MODEL_MISMATCH reason=served-id-mismatch exit=2 (expected MODEL_MISMATCH/served-id-mismatch/2) requests=[GET /v1/models, GET /health]
+[PASS] LoadingRace.HealthOkNonLoading503 (LoadingRace): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] NearMissTriple.code-float-503.0 (NearMissTriple): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] NearMissTriple.code-boolean-true (NearMissTriple): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] NearMissTriple.message-trailing-period (NearMissTriple): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] NearMissTriple.message-surrounding-space (NearMissTriple): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] NearMissTriple.router-stream-owner-loading (NearMissTriple): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] NearMissTriple.empty-503 (NearMissTriple): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] NearMissTriple.readme-key-order-positive (NearMissTriple): verdict=MODEL_LOADING reason=llamacpp-loading exit=2 (expected MODEL_LOADING/llamacpp-loading/2) requests=[GET /v1/models, GET /health]
+[PASS] NearMissTriple.exact-envelope-labelled-html (NearMissTriple): verdict=MODEL_LOADING reason=llamacpp-loading exit=2 (expected MODEL_LOADING/llamacpp-loading/2) requests=[GET /v1/models, GET /health]
+[PASS] NonLoadingStatuses.ok200-json-envelope (NonLoadingStatuses): verdict=FOREIGN_SERVICE reason=schema-unrecognized exit=2 (expected FOREIGN_SERVICE/schema-unrecognized/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] NonLoadingStatuses.ok200-plain-envelope (NonLoadingStatuses): verdict=FOREIGN_SERVICE reason=non-model-2xx exit=2 (expected FOREIGN_SERVICE/non-model-2xx/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] NonLoadingStatuses.err500-envelope (NonLoadingStatuses): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] NonLoadingStatuses.err502-envelope (NonLoadingStatuses): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] NonLoadingStatuses.err504-envelope (NonLoadingStatuses): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] NonLoadingStatuses.err404-envelope (NonLoadingStatuses): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] NonLoadingStatuses.err429-envelope (NonLoadingStatuses): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] Overbroad503.nginx-html-503 (Overbroad503): verdict=FOREIGN_SERVICE reason=html-non-model exit=2 (expected FOREIGN_SERVICE/html-non-model/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] Overbroad503.error-string (Overbroad503): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] Overbroad503.no-slot-available (Overbroad503): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] Overbroad503.lowercase-loading (Overbroad503): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] Overbroad503.server-error-type (Overbroad503): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] Overbroad503.code-string (Overbroad503): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] Overbroad503.no-error-wrapper (Overbroad503): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] Overbroad503.plaintext-loading (Overbroad503): verdict=FOREIGN_SERVICE reason=non-2xx-non-model-http exit=2 (expected FOREIGN_SERVICE/non-2xx-non-model-http/2) requests=[GET /v1/models, GET /, GET /metrics]
+[PASS] ReadyControls.expect-exact-id (ReadyControls): verdict=MODEL_OK reason=matched exit=0 (expected MODEL_OK/matched/0) requests=[GET /v1/models, GET /health]
+[PASS] ReadyControls.expect-wildcard-star (ReadyControls): verdict=MODEL_OK reason=expected-wildcard exit=0 (expected MODEL_OK/expected-wildcard/0) requests=[GET /v1/models, GET /health]
+[PASS] ReadyControls.expect-wildcard-dash (ReadyControls): verdict=MODEL_OK reason=expected-wildcard exit=0 (expected MODEL_OK/expected-wildcard/0) requests=[GET /v1/models, GET /health]
+[PASS] ReadyControls.expect-different-id (ReadyControls): verdict=MODEL_MISMATCH reason=served-id-mismatch exit=2 (expected MODEL_MISMATCH/served-id-mismatch/2) requests=[GET /v1/models, GET /health]
+[PASS] ReadyControls.expect-gguf-path-basename (ReadyControls): verdict=MODEL_OK reason=matched exit=0 (expected MODEL_OK/matched/0) requests=[GET /v1/models, GET /health]
+[PASS] ReadyControls.served-id-carries-gguf-suffix (ReadyControls): verdict=MODEL_OK reason=matched exit=0 (expected MODEL_OK/matched/0) requests=[GET /v1/models, GET /health]
+[PASS] ReadyControls.ollama-name-not-served-id (ReadyControls): verdict=MODEL_MISMATCH reason=served-id-mismatch exit=2 (expected MODEL_MISMATCH/served-id-mismatch/2) requests=[GET /v1/models, GET /health]
+[PASS] ReadyControls.second-data-id-match (ReadyControls): verdict=MODEL_OK reason=matched exit=0 (expected MODEL_OK/matched/0) requests=[GET /v1/models, GET /health]
+[PASS] RouterUnloaded.router-unloaded-no-autoload (RouterUnloaded): verdict=MODEL_UNLOADED reason=router-unloaded exit=2 (expected MODEL_UNLOADED/router-unloaded/2) requests=[GET /v1/models, GET /props, GET /health]
+[PASS] RouterUnloaded.router-unloaded-failed (RouterUnloaded): verdict=MODEL_UNLOADED reason=router-unloaded-failed exit=2 (expected MODEL_UNLOADED/router-unloaded-failed/2) requests=[GET /v1/models, GET /health]
+[PASS] RouterUnloaded.router-model-missing-autoload (RouterUnloaded): verdict=MODEL_UNLOADED reason=router-model-missing exit=2 (expected MODEL_UNLOADED/router-model-missing/2) requests=[GET /v1/models, GET /props, GET /health]
+[PASS] RouterUnloaded.router-model-invalid-non-gguf (RouterUnloaded): verdict=MODEL_UNLOADED reason=router-model-invalid exit=2 (expected MODEL_UNLOADED/router-model-invalid/2) requests=[GET /v1/models, GET /props, GET /health]
+[PASS] RouterUnloaded.router-model-invalid-gguf-v1 (RouterUnloaded): verdict=MODEL_UNLOADED reason=router-model-invalid exit=2 (expected MODEL_UNLOADED/router-model-invalid/2) requests=[GET /v1/models, GET /props, GET /health]
+tests=77 passes=77 failures=0
+WALL=45.93
+
+=== S2 tools/test-snapshot.sh ===
+command=KAMA_PROBE=<probe> bash tools/test-snapshot.sh
+revision=2011161d5e5612fa953708cf54084b7f10ce99b1
+exit=0 pass=30 fail=0 wall=2.8s
+PASS check fixture is MODEL_OK/exit 0
+PASS snapshot exit mirrors clean check
+PASS baseline TSV written
+PASS transition ledger written
+PASS one dated JSON written
+PASS snapshot JSON contract + redaction
+PASS baseline fields are normalized and complete
+PASS first run records baseline, not transitions
+PASS unchanged snapshot stays exit 0
+PASS unchanged snapshot reports zero transitions
+PASS unchanged snapshot leaves DELTA.md byte-stable
+PASS unchanged snapshot leaves latest.tsv byte-stable
+PASS dead fixture makes snapshot exit 2
+PASS MODEL_OK to DEAD transition recorded
+PASS served-id transition recorded
+PASS row-set change preserves drift exit 2
+PASS row-added transition recorded
+PASS row-absent transition recorded
+PASS malformed baseline rebaselines without breaking gate
+PASS malformed baseline warns
+PASS malformed baseline audited
+PASS malformed line never becomes phantom transition
+PASS grown-vocabulary baseline keeps drift exit 2
+PASS MODEL_LOADING baseline row accepted and diffed
+PASS MODEL_LOADING baseline row never audited as malformed
+PASS MODEL_LOADING baseline row never warns
+PASS unknown verdict still warns
+PASS unknown verdict still audited and dropped
+PASS snapshot --port refused with probe-error exit
+PASS symlinked history dir refused
+RESULT pass=30 fail=0
+
+=== S3 tools/round89-unloadable-cells.py ===
+command=LLAMA_CACHE=<empty> HF_HOME=<empty> python3 tools/round89-unloadable-cells.py --repo . --rev <rev> --work <scratch>
+revision=2011161d5e5612fa953708cf54084b7f10ce99b1
+exit=0 cells=11 mismatches=0 positive_mismatches=0 wall=54.5s
+ROUTER_UNLOADABLE_CELL U1-missing-preset oracle=MODEL_UNLOADED http=500 probe=MODEL_UNLOADED reason=router-model-missing ok=1
+ROUTER_UNLOADABLE_CELL U2-not-gguf oracle=MODEL_UNLOADED http=500 probe=MODEL_UNLOADED reason=router-model-invalid ok=1
+ROUTER_UNLOADABLE_CELL U3-bad-header oracle=MODEL_UNLOADED http=500 probe=MODEL_UNLOADED reason=router-model-invalid ok=1
+ROUTER_UNLOADABLE_CELL U4-truncated-half oracle=MODEL_UNLOADED http=500 probe=MODEL_UNLOADED reason=router-model-invalid ok=1
+ROUTER_UNLOADABLE_CELL U5-deleted-after-list oracle=MODEL_UNLOADED http=500 probe=MODEL_UNLOADED reason=router-model-missing ok=1
+ROUTER_UNLOADABLE_CELL P1-valid-unloaded oracle=MODEL_OK http=200 probe=MODEL_OK reason=router-unloaded-autoload ok=1
+ROUTER_UNLOADABLE_CELL P2-valid-loaded oracle=MODEL_OK http=200 probe=MODEL_OK reason=matched ok=1
+ROUTER_UNLOADABLE_CELL N1-valid-unloaded-noautoload oracle=MODEL_UNLOADED http=400 probe=MODEL_UNLOADED reason=router-unloaded ok=1
+ROUTER_UNLOADABLE_CELL N2-bad-header-noautoload oracle=MODEL_UNLOADED http=400 probe=MODEL_UNLOADED reason=router-unloaded ok=1
+ROUTER_UNLOADABLE_CELL P3-valid-sleeping oracle=MODEL_OK http=200 probe=MODEL_OK reason=router-sleeping ok=1
+ROUTER_UNLOADABLE_CELL P4-relative-unloaded oracle=MODEL_OK http=200 probe=MODEL_OK reason=router-unloaded-autoload ok=1
+ROUTER_UNLOADABLE cells=11 mismatches=0 positive_mismatches=0 probe=rev probe_sha256=27065a5c487ec819a975cc96d3c990ab5161d0e55d82be02a87dde86974ed3b4 server_sha256=ba272ee3446d9b98c9150c79667e6a8b217f25ee58ce0c6156cc96d2b5b362b0 rev=2011161d5e5612fa953708cf54084b7f10ce99b1
+
+=== S4 tools/round90-hostile-answers.py ===
+command=python3 tools/round90-hostile-answers.py --repo . --rev <rev> --work <scratch>
+revision=2011161d5e5612fa953708cf54084b7f10ce99b1
+exit=0 cells=13 mismatches=0 positive_mismatches=0 wall=9.8s
+HOSTILE_ANSWERS_CELL H1-oversize-length ok=1 sent=2621512 verdict=FOREIGN_SERVICE
+HOSTILE_ANSWERS_CELL H2-oversize-close ok=1 sent=6488136 verdict=FOREIGN_SERVICE
+HOSTILE_ANSWERS_CELL H3-props-oversize ok=1 sent=6357044 verdict=MODEL_UNLOADED
+HOSTILE_ANSWERS_CELL H4-id-newline-table ok=1 rc=0 forged_lines=0 header_cols=7 empty_header_cols=0
+HOSTILE_ANSWERS_CELL H5-id-c0-json ok=1 rc=0 verdict=MODEL_OK c0=0
+HOSTILE_ANSWERS_CELL H6-id-esc-table ok=1 rc=0 esc=0
+HOSTILE_ANSWERS_CELL H7-server-header-esc ok=1 table_rc=0 esc=0 json_rc=0 json=ok
+HOSTILE_ANSWERS_CELL H8-status-value-c0 ok=1 table_rc=2 esc=0 json_rc=2 json=ok
+HOSTILE_ANSWERS_CELL P1-plain ok=1 verdict=MODEL_OK reason=matched table_rc=0 table_ok=1
+HOSTILE_ANSWERS_CELL P2-large-legit ok=1 verdict=MODEL_OK reason=matched
+HOSTILE_ANSWERS_CELL P3-unicode-id ok=1 verdict=MODEL_OK reason=matched served_eq=1 table_rc=0 table_ok=1
+HOSTILE_ANSWERS_CELL P4-json-specials ok=1 verdict=MODEL_OK reason=matched served_eq=1
+HOSTILE_ANSWERS_CELL P5-wildcard ok=1 verdict=MODEL_OK reason=expected-wildcard
+HOSTILE_ANSWERS cells=13 mismatches=0 positive_mismatches=0 probe=rev probe_sha256=27065a5c487ec819a975cc96d3c990ab5161d0e55d82be02a87dde86974ed3b4 rev=2011161d5e5612fa953708cf54084b7f10ce99b1
+
+=== S5 tools/round91-answer-time.py ===
+command=python3 tools/round91-answer-time.py --repo . --rev <rev> --work <scratch>
+revision=2011161d5e5612fa953708cf54084b7f10ce99b1
+exit=0 cells=12 mismatches=0 positive_mismatches=0 wall=14.5s
+ANSWER_TIME_CELL T1-ids-200k-last ok=1 verdict=MODEL_OK reason=matched seconds=1.98
+ANSWER_TIME_CELL T2-ids-200k-absent ok=1 verdict=MODEL_MISMATCH reason=served-id-mismatch seconds=1.20
+ANSWER_TIME_CELL T3-router-80k-last ok=1 verdict=MODEL_OK reason=matched seconds=1.05
+ANSWER_TIME_CELL T4-id-3900k ok=1 verdict=MODEL_OK reason=matched seconds=2.02
+ANSWER_TIME_CELL T5-id-3800k-slashes ok=1 verdict=MODEL_OK reason=matched seconds=2.93
+ANSWER_TIME_CELL P1-plain ok=1 verdict=MODEL_OK reason=matched seconds=0.16
+ANSWER_TIME_CELL P2-path-gguf ok=1 verdict=MODEL_OK reason=matched seconds=0.15
+ANSWER_TIME_CELL P3-one-gguf-only ok=1 verdict=MODEL_MISMATCH reason=served-id-mismatch seconds=0.11
+ANSWER_TIME_CELL P4-unicode-id ok=1 verdict=MODEL_OK reason=matched seconds=0.13
+ANSWER_TIME_CELL P5-json-specials ok=1 verdict=MODEL_OK reason=matched seconds=0.13
+ANSWER_TIME_CELL P6-mismatch ok=1 verdict=MODEL_MISMATCH reason=served-id-mismatch seconds=0.10
+ANSWER_TIME_CELL P7-wildcard ok=1 verdict=MODEL_OK reason=expected-wildcard seconds=0.11
+ANSWER_TIME cells=12 mismatches=0 positive_mismatches=0 probe=rev probe_sha256=27065a5c487ec819a975cc96d3c990ab5161d0e55d82be02a87dde86974ed3b4 rev=2011161d5e5612fa953708cf54084b7f10ce99b1
+
+=== S6 tools/round92-linear-paths.py ===
+command=python3 tools/round92-linear-paths.py --repo . --rev <rev> --work <scratch>
+revision=2011161d5e5612fa953708cf54084b7f10ce99b1
+exit=0 cells=15 mismatches=0 positive_mismatches=0 wall=31.3s
+LINEAR_PATHS_CELL D1-backslash-2000 ok=1 verdict=MODEL_MISMATCH reason=served-id-mismatch seconds=0.11 equal_to_base=1 rc_m=2 rc_base=2
+LINEAR_PATHS_CELL D2-quote-2000 ok=1 verdict=MODEL_MISMATCH reason=served-id-mismatch seconds=0.11 equal_to_base=1 rc_m=2 rc_base=2
+LINEAR_PATHS_CELL D3-router-50-unloaded-wild ok=1 verdict=MODEL_UNLOADED reason=router-unloaded seconds=0.15 equal_to_base=1 rc_m=2 rc_base=2
+LINEAR_PATHS_CELL D4-router-50-unloaded-then-loaded ok=1 verdict=MODEL_OK reason=matched seconds=0.15 equal_to_base=1 rc_m=0 rc_base=0
+LINEAR_PATHS_CELL D5-check-mixed-specials ok=1 verdict=MODEL_OK reason=matched seconds=0.14 equal_to_base=1 rc_m=0 rc_base=0
+LINEAR_PATHS_CELL D6-snapshot-mixed ok=1 seconds=0.19 equal_to_base=1 rc_m=0 rc_base=0
+LINEAR_PATHS_CELL D7-snapshot-50-paths ok=1 seconds=0.20 equal_to_base=1 rc_m=0 rc_base=0 rule_served=1
+LINEAR_PATHS_CELL D8-router-mixed-wild ok=1 verdict=MODEL_LOADING reason=router-loading seconds=0.15 equal_to_base=1 rc_m=2 rc_base=2
+LINEAR_PATHS_CELL D9-router-autoload-missing-files ok=1 verdict=MODEL_OK reason=router-unloaded-autoload seconds=0.21 equal_to_base=1 rc_m=0 rc_base=0
+LINEAR_PATHS_CELL L1-jstr-backslash ok=1 verdict=MODEL_MISMATCH reason=served-id-mismatch seconds=3.45 served_scaled=1
+LINEAR_PATHS_CELL L2-jstr-quote ok=1 verdict=MODEL_MISMATCH reason=served-id-mismatch seconds=5.17 served_scaled=1
+LINEAR_PATHS_CELL L3-router-wild ok=1 verdict=MODEL_UNLOADED reason=router-unloaded seconds=5.87 same_as_D3=1
+LINEAR_PATHS_CELL L4-router-same-id ok=1 verdict=MODEL_OK reason=matched seconds=4.37 
+LINEAR_PATHS_CELL L5-snapshot-16000 ok=1 seconds=1.68 rc=0 served_len=111999 served_rule=1
+LINEAR_PATHS_CELL L6-snapshot-noslash ok=1 seconds=1.04 rc=2 served_len=200000 served_rule=1
+LINEAR_PATHS cells=15 mismatches=0 positive_mismatches=0 probe=rev probe_sha256=27065a5c487ec819a975cc96d3c990ab5161d0e55d82be02a87dde86974ed3b4 base_sha256=0aa43573be3a52fa22d9b419049814133324e423dcd22429f107ad28ee0a75da rev=2011161d5e5612fa953708cf54084b7f10ce99b1
+
+=== S7 tools/round93-router-repeat.py ===
+command=python3 tools/round93-router-repeat.py --repo . --rev <rev> --work <scratch>
+revision=2011161d5e5612fa953708cf54084b7f10ce99b1
+exit=0 cells=10 mismatches=0 positive_mismatches=0 wall=82.7s
+ROUTER_REPEAT_CELL R01-slow-x1 ok=1 want=MODEL_UNLOADED/router-model-invalid run1=MODEL_UNLOADED/router-model-invalid/2.09s run2=MODEL_UNLOADED/router-model-invalid/1.81s run3=MODEL_UNLOADED/router-model-invalid/2.24s
+ROUTER_REPEAT_CELL R02-slow-x8 ok=1 want=MODEL_UNLOADED/router-model-invalid run1=MODEL_UNLOADED/router-model-invalid/1.71s run2=MODEL_UNLOADED/router-model-invalid/2.00s run3=MODEL_UNLOADED/router-model-invalid/1.86s
+ROUTER_REPEAT_CELL R03-slow-x64 ok=1 want=MODEL_UNLOADED/router-model-invalid run1=MODEL_UNLOADED/router-model-invalid/1.56s run2=MODEL_UNLOADED/router-model-invalid/1.47s run3=MODEL_UNLOADED/router-model-invalid/3.67s
+ROUTER_REPEAT_CELL R04-slow-x2048 ok=1 want=MODEL_UNLOADED/router-model-invalid run1=MODEL_UNLOADED/router-model-invalid/3.01s run2=MODEL_UNLOADED/router-model-invalid/4.18s run3=MODEL_UNLOADED/router-model-invalid/6.06s
+ROUTER_REPEAT_CELL R05-slow-aliases ok=1 want=MODEL_UNLOADED/router-model-invalid run1=MODEL_UNLOADED/router-model-invalid/4.52s run2=MODEL_UNLOADED/router-model-invalid/2.88s run3=MODEL_UNLOADED/router-model-invalid/3.39s
+ROUTER_REPEAT_CELL R06-slow-mmproj-x64 ok=1 want=MODEL_UNLOADED/router-model-invalid run1=MODEL_UNLOADED/router-model-invalid/2.24s run2=MODEL_UNLOADED/router-model-invalid/2.01s run3=MODEL_UNLOADED/router-model-invalid/4.16s
+ROUTER_REPEAT_CELL P01-ok-x64 ok=1 want=MODEL_OK/router-unloaded-autoload run1=MODEL_OK/router-unloaded-autoload/0.61s run2=MODEL_OK/router-unloaded-autoload/0.86s run3=MODEL_OK/router-unloaded-autoload/0.61s
+ROUTER_REPEAT_CELL P02-slow-then-ok ok=1 want=MODEL_OK/router-unloaded-autoload run1=MODEL_OK/router-unloaded-autoload/3.85s run2=MODEL_OK/router-unloaded-autoload/3.07s run3=MODEL_OK/router-unloaded-autoload/4.79s
+ROUTER_REPEAT_CELL P03-missing-x64 ok=1 want=MODEL_UNLOADED/router-model-missing run1=MODEL_UNLOADED/router-model-missing/0.82s run2=MODEL_UNLOADED/router-model-missing/0.88s run3=MODEL_UNLOADED/router-model-missing/1.08s
+ROUTER_REPEAT_CELL P04-slow-x1-mixed ok=1 want=MODEL_UNLOADED/router-model-missing run1=MODEL_UNLOADED/router-model-missing/4.53s run2=MODEL_UNLOADED/router-model-missing/2.48s run3=MODEL_UNLOADED/router-model-missing/2.97s
+ROUTER_REPEAT cells=10 mismatches=0 positive_mismatches=0 probe=rev probe_sha256=27065a5c487ec819a975cc96d3c990ab5161d0e55d82be02a87dde86974ed3b4 base_sha256=36631d498901c40f76e1c36471166fecb71a2e84124c4795c301e9e8e5cbf962 rev=2011161d5e5612fa953708cf54084b7f10ce99b1 load1=136.52
+
+=== S8 operator llama.cpp router 127.0.0.1:1234 (read-only GET) ===
+command=curl -sS -m 10 http://127.0.0.1:1234/v1/models ; curl -sS -m 10 http://127.0.0.1:1234/props
+revision=n/a (live host service, not a lane revision; identical measurement in both receipts)
+GET http://127.0.0.1:1234/v1/models -> 200 (4054 bytes, 0.033s)
+GET http://127.0.0.1:1234/props        -> 200 (233 bytes, 0.002s)
+router_identity: role=router models_autoload=True max_instances=2 build_info=b1-39febd2
+served_entries: n=4 ids=[LFM3-1.7B, LFM3-1.7B-Uncensored, LFM3-Omni-2B, LFM3-VL-2B] status=[unloaded, unloaded, unloaded, unloaded]
+scope: read-only GETs only. The probe under test was NOT pointed at port 1234 (it would also GET /health and
+read the candidates' local files); the two receipts grade the probe on lane-owned stubs and lane-owned children.
+-- /props body --
+{"role":"router","max_instances":2,"models_autoload":true,"model_alias":"llama-server","model_path":"none","default_generation_settings":{"params":null,"n_ctx":0},"ui_settings":{},"build_info":"b1-39febd2","cors_proxy_enabled":false}
+-- /v1/models body --
+{"data":[{"id":"LFM3-1.7B","aliases":[],"tags":[],"object":"model","owned_by":"llamacpp","created":1794116079,"status":{"value":"unloaded","args":["/home/vgpnk/src/llama.cpp/build/bin/llama-server","--host","127.0.0.1","--jinja","--log-colors","off","--port","0","--sleep-idle-seconds","600","--alias","LFM3-1.7B","--ctx-size","32768","--model","/home/vgpnk/models/lfm3/LFM3-1.7B/LFM3-1.7B-Q8_0.gguf","--n-gpu-layers","99"],"preset":"[LFM3-1.7B]\njinja = 1\nlog-colors = off\nsleep-idle-seconds = 600\nctx-size = 32768\nmodel = /home/vgpnk/models/lfm3/LFM3-1.7B/LFM3-1.7B-Q8_0.gguf\nn-gpu-layers = 99\n\n"},"architecture":{"input_modalities":["text"],"output_modalities":["text"]},"source":"models_dir","can_remove":false,"context_length":262144},{"id":"LFM3-1.7B-Uncensored","aliases":[],"tags":[],"object":"model","owned_by":"llamacpp","created":1794116079,"status":{"value":"unloaded","args":["/home/vgpnk/src/llama.cpp/build/bin/llama-server","--host","127.0.0.1","--jinja","--log-colors","off","--min-p","0.0","--port","0","--no-reasoning-preserve","--repeat-penalty","1.1","--sleep-idle-seconds","600","--spec-ngram-map-k-size-m","32","--spec-ngram-map-k-size-n","4","--spec-type","ngram-map-k","--temperature","0.1","--top-k","50","--top-p","1.0","--alias","LFM3-1.7B-Uncensored","--batch-size","2048","--ctx-size","262144","--cache-ram","4096","--flash-attn","on","--kv-unified","--model","/home/vgpnk/models/lfm3/LFM3-1.7B-Uncensored/LFM3-1.7B-Uncensored-AD-Q6_K.gguf","--n-gpu-layers","99","--parallel","4","--ubatch-size","1024"],"preset":"[LFM3-1.7B-Uncensored]\njinja = 1\nlog-colors = off\nmin-p = 0.0\nreasoning-preserve = false\nrepeat-penalty = 1.1\nsleep-idle-seconds = 600\nspec-ngram-map-k-size-m = 32\nspec-ngram-map-k-size-n = 4\nspec-type = ngram-map-k\ntemperature = 0.1\ntop-k = 50\ntop-p = 1.0\nbatch-size = 2048\nctx-size = 262144\ncache-ram = 4096\nflash-attn = on\nkv-unified = true\nmodel = /home/vgpnk/models/lfm3/LFM3-1.7B-Uncensored/LFM3-1.7B-Uncensored-AD-Q6_K.gguf\nn-gpu-layers = 99\nparallel = 4\nubatch-size = 1024\n\n"},"architecture":{"input_modalities":["text"],"output_modalities":["text"]},"source":"preset","can_remove":false,"context_length":262144},{"id":"LFM3-Omni-2B","aliases":[],"tags":[],"object":"model","owned_by":"llamacpp","created":1794116079,"status":{"value":"unloaded","args":["/home/vgpnk/src/llama.cpp/build/bin/llama-server","--host","127.0.0.1","--jinja","--log-colors","off","--port","0","--sleep-idle-seconds","600","--alias","LFM3-Omni-2B","--ctx-size","32768","--model","/home/vgpnk/models/lfm3/LFM3-Omni-2B/LFM3-Omni-2B-Q8_0.gguf","--mmproj","/home/vgpnk/models/lfm3/LFM3-Omni-2B/mmproj-LFM3-Omni-2B-Q8_0.gguf","--n-gpu-layers","99"],"preset":"[LFM3-Omni-2B]\njinja = 1\nlog-colors = off\nsleep-idle-seconds = 600\nctx-size = 32768\nmodel = /home/vgpnk/models/lfm3/LFM3-Omni-2B/LFM3-Omni-2B-Q8_0.gguf\nmmproj = /home/vgpnk/models/lfm3/LFM3-Omni-2B/mmproj-LFM3-Omni-2B-Q8_0.gguf\nn-gpu-layers = 99\n\n"},"architecture":{"input_modalities":["text","image","audio"],"output_modalities":["text","audio"]},"source":"models_dir","can_remove":false,"context_length":128000},{"id":"LFM3-VL-2B","aliases":[],"tags":[],"object":"model","owned_by":"llamacpp","created":1794116079,"status":{"value":"unloaded","args":["/home/vgpnk/src/llama.cpp/build/bin/llama-server","--host","127.0.0.1","--jinja","--log-colors","off","--port","0","--sleep-idle-seconds","600","--alias","LFM3-VL-2B","--ctx-size","32768","--model","/home/vgpnk/models/lfm3/LFM3-VL-2B/LFM3-VL-2B-Q8_0.gguf","--mmproj","/home/vgpnk/models/lfm3/LFM3-VL-2B/mmproj-LFM3-VL-2B-Q8_0.gguf","--n-gpu-layers","99"],"preset":"[LFM3-VL-2B]\njinja = 1\nlog-colors = off\nsleep-idle-seconds = 600\nctx-size = 32768\nmodel = /home/vgpnk/models/lfm3/LFM3-VL-2B/LFM3-VL-2B-Q8_0.gguf\nmmproj = /home/vgpnk/models/lfm3/LFM3-VL-2B/mmproj-LFM3-VL-2B-Q8_0.gguf\nn-gpu-layers = 99\n\n"},"architecture":{"input_modalities":["text","image"],"output_modalities":["text"]},"source":"models_dir","can_remove":false,"context_length":128000}],"object":"list"}
+
+=== CROSS-REVISION DIFF (digests, timings, ports, revs, sent-byte counts stripped) ===
+check: IDENTICAL (no behaviour-bearing line differs)
+snapshot: IDENTICAL (no behaviour-bearing line differs)
+round89: IDENTICAL (no behaviour-bearing line differs)
+round90: IDENTICAL (no behaviour-bearing line differs)
+round91: IDENTICAL (no behaviour-bearing line differs)
+round92: IDENTICAL (no behaviour-bearing line differs)
+round93: IDENTICAL (no behaviour-bearing line differs)
+
+residual raw differences (before the port/rev/sent strip): check.py evidence strings carry the ephemeral stub port and curl milliseconds; round90 H1/H2/H3 `sent=` byte counts vary per run (H1 2621512 vs 72 bytes) because the stub counts socket writes, and both runs are under the 16 MiB cap the cell grades; every summary line carries its own sha256/rev.

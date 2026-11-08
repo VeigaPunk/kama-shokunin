@@ -1,0 +1,33 @@
+# RV01ProbeDiff receipts — 2026-11-08T05:48:54Z host=plazir27 nproc=32 load1=121.62
+
+## (a) no clock in ROUTER_PY
+$ grep -n "time\.\|DEADLINE\|PER_FILE" new-router.py  (extracted from tools/kama-probe.sh @ f6325660)
+exit=1 (1 = no match)
+
+## (c) timeout argument actually passed (PATH shim logs argv[1])
+limit=35
+limit=140
+limit=620
+limit=30740
+
+## (b) direct ROUTER_PY calls: state, steps, CPU
+/fast/scratch/hyaku/kama-r95/RV01ProbeDiff/fx/tens900k.gguf	state=-	steps=4000001	wall=8.912s
+  cpu fx=tens900k.gguf load1=121.62 user=1.92 sys=0.27 wall=9.13
+/fast/scratch/hyaku/kama-r95/RV01ProbeDiff/fx/arr49m_bad.gguf	state=invalid	steps=766014	wall=27.436s
+  cpu fx=arr49m_bad.gguf load1=127.18 user=7.89 sys=0.09 wall=27.72
+/fast/scratch/hyaku/kama-r95/RV01ProbeDiff/fx/big200.gguf	state=invalid	steps=390831	wall=8.522s
+  cpu fx=big200.gguf load1=132.93 user=4.02 sys=0.03 wall=8.67
+/fast/scratch/hyaku/kama-r95/RV01ProbeDiff/fx/plain200.bin	state=invalid	steps=1	wall=0.001s
+  cpu fx=plain200.bin load1=134.73 user=0.03 sys=0.00 wall=0.09
+/fast/scratch/hyaku/kama-r95/RV01ProbeDiff/fx/fast_bad.bin	state=invalid	steps=1	wall=0.000s
+  cpu fx=fast_bad.bin load1=134.73 user=0.03 sys=0.00 wall=0.17
+/fast/scratch/hyaku/kama-r95/RV01ProbeDiff/fx/ok.gguf	state=ok	steps=10	wall=0.002s
+  cpu fx=ok.gguf load1=134.73 user=0.03 sys=0.00 wall=0.21
+
+## (b) base ROUTER_PY (15s per-file clock) on the same fixtures
+0	-
+  base fx=tens900k.gguf load1=134.73 user=2.02 sys=0.24 wall=11.23
+0	-
+  base fx=arr49m_bad.gguf load1=137.00 user=7.59 sys=0.08 wall=15.09
+0	invalid
+  base fx=big200.gguf load1=139.10 user=4.02 sys=0.04 wall=14.06

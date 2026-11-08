@@ -1,0 +1,22 @@
+Paired A/B of tools/round91-answer-time.py, base vs tip, interleaved (base,tip,base,tip).
+load1 at each run: base#1 107.74, tip#1 104.21, base#2 104.47, tip#2 106.46 (host nproc=32).
+Each cell's value is the MINIMUM of its two runs; all 12 cells exit ok=1 at both revisions.
+
+cell                    base_min   tip_min  ratio
+T1-ids-200k-last           3.640     3.210   0.88
+T2-ids-200k-absent         2.560     2.000   0.78
+T3-router-80k-last         1.980     2.590   1.31
+T4-id-3900k                2.800     3.650   1.30
+T5-id-3800k-slashes        3.760     4.470   1.19
+P1-plain                   0.420     0.340   0.81
+P2-path-gguf               0.350     0.300   0.86
+P3-one-gguf-only           0.350     0.340   0.97
+P4-unicode-id              0.480     0.380   0.79
+P5-json-specials           0.480     0.470   0.98
+P6-mismatch                0.280     0.410   1.46
+P7-wildcard                0.320     0.390   1.22
+
+P cells (control: plain /v1/models lists, they do not enter the router file-state path): median ratio 0.97
+T cells (large-answer cells): median ratio 1.19
+
+Reading: at matched load the two revisions are within noise of each other (T median 1.19, P control 0.97). The 3-4x difference seen in the single-shot base(load~44) vs tip(load~130+) comparison is host load, not the round-95 change: the P cells, which the diff cannot touch, scaled by the same factor.
