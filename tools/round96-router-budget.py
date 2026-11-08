@@ -16,7 +16,7 @@ was still capped by the constant `timeout 60`, so a listing of >=~20 distinct sl
 left the truncated candidates `-`, and graded `MODEL_OK` for a model that can never load.
 
 Round-95 probe change (tools/kama-probe.sh ROUTER_PY): the clock is removed from the decision.
-Work is bounded deterministically - `MAX_STEPS` (4 000 000) counts the parser's read/seek steps,
+Work is bounded deterministically - `MAX_STEPS` (5 000 000) counts the parser's read/seek steps,
 `MAX_META` (512 MiB) caps the header position - so a candidate's state is a pure function of its
 bytes, and the pass-level limit is derived from the candidate count (`20 + 25 * npaths` seconds).
 
@@ -43,7 +43,8 @@ Fixtures (deterministic bytes, in the run's private work dir):
   big.gguf        GGUF v3 declaring 1 200 000 tensors (> MAX_TENSORS) -> `-` (disclosed limit)
   mid.gguf        GGUF v3, 700 000 tensor infos, no data section -> `invalid` (steps 6 x 700 000 =
                   4 200 000 <= MAX_STEPS 5 000 000 at M1; `-` at base -> the W11 discriminator)
-  strbig.gguf     GGUF v3, 0 tensors, one uint32 string array of 6 000 000 elements -> `-` (disclosed)
+  strbig.gguf     GGUF v3, 0 tensors, one uint32 string array of 6 000 000 one-byte strings
+                  (54 MB: each element carries its u64 length) -> `-` (disclosed)
   missing         a path under the work dir that does not exist
 
 Cells (expect `good`; verdict/reason read from `check --json` rows[0]):
@@ -165,10 +166,16 @@ def gguf_strbig() -> bytes:
     # one KV entry: key "k", value a uint32 string array (type 9) of 6 000 000 one-char
     # strings (element type 8). Element count > MAX_STEPS, so the probe's step budget
     # governs the decision and grades `-`.
+    # Round 96 amendment 2 (RV01 F1): a string array of N elements needs N length prefixes, so the
+    # array must carry 8 * N bytes before any payload; the first version wrote one 6 MB element and
+    # the probe's `base + 8 * n > size` guard graded the file `invalid` before the step budget ran.
+    # 9 bytes per element (one-byte string + its u64 length) = 54 MB, so the per-element loop trips
+    # MAX_STEPS at element 5 000 001 and the state is `-` (undecidable -> loadable).
+    n = 6_000_000
     out = [b"GGUF", struct.pack("<I", 3), struct.pack("<QQ", 0, 1)]
     out.append(struct.pack("<Q", 1) + b"k")
-    out.append(struct.pack("<IIQ", 9, 8, 6_000_000))
-    out.append(struct.pack("<Q", 1) + b"x" * 6_000_000)
+    out.append(struct.pack("<IIQ", 9, 8, n))
+    out.append(struct.pack("<Q", 1) * n + b"x" * n)
     return b"".join(out)
 
 
@@ -466,7 +473,7 @@ def main() -> int:
             print(f"ROUTER_BUDGET96_UNSTABLE {cid} natural={nv} loaded={lv}", flush=True)
         if not (ng and lg):
             mismatches += 1
-            if cid.startswith("W0") and cid not in ("W09-undecided-big",):
+            if cid not in ("W09-undecided-big", "W12-strings"):
                 positive_mismatches += 1
     print(f"ROUTER_BUDGET96 cells={len(cids)} mismatches={mismatches} "
           f"positive_mismatches={positive_mismatches} load_cells={len(cids)} load_stable={load_stable} "

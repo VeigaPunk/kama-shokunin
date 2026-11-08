@@ -2426,6 +2426,16 @@ readings are here, and every registry row, decision or future row cites these.
   is why `R21 other` cites P52–P54 and not P16. A row's Entry cell is single-valued, so "reaches other tools" is not
   an entry: it is the reason those tools carry their own setter rows.
 
-### Round 96 correction (step-cost table; dated 2026-11-08)
+### Round 96 correction (step-cost table; dated 2026-11-08; amended by wave-1 RV01)
 
-The binding tensor ceiling is the step budget, not the `MAX_TENSORS` constant. One tensor header costs **1 tensor header = 6 steps** (name `u64`+skip 2: u64 1 + skip 1; `nd` `u32` 1; dims `u64` 1; type `u32` + offset `u64` 2), priced read-by-read from `tools/kama-probe.sh` (`need()` charges one step per call). With `MAX_STEPS = 5 000 000` the ceiling is 5 000 000 / 6 = **833 333 tensor headers** (ceiling 833,333), and a 700 000-tensor file needed 4 200 000 steps — at 4 000 000 it graded `-` (undecidable → loadable) while the router oracle said failed. KV/string-array work also charges steps, so the effective tensor ceiling is slightly lower than 6-per-header alone. Sourced on S618 (`ggml/include/ggml.h` @ b12177, sha256 `590e00a5…67392`, opened 2026-11-08): "nb[0] = ggml_type_size(type)" (line 697).
+The binding tensor ceiling is the step budget, not the `MAX_TENSORS` constant. One tensor header costs **`5 + nd` steps** (`nd` = rank), priced read-by-read from `tools/kama-probe.sh` (`need()` charges one step per call): name `u64` length + `skip` = 2, `nd` `u32` = 1, `nd` dims `u64` = `nd`, type `u32` + offset `u64` = 2. Six steps is the `nd = 1` case only. Four preamble steps are paid before the first header (magic, version, `n_tensors`, `n_kv`), so the decidable-header count at `MAX_STEPS = 5 000 000` is `(5 000 000 - 4) / (5 + nd)`:
+
+| `nd` | steps/header | decidable headers |
+|---|---|---|
+| 0 | 5 | 999,999 |
+| 1 | 6 | 833,332 |
+| 2 | 7 | 714,285 |
+| 3 | 8 | 625,000 |
+| 4 | 9 | 555,555 |
+
+At the old `MAX_STEPS = 4 000 000` the `nd = 1` ceiling was 666,666, so a 700 000-tensor file (4 200 004 steps) graded `-` — undecidable → loadable, the round-89 rule, i.e. `MODEL_OK` for a file the router rejects. That file now decides `invalid` at `nd ≤ 2` and stays `-` at `nd ≥ 3`; a listing's real ceiling is the average rank of its headers. KV and string-array work also charges steps. Sourced on S618 (`ggml/include/ggml.h` @ b12177, sha256 `590e00a5…67392`, opened 2026-11-08): "nb[0] = ggml_type_size(type)" (line 697).

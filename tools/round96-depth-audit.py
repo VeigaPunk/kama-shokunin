@@ -19,8 +19,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-STEPS_PER_HEADER = 6
-CEILING = 833_333  # 5_000_000 / 6 = 833 333.33
+STEPS_PER_HEADER = 6      # nd = 1: 5 + nd
+PREAMBLE = 4              # magic rd(4), version u32, n_tensors u64, n_kv u64
+CEILING = 833_332         # (5_000_000 - 4) // 6 = 833 332 decidable headers (RV01 F3)
 
 
 def show(repo: Path, rev: str, path: str):
@@ -64,23 +65,23 @@ def main() -> int:
     checks += 1
 
     derived_ceiling = max_steps // STEPS_PER_HEADER if max_steps else None
-    for needle, label in (("1 tensor header = 6 steps", "step-table"),
-                          (f"ceiling {CEILING:,}", "ceiling"),
+    for needle, label in (("5 + nd steps", "step-table"),
+                          ("833,332", "ceiling"),
+                          ("714,285", "nd2-ceiling"),
+                          ("625,000", "nd3-ceiling"),
+                          ("555,555", "nd4-ceiling"),
                           ("S618", "sourced")):
         checks += 1
         if needle not in skill:
             mismatches += 1
-    # the old false ceiling must not be restated as the enforced ceiling
-    checks += 1
-    if "ceiling 1,000,000" in skill:
-        mismatches += 1
     status = sources_status(a.repo, rev).get("S618", "")
     checks += 1
     if status in ("", "rejected"):
         mismatches += 1
-    if derived_ceiling != CEILING:
-        mismatches += 1
+    derived = (max_steps - PREAMBLE) // STEPS_PER_HEADER if max_steps else None
     checks += 1
+    if derived != CEILING:
+        mismatches += 1
     print(f"DEPTH_AUDIT checks={checks} mismatches={mismatches} met={mismatches == 0}")
     return 0 if mismatches == 0 else 1
 

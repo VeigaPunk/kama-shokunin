@@ -56,6 +56,13 @@ def main() -> int:
     checks += 1
     if "20 + 25 * npaths" not in counter or "20 + 15 * ncand" in counter:
         mismatches += 1
+    # (4) the counter's own docstring states the budget the probe enforces (RV01 F5)
+    checks += 1
+    parts = counter.split('"""')
+    doc = parts[1] if len(parts) >= 3 else counter
+    want = "{:,}".format(max_steps).replace(",", " ") if max_steps else None
+    if want is None or want not in doc.replace(",", " "):
+        mismatches += 1
     # capability row: find the router-byte-decided row, extract its commit hash
     checks += 1
     row = None
