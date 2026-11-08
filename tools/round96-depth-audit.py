@@ -65,7 +65,7 @@ def main() -> int:
     checks += 1
 
     derived_ceiling = max_steps // STEPS_PER_HEADER if max_steps else None
-    for needle, label in (("5 + nd steps", "step-table"),
+    for needle, label in (("`5 + nd` steps", "step-table"),
                           ("833,332", "ceiling"),
                           ("714,285", "nd2-ceiling"),
                           ("625,000", "nd3-ceiling"),
