@@ -1,0 +1,20 @@
+# SN01Bounds strace census (successful write-open/mkdir/unlink/rename/bind only)
+# trace args: strace -f -s 300 -e trace=openat,open,creat,mkdir,mkdirat,unlink,unlinkat,rename,renameat,renameat2,socket,bind
+# scratch root: /fast/scratch/hyaku/kama-r99/SN01Bounds
+
+## C2 record-audit (complete run)
+kinds: {'mkdir': 2, 'write-open': 11, 'unlink': 2}
+outside-scratch targets: none (only /dev/null)
+unlink targets (dirfd-relative, inside --work): sources-base.md, sources-tip.md
+binds: none
+
+## C3 autoload-states (complete run)
+kinds: {'mkdir': 12, 'write-open': 177, 'bind': 10, 'unlink': 49}
+outside-scratch targets: 10 x /tmp/kama-probe.<6 rand> + their m<port>.{body,hdr,err} and props<port>.body
+  (all removed by the probe EXIT trap: unlinkat(..., AT_REMOVEDIR) = 0; `ls -d /tmp/kama-probe.*` -> none)
+binds (all 10): bind(3, {sa_family=AF_INET, sin_port=htons(0), sin_addr=inet_addr("127.0.0.1")}, 16) = 0
+
+## C1 control-population (partial trace, job still running at report time)
+kinds so far: {'write-open': 346, 'mkdir': 23, 'bind': 11, 'unlink': 106}
+outside-scratch targets: none (no /tmp path; all fixture opens are dirfd-relative inside --work)
+binds (all 11): 127.0.0.1:0

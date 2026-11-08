@@ -1,0 +1,58 @@
+# C2: frozen C2 counter, `--tree` path and byte-freeze status (measured 2026-11-08, SC01Recon)
+
+Counter under grading: tools/round99-record-audit.py
+  bytes at freeze commit f6e7ccc2 : sha256 5e2be1391e199aa60adf5045d3cef87cc83115f951e13824ec984e7b87ed08f6
+  bytes in working tree (Y)        : sha256 59f22d5e3e891ca5a695cc1658e49e1a13e4fe5d35613a85567d3cee23a138ed
+  `git diff` (Y) : read_bytes_at loses its `if tree: read tree/path` branch and always uses
+                   `git show <R98_BASE|R98_TIP>:corpus/SOURCES.md`.
+
+## A. Predicate path (`--rev`) works with the FROZEN bytes
+
+Scratch clone of the lane (`git clone --shared`), corrections + round-99 lesson committed as
+9cf00e5c6ac417e2ffeb17597b6d611754bd8bf3, then:
+
+  python3 <frozen counter> --repo <clone> --rev 9cf00e5c... --work <scratch>
+  -> RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=9cf00e5c6ac417e2ffeb17597b6d611754bd8bf3
+  -> exit 0
+
+Base control, unmodified lane repo:
+
+  python3 tools/round99-record-audit.py --repo . --rev 439fdb3d --work <scratch>
+  -> RECORD_AUDIT99_MISMATCH 1,2,3,4,5,6,7,9,10,11 (10 lines)
+  -> RECORD_AUDIT99 checks=12 mismatches=10 met=False rev=439fdb3d...
+  -> exit 1
+
+## B. `--tree` path does NOT work with the FROZEN bytes
+
+Materialized mirror of the M2 tree (git archive f6e7ccc2 + the working-tree LOG.md, SCORECARD.md,
+corpus/lessons/round-99.md):
+
+  FROZEN counter, honest mirror:
+    RECORD_AUDIT99_MISMATCH 8 census base={'rows':'366','tier.A':'347','tier.B':'11','tier.C':'8',
+      'status.mined':'327','status.queued':'8','status.rejected':'31'} tip=<identical 366 set>
+    RECORD_AUDIT99 checks=12 mismatches=1 met=False
+  FROZEN counter, forged mirror (12 reported, 0 dead -> 10 reported, 2 dead):
+    RECORD_AUDIT99_MISMATCH 1, 2, 8
+    RECORD_AUDIT99 checks=12 mismatches=3 met=False
+  FROZEN counter, mirror without corpus/SOURCES.md:
+    RECORD_AUDIT99 could-not-evaluate: census revision bytes unavailable   (exit 2)
+  WORKING-TREE counter, honest mirror:  checks=12 mismatches=0 met=True
+  WORKING-TREE counter, forged mirror:  MISMATCH 1, 2 -> checks=12 mismatches=2 met=False
+  WORKING-TREE counter, forge that also mislabels the lesson census sentence (check 7):
+    MISMATCH 1, 2, 7 -> checks=12 mismatches=3 met=False
+
+Cause: under `--tree` the frozen `read_bytes_at` reads the tree's own corpus/SOURCES.md for BOTH
+R98_BASE and R98_TIP, so base == tip == the 366-row tip, and check 8 can never pass in tree mode.
+
+## C. Consequences for the frozen claim
+
+1. The untracked receipt .ufo/waves/round-99/controls/c2-forged.out
+   (`RECORD_AUDIT99_MISMATCH 1`, `MISMATCH 2`, `mismatches=2`) is reproducible only with the
+   WORKING-TREE bytes, not with the bytes committed at f6e7ccc2 (which give 3, adding check 8).
+2. The plan's C2 kill rule K1 is "the counter's bytes change after the freeze commit". The edit
+   above is exactly that change; committing it at M2 fires K1, reverting it makes the recorded
+   forged-control receipt unreproducible.
+3. The plan's C2 disclosed limit (d) ("the counter grades the two frozen historical revisions,
+   never the tip") is false for the frozen bytes on the `--tree` path.
+4. The plan describes the forged mirror as keeping the census mislabel; that forge fails check 7 as
+   well (measured mismatches=3 with the working-tree bytes), which the recorded receipt does not show.

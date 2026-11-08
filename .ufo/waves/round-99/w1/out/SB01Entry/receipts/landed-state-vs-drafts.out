@@ -1,0 +1,41 @@
+# SB01Entry: what the L1 landed after the freeze commit vs what this seat's drafts assumed
+# date: 2026-11-08; read-only
+
+== A. lane HEAD ==
+00394f3b round-99 amendment 1: wave-1 falsifications; hardened C1/C2/C3 counters, probe call-shape fix, SKILL decision row + round-99 section, S627 admit/S628 reject, record corrections, amendment plan
+f6e7ccc2 round-99 freeze: three instruments (control population, record audit, autoload states), claim plan, S624/S625/S626, candidate probe, freeze controls, wave spec
+439fdb3d round-98 verifier spot-check (integrator, hyaku): non-author admit/reject
+
+== B. the reason-table row question, as landed ==
+1773:| matching entry `unloaded` (not failed) and `/props` could not be read: timeout, over the 4 MiB cap, not JSON, not a router document, or no boolean `model
+1822:| timeout, over the 4 MiB cap, non-JSON, not a router document, field absent, or field non-boolean | `MODEL_UNLOADED` / `router-autoload-unread` |
+1833:capture; `router-autoload-unread` is documented here and in the decision row above, not as a row there (a row there
+
+   the landed prose that declines a reason-table row (SKILL.md:1832-1835):
+round-90 `## Probe reason codes` table below stays byte-identical and is the frozen 23-reason population bound to its
+capture; `router-autoload-unread` is documented here and in the decision row above, not as a row there (a row there
+cannot bind without editing the round-90 instrument — CN01's A/B/C fixtures in
+`.ufo/waves/round-99/w1/CN01Overlap.md` §4).
+
+== C. the reason-table row count at the tip (no router-autoload-unread row) ==
+REASON_ROW body-too-large bound=0
+REASON_ROWS population=23 documented=23 rows=24 bound=0 unbound=24 missing=0 duplicates=0 additional=0 receipt=stale probe_sha256=05ebee88bed11e214bbb43cacfc965282b86359d9c2154f340eef36605def050 rev=00394f3ba7662a01d24ddec4b699ca8e1a793fd5
+exit=1
+
+== D. controls/c3-regression.out at the tip: tracked? has a summary line? ==
+?? .ufo/waves/round-99/controls/c3-regression.out
+NOT IN HEAD (untracked working-tree file)
+3 .ufo/waves/round-99/controls/c3-regression.out
+--- its full content ---
+# command: python3 tools/round98-router-budget.py --repo . --rev 00394f3ba7662a01d24ddec4b699ca8e1a793fd5 --work /fast/scratch/hyaku/kama-r99/measure/reg --slow-files 72 --burners 0
+# note: burners 0 -> the second pass is a plain re-pass, not a synthetic-load pass; the regression grades
+# cell expectations for the vocabulary change, not r98's load discrimination (which its own receipt carries).
+--- summary-line search ---
+0
+0 (no ROUTER_BUDGET98 summary line in the file)
+
+== E. the knowledge entry's verified-at, as landed (what it cites that file for) ==
+verified-at: 2026-11-08 — the b12177 files fetched raw (HTTP 200; digests in `.ufo/waves/round-99/sources/`; S628 is a 404 rejection), the eight live cells run 
+against a loopback stub by `tools/round99-autoload-states.py` (`cells=8 mismatches=0 base_mismatches=7 flips=7 stable=1`, `.ufo/waves/round-99/measured/c3.out`)
+, the plain-call regression control (`listeners` on/off/non-router, `.ufo/waves/round-99/controls/c3-plaincall.out`), and the round-98 19-cell budget counter re
+-run on the candidate probe (`ROUTER_BUDGET98 cells=19 mismatches=0`, `.ufo/waves/round-99/controls/c3-regression.out`).

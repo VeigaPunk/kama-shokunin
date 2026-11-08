@@ -1,0 +1,26 @@
+# SB01Entry: the verdict-matrix harness rows by family (does any expect router-autoload-unread?)
+# date: 2026-11-08
+
+$ python3 -c '<load every tests/probe-verdicts/*.json and print family, rows, reasons>'
+AuthAndDead.json         rows= 7 reasons=['connection-refused', 'empty-reply', 'http-401', 'http-403']
+EnvelopeShapes.json      rows= 9 reasons=['llamacpp-loading', 'non-2xx-non-model-http']
+ForeignControls.json     rows= 8 reasons=['html-non-model', 'non-2xx-non-model-http', 'non-model-2xx', 'schema-unrecognized']
+LoadingEnvelope.json     rows= 8 reasons=['llamacpp-loading']
+LoadingRace.json         rows= 9 reasons=['expected-wildcard', 'llamacpp-loading', 'matched', 'non-2xx-non-model-http', 'served-id-mismatch']
+NearMissTriple.json      rows= 8 reasons=['llamacpp-loading', 'non-2xx-non-model-http']
+NonLoadingStatuses.json  rows= 7 reasons=['non-2xx-non-model-http', 'non-model-2xx', 'schema-unrecognized']
+Overbroad503.json        rows= 8 reasons=['html-non-model', 'non-2xx-non-model-http']
+ReadyControls.json       rows= 8 reasons=['expected-wildcard', 'matched', 'served-id-mismatch']
+RouterUnloaded.json      rows= 5 reasons=['router-model-invalid', 'router-model-missing', 'router-unloaded', 'router-unloaded-failed']
+total rows: 77
+
+RouterUnloaded.json rows:
+  - RouterUnloaded.router-unloaded-no-autoload | routes: ['/v1/models', '/props'] | expected: {'verdict': 'MODEL_UNLOADED', 'reason': 'router-unloaded', 'exit': 2}
+  - RouterUnloaded.router-unloaded-failed | routes: ['/v1/models', '/props'] | expected: {'verdict': 'MODEL_UNLOADED', 'reason': 'router-unloaded-failed', 'exit': 2}
+  - RouterUnloaded.router-model-missing-autoload | routes: ['/v1/models', '/props'] | expected: {'verdict': 'MODEL_UNLOADED', 'reason': 'router-model-missing', 'exit': 2}
+  - RouterUnloaded.router-model-invalid-non-gguf | routes: ['/v1/models', '/props'] | expected: {'verdict': 'MODEL_UNLOADED', 'reason': 'router-model-invalid', 'exit': 2}
+  - RouterUnloaded.router-model-invalid-gguf-v1 | routes: ['/v1/models', '/props'] | expected: {'verdict': 'MODEL_UNLOADED', 'reason': 'router-model-invalid', 'exit': 2}
+
+== the harness over the candidate probe (committed receipt) ==
+tests=77 passes=77 failures=0
+exit=0

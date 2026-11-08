@@ -1,0 +1,152 @@
+### mut-all sha256=544dd63bdaf689edd6627561d8aa4f9faf85fea9724f52d94662e915b4c98179
+--- .ufo/waves/round-99/candidates/kama-probe.r99.sh	2026-11-08 11:53:49.771183764 -0300
++++ /fast/scratch/hyaku/kama-r99/EX03Autoload/mut-all.sh	2026-11-08 12:12:19.454369547 -0300
+@@ -52,13 +52,13 @@
+ # a request wakes a `sleeping` model and, when the router's bare GET /props reports
+ # {"role":"router","models_autoload":true}, loads an `unloaded` (not failed) one; both
+ # answer the request (200), so they grade MODEL_OK with reason router-sleeping /
+-# router-unloaded-autoload (a cold start, not drift). Precedence: loaded or status-less,
++# router-autoload-unread-autoload (a cold start, not drift). Precedence: loaded or status-less,
+ # then these cold-start states, then loading/downloading, then MODEL_UNLOADED. /props is
+ # read bare only (`/props?model=` would route to, and may load, an instance).
+ # Round 99 (C3; plans/round-99-claims.md): an unread /props answer -- a fetch that timed out, was
+ # over the 4 MiB cap, was not JSON, or carried no explicit router `models_autoload` -- is NOT an
+ # autoload-off answer. It reads MODEL_UNLOADED reason router-autoload-unread; only an explicit
+-# {"role":"router","models_autoload":false} reads router-unloaded (S624, S625: the field is built
++# {"role":"router","models_autoload":false} reads router-autoload-unread (S624, S625: the field is built
+ # from params.models_autoload, default true, so "off" is an explicit state, never an absence).
+ # Round 89 (receipts .ufo/waves/round-89/; plans/round-89-claims.md C1): a listed
+ # `unloaded` entry whose model file cannot load answers a real request with 500 "model
+@@ -963,13 +963,13 @@
+     if [ "$nbad" -lt "$ncand" ]; then unloaded=1; fi
+   fi
+   if [ "$unloaded" -eq 1 ]; then
+-    RT_VERDICT=MODEL_OK; RT_REASON=router-unloaded-autoload; return 0
++    RT_VERDICT=MODEL_OK; RT_REASON=router-autoload-unread-autoload; return 0
+   fi
+   if [ -n "$loading" ]; then RT_VERDICT=MODEL_LOADING; RT_REASON="router-$loading"
+   elif [ -n "$unloadable" ] && [ "$autoload" -eq 1 ]; then RT_VERDICT=MODEL_UNLOADED; RT_REASON=$unloadable
+   elif [ -n "$down" ]; then
+     RT_VERDICT=MODEL_UNLOADED
+-    if [ "$down" = "router-unloaded" ] && [ "$ncand" -gt 0 ] && [ "$ra" -eq 2 ]; then
++    if [ "$down" = "router-autoload-unread" ] && [ "$ncand" -gt 0 ] && [ "$ra" -eq 2 ]; then
+       RT_REASON=router-autoload-unread
+     else
+       RT_REASON=$down
+### mut-off-for-unread sha256=c460d2cfb61e88b05a6d543f9ad9193d319e382992c73430c2bc0a6200d904d3
+--- .ufo/waves/round-99/candidates/kama-probe.r99.sh	2026-11-08 11:53:49.771183764 -0300
++++ /fast/scratch/hyaku/kama-r99/EX03Autoload/mut-off-for-unread.sh	2026-11-08 12:12:25.171077577 -0300
+@@ -892,13 +892,13 @@
+   local port=$1 pbody="$TMP_ROOT/props$1.body" state
+   curl -sS --noproxy '*' --connect-timeout "$CONNECT_TIMEOUT" --max-time "$TIMEOUT" \
+     --max-filesize "$MAX_BODY" -o "$pbody" "http://127.0.0.1:$port/props" 2>/dev/null || return 2
+-  [ "$(wc -c < "$pbody")" -le "$MAX_BODY" ] || return 2
++  [ "$(wc -c < "$pbody")" -le "$MAX_BODY" ] || return 1
+   state=$(python3 - "$pbody" <<'PY' 2>/dev/null
+ import json, sys
+ try:
+     doc = json.load(open(sys.argv[1]))
+ except Exception:
+-    print("unread")
++    print("off")
+     raise SystemExit(0)
+ if not isinstance(doc, dict) or doc.get("role") != "router":
+     print("unread")
+### mut-curl-fail-off sha256=a42c184b4e0c1ab2e278427dbefd6f5cdadbf4d7da4f642320e3bdd9747fc39d
+--- .ufo/waves/round-99/candidates/kama-probe.r99.sh	2026-11-08 11:53:49.771183764 -0300
++++ /fast/scratch/hyaku/kama-r99/EX03Autoload/mut-curl-fail-off.sh	2026-11-08 12:14:25.793151306 -0300
+@@ -891,7 +891,7 @@
+   [ "$HAVE_PY" -eq 1 ] || return 2
+   local port=$1 pbody="$TMP_ROOT/props$1.body" state
+   curl -sS --noproxy '*' --connect-timeout "$CONNECT_TIMEOUT" --max-time "$TIMEOUT" \
+-    --max-filesize "$MAX_BODY" -o "$pbody" "http://127.0.0.1:$port/props" 2>/dev/null || return 2
++    --max-filesize "$MAX_BODY" -o "$pbody" "http://127.0.0.1:$port/props" 2>/dev/null || return 1
+   [ "$(wc -c < "$pbody")" -le "$MAX_BODY" ] || return 2
+   state=$(python3 - "$pbody" <<'PY' 2>/dev/null
+ import json, sys
+### mut-nonrouter-off sha256=05a5be5618e1a5b6210e7928535706aaa7b9c8dbf7848985e9df36aa7073f41a
+--- .ufo/waves/round-99/candidates/kama-probe.r99.sh	2026-11-08 11:53:49.771183764 -0300
++++ /fast/scratch/hyaku/kama-r99/EX03Autoload/mut-nonrouter-off.sh	2026-11-08 12:14:25.793297637 -0300
+@@ -901,7 +901,7 @@
+     print("unread")
+     raise SystemExit(0)
+ if not isinstance(doc, dict) or doc.get("role") != "router":
+-    print("unread")
++    print("off")
+ elif doc.get("models_autoload") is True:
+     print("on")
+ elif doc.get("models_autoload") is False:
+### mut-off-branch-unread sha256=53943ad234ac492ceca552c36e96075dd0a2ca90f9e6153327f6daf1df76b5bd
+--- .ufo/waves/round-99/candidates/kama-probe.r99.sh	2026-11-08 11:53:49.771183764 -0300
++++ /fast/scratch/hyaku/kama-r99/EX03Autoload/mut-off-branch-unread.sh	2026-11-08 12:14:32.244175832 -0300
+@@ -912,7 +912,7 @@
+ ) || return 2
+   case "$state" in
+     on) return 0 ;;
+-    off) return 1 ;;
++    off) return 2 ;;
+     *) return 2 ;;
+   esac
+ }
+### mut-no-fetch sha256=2026049b0d298400851f48a59024111e8a2ace5425dfdd811da8767422c6de99
+--- .ufo/waves/round-99/candidates/kama-probe.r99.sh	2026-11-08 11:53:49.771183764 -0300
++++ /fast/scratch/hyaku/kama-r99/EX03Autoload/mut-no-fetch.sh	2026-11-08 12:12:25.171259297 -0300
+@@ -888,6 +888,7 @@
+ # $1 port -> 0 autoload explicitly on, 1 autoload explicitly off, 2 unread (fetch failed,
+ # over the 4 MiB cap, not JSON, not a router props doc, or the field is absent).
+ router_autoload() {
++  return 0 # mutant no-fetch: never call curl, always autoload on
+   [ "$HAVE_PY" -eq 1 ] || return 2
+   local port=$1 pbody="$TMP_ROOT/props$1.body" state
+   curl -sS --noproxy '*' --connect-timeout "$CONNECT_TIMEOUT" --max-time "$TIMEOUT" \
+### mut-on-as-unread sha256=abe64209ef278b830daef549b9ae2d84ee5d8eef7b5169a64920cb80d89d2aed
+--- .ufo/waves/round-99/candidates/kama-probe.r99.sh	2026-11-08 11:53:49.771183764 -0300
++++ /fast/scratch/hyaku/kama-r99/EX03Autoload/mut-on-as-unread.sh	2026-11-08 12:14:25.793401007 -0300
+@@ -911,7 +911,7 @@
+ PY
+ ) || return 2
+   case "$state" in
+-    on) return 0 ;;
++    on) return 2 ;;
+     off) return 1 ;;
+     *) return 2 ;;
+   esac
+### mut-field-absent-on sha256=e9b8c9898d2bc4d7801fa44e6ab50ce1272afaffaaf96ec079ba3f0be84253a9
+--- .ufo/waves/round-99/candidates/kama-probe.r99.sh	2026-11-08 11:53:49.771183764 -0300
++++ /fast/scratch/hyaku/kama-r99/EX03Autoload/mut-field-absent-on.sh	2026-11-08 12:12:25.171578048 -0300
+@@ -907,7 +907,7 @@
+ elif doc.get("models_autoload") is False:
+     print("off")
+ else:
+-    print("unread")
++    print("on")
+ PY
+ ) || return 2
+   case "$state" in
+### mut-str-false-off sha256=2f98eb0d4aab380f33e613b1be95e3fb8bd738d6ceff262258bc3adb2259bab8
+--- .ufo/waves/round-99/candidates/kama-probe.r99.sh	2026-11-08 11:53:49.771183764 -0300
++++ /fast/scratch/hyaku/kama-r99/EX03Autoload/mut-str-false-off.sh	2026-11-08 12:14:25.793503697 -0300
+@@ -904,7 +904,7 @@
+     print("unread")
+ elif doc.get("models_autoload") is True:
+     print("on")
+-elif doc.get("models_autoload") is False:
++elif doc.get("models_autoload") in (False, "false", 0):
+     print("off")
+ else:
+     print("unread")
+### mut-exit0 sha256=7cbcf1ae21d5efab5999cd6f0e9d9a6f27d3008d5a0ac940178a4286eb9b69ab
+--- .ufo/waves/round-99/candidates/kama-probe.r99.sh	2026-11-08 11:53:49.771183764 -0300
++++ /fast/scratch/hyaku/kama-r99/EX03Autoload/mut-exit0.sh	2026-11-08 12:16:39.158154688 -0300
+@@ -1480,9 +1480,9 @@
+ }
+ 
+ cmd_check() {
+-  # `eval_rows || exit_code=$?`: a bare call would trip set -e on the drift exit 2
++  # mutant: drift exit forced to 0 (verdict/reason unchanged)
+   local exit_code=0
+-  eval_rows || exit_code=$?
++  eval_rows || exit_code=0
+   if [ "$JSON_OUT" -eq 1 ]; then
+     emit_json "$(printf '{\n  "schema": "kama-probe/v1",\n  "subcommand": "check",\n  "registry": %s,\n  "verdict_vocabulary": "%s",\n  "exit_codes": {"0": "every declared consumer reconciles", "2": "at least one drift", "1": "probe error"},\n  "summary": {"registry_rows_evaluated": %s, "model_ok": %s, "drift": %s, "exit": %s},\n  "rows": [\n%s\n  ]\n}\n' \
+       "$(jstr "$OPT_REGISTRY")" "$VOCAB" "$EV_N" "$EV_OK" "$EV_DRIFT" "$exit_code" \

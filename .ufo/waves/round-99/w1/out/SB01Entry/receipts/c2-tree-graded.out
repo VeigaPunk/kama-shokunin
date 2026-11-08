@@ -1,0 +1,23 @@
+# SB01Entry grading of the round-99 correction + lesson text against the frozen C2 counter
+# date: 2026-11-08
+
+== A. working-tree counter (tools/round99-record-audit.py), --tree over a materialised tree of the drafts ==
+$ python3 tools/round99-record-audit.py --repo . --tree <tree> --work <scratch>
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=tree:/fast/scratch/hyaku/kama-r99/SB01Entry/tree
+exit=0
+
+== B. FREEZE-COMMIT bytes of the same counter (git show f6e7ccc2:tools/round99-record-audit.py) over the same tree ==
+$ python3 <(git show f6e7ccc2:tools/round99-record-audit.py) --repo . --tree <tree> --work <scratch>
+RECORD_AUDIT99_MISMATCH 8 census base={'rows': '366', 'tier.A': '347', 'tier.B': '11', 'tier.C': '8', 'status.mined': '327', 'status.queued': '8', 'status.rejected': '31'} tip={'rows': '366', 'tier.A': '347', 'tier.B': '11', 'tier.C': '8', 'status.mined': '327', 'status.queued': '8', 'status.rejected': '31'}
+RECORD_AUDIT99 checks=12 mismatches=1 met=False rev=tree:/fast/scratch/hyaku/kama-r99/SB01Entry/tree2
+exit=1
+
+== C. the same freeze-commit bytes over a tree WITHOUT corpus/SOURCES.md ==
+RECORD_AUDIT99 could-not-evaluate: census revision bytes unavailable
+exit=2
+
+== D. forgery control: the correction text forged back to '10 reported, 2 dead' ==
+RECORD_AUDIT99_MISMATCH 1 SCORECARD block states 12 reported, 0 dead after the stale line
+RECORD_AUDIT99_MISMATCH 2 LOG block states 12 reported, 0 dead after the stale line
+RECORD_AUDIT99 checks=12 mismatches=2 met=False rev=tree:/fast/scratch/hyaku/kama-r99/SB01Entry/forge
+exit=1

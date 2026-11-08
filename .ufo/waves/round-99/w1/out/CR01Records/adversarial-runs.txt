@@ -1,0 +1,231 @@
+# CR01Records round-99 C2 receipts — generated 2026-11-08T12:18:54
+# NOTE: every run below is read-only against the lane; the frozen counter is `git show f6e7ccc2:tools/round99-record-audit.py`.
+
+## lane HEAD
+$ git -C kama-shokunin rev-parse HEAD
+f6e7ccc285e0c1207378f73c394acbfda58bff23
+
+## lane status (untracked/modified; no writes by this seat)
+ M LOG.md
+ M SCORECARD.md
+ M tools/round99-record-audit.py
+?? .ufo/waves/round-99/controls/c2-forged.out
+?? .ufo/waves/round-99/controls/c3-harness-candidate.out
+?? .ufo/waves/round-99/controls/c3-mutant-blanket.out
+?? .ufo/waves/round-99/measured/
+?? .ufo/waves/round-99/w1.ready
+?? .ufo/waves/round-99/w1.ready.dispatched
+?? .ufo/waves/round-99/w1/out/
+?? corpus/lessons/round-99.md
+
+
+## post-freeze diff of the graded counter
+$ git -C kama-shokunin diff tools/round99-record-audit.py
+diff --git i/tools/round99-record-audit.py w/tools/round99-record-audit.py
+index 39a4c085..460840b5 100755
+--- i/tools/round99-record-audit.py
++++ w/tools/round99-record-audit.py
+@@ -250,9 +250,8 @@ def main() -> int:
+ 
+ 
+ def read_bytes_at(rev: str, path: str, repo: Path, tree):
+-    if tree:
+-        p = tree / path
+-        return p.read_bytes() if p.exists() else None
++    # The two census revisions are historical and always come from git, also under --tree:
++    # a materialized tree holds only the current bytes.
+     p = subprocess.run(["git", "-C", str(repo), "show", f"{rev}:{path}"], capture_output=True)
+     return p.stdout if p.returncode == 0 else None
+ 
+
+
+## check table source lines
+$ grep -n 'chk\|mismatches=9\|BLOCK_RE\|read_bytes_at' tools/round99-record-audit.py
+10:    Before (do-nothing control): at base `439fdb3d` the same counter prints `mismatches=9`
+65:BLOCK_RE = re.compile(r"^## .*[Rr]ound[- ]99.*(?:correction|corrections).*$", re.M)
+70:    for m in BLOCK_RE.finditer(text):
+174:        def chk(cid, ok, detail):
+178:        chk(1, bool(s_block) and bool(cs) and stale_s is not None and
+181:        chk(2, bool(l_block) and bool(cl) and stale_l is not None and
+185:        chk(3, "SCORECARD.md:6431" in both and "LOG.md:4040" in both,
+188:        chk(4, bool(re.search(r"\b7 attack\b", both)) and bool(re.search(r"\b5 non-attack\b", both))
+192:        chk(5, "EX02BudgetControl" in both and "SB01-equivalent" in both,
+195:        chk(6, "RV03Intent" in both, "RV03Intent named")
+201:        chk(7, bool(lesson99) and bool(re.search(base_pat, lesson99, re.I)) and
+205:        base_bytes = read_bytes_at(R98_BASE, "corpus/SOURCES.md", a.repo, a.tree)
+206:        tip_bytes = read_bytes_at(R98_TIP, "corpus/SOURCES.md", a.repo, a.tree)
+212:        chk(8, got_base == EXPECT_BASE and got_tip == EXPECT_TIP,
+217:        chk(9, bool(verdict) and failed_names == sorted(
+224:        chk(10, "M3" in mistakes and "round-98.md" in mistakes and "sampling" in mistakes,
+227:        chk(11, results.get("seats") == len(seats) == 12 and not dead and len(attack) == 7 and
+231:        chk(12, len(attack) + len(non) == 12 and len(attack) == 7,
+252:def read_bytes_at(rev: str, path: str, repo: Path, tree):
+
+
+## baseline: working counter --tree on the current working tree
+exit=0
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=tree:/fast/scratch/hyaku/kama-r99/CR01Records/trees/base-current
+
+
+## base revision 439fdb3d
+$ frozen-counter --repo kama-shokunin --rev 439fdb3d
+exit=1
+RECORD_AUDIT99_MISMATCH 1 SCORECARD block states 12 reported, 0 dead after the stale line
+RECORD_AUDIT99_MISMATCH 2 LOG block states 12 reported, 0 dead after the stale line
+RECORD_AUDIT99_MISMATCH 3 both stale pointers named
+RECORD_AUDIT99_MISMATCH 4 7 attack ['CR01Boundary', 'CR02Wording', 'MT01Forgeries', 'RV01SelfAssess', 'RV02BudgetCells', 'RV03Intent', 'SN01StepFlips'] / 5 non-attack ['CN01Overlap', 'EX01SelfAssessControl', 'EX02BudgetControl', 'SC01SiblingScan', 'SC02SourceReopen']
+RECORD_AUDIT99_MISMATCH 5 EX02BudgetControl named against SB01-equivalent
+RECORD_AUDIT99_MISMATCH 6 RV03Intent named
+RECORD_AUDIT99_MISMATCH 7 lesson carries the base/tip census correction
+RECORD_AUDIT99_MISMATCH 9 gate failed arms ['newest-closure', 'round-clean', 'round-scope', 'round75-instruments', 'round78-instruments', 'selfdesc']
+RECORD_AUDIT99_MISMATCH 10 carried M3 sampling record inside ## Mistakes
+RECORD_AUDIT99_MISMATCH 11 seats=12 results=12 dead=[]
+RECORD_AUDIT99 checks=12 mismatches=10 met=False rev=439fdb3d41b55e5b9e6d7c480d17f2c428bae978
+
+
+## adversarial trees — frozen counter (freeze bytes) via `--rev <scratch-clone commit>`
+# toplevel assertion below; fixtures live in /fast/scratch/hyaku/kama-r99/CR01Records/clone
+$ git -C /fast/scratch/hyaku/kama-r99/CR01Records/clone rev-parse --show-toplevel -> /fast/scratch/hyaku/kama-r99/CR01Records/clone (expect same)
+
+### tree base-current
+$ python3 frozen-counter.py --repo <clone> --rev d0cf1625d771 --work <scratch> (tree base-current)
+exit=0
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=d0cf1625d7719f2564b915932fea792a512e2ff3
+
+### tree T_a
+$ python3 frozen-counter.py --repo <clone> --rev 131f5213cd45 --work <scratch> (tree T_a)
+exit=0
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=131f5213cd459b7e3b1dfd9b4ac40e27f376f251
+
+### tree T_b
+$ python3 frozen-counter.py --repo <clone> --rev 6c98cab5008d --work <scratch> (tree T_b)
+exit=1
+RECORD_AUDIT99_MISMATCH 1 SCORECARD block states 12 reported, 0 dead after the stale line
+RECORD_AUDIT99_MISMATCH 2 LOG block states 12 reported, 0 dead after the stale line
+RECORD_AUDIT99 checks=12 mismatches=2 met=False rev=6c98cab5008d6de62639ccca005b9ce1083067b2
+
+### tree T_b2
+$ python3 frozen-counter.py --repo <clone> --rev 4d44b83194ee --work <scratch> (tree T_b2)
+exit=1
+RECORD_AUDIT99_MISMATCH 1 SCORECARD block states 12 reported, 0 dead after the stale line
+RECORD_AUDIT99_MISMATCH 2 LOG block states 12 reported, 0 dead after the stale line
+RECORD_AUDIT99 checks=12 mismatches=2 met=False rev=4d44b83194ee9ac498cf9abfefb2fbddf70dd21d
+
+### tree T_c
+$ python3 frozen-counter.py --repo <clone> --rev a259686c2570 --work <scratch> (tree T_c)
+exit=0
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=a259686c25700da03d35c6df6dc1fb4f73e6b90f
+
+### tree T_d
+$ python3 frozen-counter.py --repo <clone> --rev 3aa9296eaabc --work <scratch> (tree T_d)
+exit=1
+RECORD_AUDIT99_MISMATCH 7 lesson carries the base/tip census correction
+RECORD_AUDIT99 checks=12 mismatches=1 met=False rev=3aa9296eaabc43148f38ab2933f4753d342bc530
+
+### tree T_e
+$ python3 frozen-counter.py --repo <clone> --rev d31cdeb12720 --work <scratch> (tree T_e)
+exit=1
+RECORD_AUDIT99_MISMATCH 4 7 attack ['CR01Boundary', 'CR02Wording', 'MT01Forgeries', 'RV01SelfAssess', 'RV02BudgetCells', 'RV03Intent', 'SN01StepFlips'] / 5 non-attack ['CN01Overlap', 'EX01SelfAssessControl', 'EX02BudgetControl', 'SC01SiblingScan', 'SC02SourceReopen']
+RECORD_AUDIT99 checks=12 mismatches=1 met=False rev=d31cdeb1272070599ba31a92d43f7e563ef7b862
+
+### tree T_e2
+$ python3 frozen-counter.py --repo <clone> --rev 3675e2b17db1 --work <scratch> (tree T_e2)
+exit=0
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=3675e2b17db16bd5a4e08035c7d2f20a40e15e69
+
+### tree T_f
+$ python3 frozen-counter.py --repo <clone> --rev 44ff65857ac8 --work <scratch> (tree T_f)
+exit=0
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=44ff65857ac8e225d3133e6878e508d5c23e98c5
+
+### tree T_g
+$ python3 frozen-counter.py --repo <clone> --rev 354157b3a978 --work <scratch> (tree T_g)
+exit=0
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=354157b3a978a257897bebac6275d1bcf57fee9e
+
+### tree T_h
+$ python3 frozen-counter.py --repo <clone> --rev 3cbf6a075c32 --work <scratch> (tree T_h)
+exit=0
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=3cbf6a075c32b237fb659441dda204a0fbb6e721
+
+### tree T_h2
+$ python3 frozen-counter.py --repo <clone> --rev 57cd8f6df29b --work <scratch> (tree T_h2)
+exit=0
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=57cd8f6df29b7046739487c5469b5f121ea77236
+
+### tree T_i
+$ python3 frozen-counter.py --repo <clone> --rev bd5382eeecc0 --work <scratch> (tree T_i)
+exit=0
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=bd5382eeecc035f5b1bdf8c923b34ab686f74cfe
+
+## adversarial trees — working counter --tree (post-freeze bytes), same content
+### tree base-current
+$ python3 tools/round99-record-audit.py --repo . --tree trees/base-current --work <scratch>
+exit=0
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=tree:/fast/scratch/hyaku/kama-r99/CR01Records/trees/base-current
+
+### tree T_a
+$ python3 tools/round99-record-audit.py --repo . --tree trees/T_a --work <scratch>
+exit=0
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=tree:/fast/scratch/hyaku/kama-r99/CR01Records/trees/T_a
+
+### tree T_b
+$ python3 tools/round99-record-audit.py --repo . --tree trees/T_b --work <scratch>
+exit=1
+RECORD_AUDIT99_MISMATCH 1 SCORECARD block states 12 reported, 0 dead after the stale line
+RECORD_AUDIT99_MISMATCH 2 LOG block states 12 reported, 0 dead after the stale line
+RECORD_AUDIT99 checks=12 mismatches=2 met=False rev=tree:/fast/scratch/hyaku/kama-r99/CR01Records/trees/T_b
+
+### tree T_b2
+$ python3 tools/round99-record-audit.py --repo . --tree trees/T_b2 --work <scratch>
+exit=1
+RECORD_AUDIT99_MISMATCH 1 SCORECARD block states 12 reported, 0 dead after the stale line
+RECORD_AUDIT99_MISMATCH 2 LOG block states 12 reported, 0 dead after the stale line
+RECORD_AUDIT99 checks=12 mismatches=2 met=False rev=tree:/fast/scratch/hyaku/kama-r99/CR01Records/trees/T_b2
+
+### tree T_c
+$ python3 tools/round99-record-audit.py --repo . --tree trees/T_c --work <scratch>
+exit=0
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=tree:/fast/scratch/hyaku/kama-r99/CR01Records/trees/T_c
+
+### tree T_d
+$ python3 tools/round99-record-audit.py --repo . --tree trees/T_d --work <scratch>
+exit=1
+RECORD_AUDIT99_MISMATCH 7 lesson carries the base/tip census correction
+RECORD_AUDIT99 checks=12 mismatches=1 met=False rev=tree:/fast/scratch/hyaku/kama-r99/CR01Records/trees/T_d
+
+### tree T_e
+$ python3 tools/round99-record-audit.py --repo . --tree trees/T_e --work <scratch>
+exit=1
+RECORD_AUDIT99_MISMATCH 4 7 attack ['CR01Boundary', 'CR02Wording', 'MT01Forgeries', 'RV01SelfAssess', 'RV02BudgetCells', 'RV03Intent', 'SN01StepFlips'] / 5 non-attack ['CN01Overlap', 'EX01SelfAssessControl', 'EX02BudgetControl', 'SC01SiblingScan', 'SC02SourceReopen']
+RECORD_AUDIT99 checks=12 mismatches=1 met=False rev=tree:/fast/scratch/hyaku/kama-r99/CR01Records/trees/T_e
+
+### tree T_e2
+$ python3 tools/round99-record-audit.py --repo . --tree trees/T_e2 --work <scratch>
+exit=0
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=tree:/fast/scratch/hyaku/kama-r99/CR01Records/trees/T_e2
+
+### tree T_f
+$ python3 tools/round99-record-audit.py --repo . --tree trees/T_f --work <scratch>
+exit=0
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=tree:/fast/scratch/hyaku/kama-r99/CR01Records/trees/T_f
+
+### tree T_g
+$ python3 tools/round99-record-audit.py --repo . --tree trees/T_g --work <scratch>
+exit=0
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=tree:/fast/scratch/hyaku/kama-r99/CR01Records/trees/T_g
+
+### tree T_h
+$ python3 tools/round99-record-audit.py --repo . --tree trees/T_h --work <scratch>
+exit=0
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=tree:/fast/scratch/hyaku/kama-r99/CR01Records/trees/T_h
+
+### tree T_h2
+$ python3 tools/round99-record-audit.py --repo . --tree trees/T_h2 --work <scratch>
+exit=0
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=tree:/fast/scratch/hyaku/kama-r99/CR01Records/trees/T_h2
+
+### tree T_i
+$ python3 tools/round99-record-audit.py --repo . --tree trees/T_i --work <scratch>
+exit=0
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=tree:/fast/scratch/hyaku/kama-r99/CR01Records/trees/T_i

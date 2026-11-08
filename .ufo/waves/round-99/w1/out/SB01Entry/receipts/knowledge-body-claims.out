@@ -1,0 +1,35 @@
+# SB01Entry: the knowledge draft's two non-quoted body claims, checked against the fetched b12177 bytes
+# date: 2026-11-08; file: /fast/scratch/hyaku/kama-r99/SB01Entry/src/server-models.cpp (sha256 cab14969b9e5adf08a057c622d1abfc30fd8a17484de5b35942632d739a71108)
+
+== claim: 'The per-request ?autoload=true|false parameter changes a request behaviour (is_autoload, server-models.cpp:1968-1973)' ==
+static bool is_autoload(const common_params & params, const server_http_req & req) {
+    std::string autoload = req.get_param("autoload");
+    if (autoload.empty()) {
+        return params.models_autoload;
+    } else {
+        return autoload == "true" || autoload == "1";
+    }
+
+== claim: '/props?model=<id> routes to an instance and is not read' (get_router_props lines 2021-2046) ==
+    this->get_router_props = [this](const server_http_req & req) {
+        std::string name = req.get_param("model");
+        if (name.empty()) {
+            // main instance
+   ...
+            if (!params.server_connect_code.empty()) {
+                props["connect_code"] = params.server_connect_code;
+            }
+            res_ok(res, props);
+            return res;
+        }
+        return proxy_get(req);
+    };
+
+== claim: the bare body carries role / max_instances / models_autoload ==
+            json props = {
+                // TODO: add support for this on web UI
+                {"role",                 "router"},
+                {"max_instances",        params.models_max},
+                {"models_autoload",      params.models_autoload},
+                // this is a dummy response to make sure the UI doesn't break
+                {"model_alias", "llama-server"},

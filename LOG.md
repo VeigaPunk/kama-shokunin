@@ -4048,3 +4048,51 @@ mutating git/jj command.
 
 The round-98 wave line "10 reported, 2 dead" (`LOG.md:4040`; the SCORECARD twin is `SCORECARD.md:6431`) is wrong: `.ufo/waves/round-98/w1-results.json` carries **12 seats** and **12 results**, every result with a non-empty output, so it is **12 reported, 0 dead** (lesson M3: `RV03Intent` and `EX02BudgetControl` settled). The split is **7 attack** (`RV01SelfAssess`, `RV02BudgetCells`, `CR01Boundary`, `CR02Wording`, `MT01Forgeries`, `SN01StepFlips`, `RV03Intent`) and **5 non-attack** (`SC01SiblingScan`, `SC02SourceReopen`, `EX01SelfAssessControl`, `EX02BudgetControl`, `CN01Overlap`); the "SB01-equivalent prose" seat above is `EX02BudgetControl`. The gate receipt `PRE_REPORT round=98 arms=14 failed=6 uncommitted=1` names six failed arms (`selfdesc`, `newest-closure`, `round-scope`, `round-clean`, `round75-instruments`, `round78-instruments`), not five.
 
+## round 99 — the population the control ran, the records that did not match, and an unread flag that is not "off" (2026-11-08)
+
+L1 `KamaR99`. Base `439fdb3d` (round-98 closed `ok`). Three claims: C1 operability (the budget
+counter's control mode refuses a selected population it did not run), C2 calibration (the lane's
+round-98 records agree with the committed wave evidence on twelve mechanical propositions), C3
+depth (an unread `/props` autoload flag reads `router-autoload-unread`, not `router-unloaded`).
+
+**Freeze (`f6e7ccc2`).** Three counters (`tools/round99-{router-budget,control-population,
+record-audit,autoload-states}.py`), `plans/round-99-claims.md`, S624/S625/S626, the candidate probe,
+`claims.json`, the wave spec and every freeze-time control (census 363 exit 0; base C1 accept; base
+C2 10 mismatches; base C3 4 mismatches; candidate C3 met; the literal scan).
+
+**Wave 1 (12 seats, 0 dead).** Reports under `.ufo/waves/round-99/w1/`, results in
+`w1-results.json`, ledger `claim-falsification.tsv`: RV01Wording, RV02Counter, CR01Records,
+MT01Mutants, SN01Bounds, CN01Overlap (attack) + SC01Recon, SC02Sources, EX01Counter, EX02Records,
+EX03Autoload, SB01Entry (building). The wave falsified all three claims' wording before any scored
+measurement.
+
+**Amendment 1 (`00394f3b`).** C1: id-set control (`selected_ids`/`ran_ids`), non-empty selection, a
+`_CELL`-stream length check against a fabricated CONTROL line, `population_shaped` only by check,
+and the grader-level base arm. C2: `--tree` census reads git; twelve checks hardened (per-file
+blocks and pointers, segment attribution, line-scoped replacement-bound census, verdict + six-arm
+phrase, single `## Mistakes` paragraph); the forged control re-run as a tree matrix and as a
+`--rev` clone replay. C3: eight cells (U5 absent, U6 non-boolean, U7 wrong role added), exit graded,
+the probe's `router_autoload` call kept inside a condition (fixes `set -e` aborts on
+listeners/consumers), and the SKILL reason placed in the decision table/section, never in the frozen
+round-90 reason-codes table (CN01). Sources: S627 admitted (`common/arg.cpp:3682`, the only writer of
+`params.models_autoload`), S628 rejected (404 at b12177); census 363 → 368.
+
+**Measurements at `00394f3b`.** C1 `CONTROL_POP99 … refused=1 complete=1 mutant_cell_lines=5
+positive_cell_lines=6 population_shaped=1 met=True` exit 0 (`measured/c1.out`; base counter accepts
+the drop, `controls/c1-before.out`; grader base arm met=False; hardened drop refusal). C2
+`RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=00394f3b` exit 0 (`measured/c2.out`; base 10;
+14 of 15 forged variants caught, J negation disclosed; `--rev` forge 3 mismatches). C3
+`AUTOLOAD_STATES99 cells=8 mismatches=0 base_mismatches=7 flips=7 stable=1 met=True` exit 0
+(`measured/c3.out`; base 7; plain-call control green; 77/77 verdict matrix).
+
+**Incidents.** A 900 s tool timeout killed the first budget-regression run before its burner reaper,
+leaking 64 `while True: pass` processes (load1 94) — reaped by exact PID
+(`controls/regression-timeout-reap.out`). Two wave seats later ran the same counter concurrently
+(128 burners, load1 168), host-deferring the fleet; the orchestrator reaped the second group. The
+regression control is re-run with `--burners 0` to avoid repeating the harm. Also: the first seat to
+report (MT01) caught the post-freeze counter edits and the `--tree` defect before any data — the
+amendment is the record, not a late repair.
+
+**No axis is harmed.** Scores unchanged (operability 8, calibration 7, depth 7); three capability
+rows enter with demonstrated evidence.
+

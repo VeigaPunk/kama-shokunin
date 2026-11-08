@@ -1,0 +1,43 @@
+# SB01Entry: the S627 sources receipt has no corpus/SOURCES.md row (round 99 wave sources)
+# date: 2026-11-08
+
+$ git ls-files .ufo/waves/round-99/sources/
+.ufo/waves/round-99/sources/s624-server-models-props.txt
+.ufo/waves/round-99/sources/s625-common-models-autoload.txt
+.ufo/waves/round-99/sources/s626-readme-option-row.txt
+.ufo/waves/round-99/sources/s627-arg-models-autoload.txt
+
+$ grep -c 'S627' corpus/SOURCES.md
+0
+
+$ grep -n 'S62[3-6] |' corpus/SOURCES.md | cut -c1-60
+378:| S623 | GGUF specification, naming convention, ggml doc
+379:| S624 | llama.cpp tools/server/server-models.cpp at tag
+380:| S625 | llama.cpp common/common.h at tag b12177 — htt
+381:| S626 | llama.cpp tools/server/README.md at tag b12177 
+
+== the s627 file's own header ==
+# S627 candidate — llama.cpp common/arg.cpp @ tag b12177
+url: https://raw.githubusercontent.com/ggml-org/llama.cpp/b12177/common/arg.cpp
+accessed: 2026-11-08 (curl HTTP 200, 224666 bytes)
+sha256: c69c0e0703dbd343aec148ff4a65a343da80f65064d9385bc60120ed765e6f67
+line 3676-3684:
+    ).set_examples({LLAMA_EXAMPLE_SERVER}).set_env("LLAMA_ARG_MODELS_MEMORY_MARGIN"));
+    add_opt(common_arg(
+        {"--models-autoload"},
+        {"--no-models-autoload"},
+        string_format("for router server, whether to automatically load models (default: %s)", params.models_autoload ? "enabled" : "disabled"),
+        [](common_params & params, bool value) {
+            params.models_autoload = value;
+        }
+    ).set_examples({LLAMA_EXAMPLE_SERVER}).set_env("LLAMA_ARG_MODELS_AUTOLOAD"));
+
+== census at the freeze commit's tip ==
+$ bash /home/vgpnk/Projects/shokunin/scripts/sources-census.sh census --file <(git show f6e7ccc2:corpus/SOURCES.md)
+file	rows	366
+file	tier.A	347
+file	tier.B	11
+file	tier.C	8
+file	status.mined	327
+file	status.queued	8
+file	status.rejected	31

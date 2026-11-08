@@ -12,11 +12,11 @@ Round 43 re-anchors the `SKILL.md` and `PROVINCE.md` hashes after the round-43 e
 
 | Axis | Score | Evidence pointer (re-derivable at the measured commit) | Last change |
 |---|---|---|---|
-| **operability** | **8** | round-83 terminal receipts at `1d90dc816e200481c7a136934a35e8c418ec4501`: debt events75/accepted53/late22/pending1/unaccepted0/bad_rows10 exit1; pending window7/accepted7/falls=no exit1; delta113/103/10/bad10 exit1. Re-derive from `.ufo/waves/round-83/measured/final/c1-legA.out`, `.ufo/waves/round-83/measured/final/c1-pending.out`, `.ufo/waves/round-83/measured/final/c1-delta.out`; append-debt29/0 and pending-falls7/0 selftests at that revision. Independent run `python3 tools/pin-watch.py selftest` → `selftest pass=9 fail=0` (exit 0). Historical rounds remain below; registered consumers retain last recorded DEAD state. | score round3; terminal evidence corrected round84 |
+| **operability** | **8** | round-83 terminal receipts at `1d90dc816e200481c7a136934a35e8c418ec4501`: debt events75/accepted53/late22/pending1/unaccepted0/bad_rows10 exit1; pending window7/accepted7/falls=no exit1; delta113/103/10/bad10 exit1. Re-derive from `.ufo/waves/round-83/measured/final/c1-legA.out`, `.ufo/waves/round-83/measured/final/c1-pending.out`, `.ufo/waves/round-83/measured/final/c1-delta.out`; append-debt29/0 and pending-falls7/0 selftests at that revision. Independent run `python3 tools/pin-watch.py selftest` → `selftest pass=9 fail=0` (exit 0). Historical rounds remain below; registered consumers retain last recorded DEAD state. Round 99 (C1) adds `tools/round99-control-population.py` with the successor counter's id-set control: `CONTROL_POP99 … selected=6 ran=5 mutant_control_exit=1 refused=1 positive_exit=0 complete=1 mutant_cell_lines=5 positive_cell_lines=6 population_shaped=1 met=True` at `00394f3b` (`measured/c1.out`), the predecessor's acceptance of the same one-line drop (`controls/c1-before.out`, exit 0) and the grader-level negative arm (`controls/c1-grader-base.out`, met=False). | score round3; terminal evidence corrected round84; C1 round99 |
 | **freshness** | **8** | round-83 terminal `.ufo/waves/round-83/measured/final/c3.out` at `1d90dc816e200481c7a136934a35e8c418ec4501`: `PIN_RECHECK rows=5 graded=4 holds=4 reworded=0 moved=0 drifted=0 ungraded=1 bad=0`, exit0; final `.ufo/waves/round-83/measured/final/c3-selftest.out` is14/0, not superseded11. Current run `python3 tools/round83-pin-rechecks.py --selftest` → `PIN_RECHECK_SELFTEST pass=14 fail=0` (exit 0). Terminal historical receipts are under `.ufo/waves/round-83/measured/final/`; current row grading is recorded in round84 section below. Document bytes never imply live endpoint readiness. | score round10; terminal evidence corrected round84 |
-| depth | **7** | `SKILL.md` sha256 `3021fc5d7e8fb135236f1a9ff8ad9d32d3b764ddbdf664aca2fe807ecc1c2af7` (2484 lines); run `grep -c '^## ' SKILL.md` → `59`; round98 extends §Round 97 correction to eight boundary rows (adding (800,000, nd=1) and (520,000, nd=4), the overcharge window) and to five graded probe forgeries W14-900k-nd1, W15-700k-nd4, W16-maxmeta, W17-833333-nd1 and the overcharge variant graded by W18-800k-nd1 and W19-520k-nd4, cites S622 for the four preamble fields, and rolls the heading to `five graded forgeries`; SKILL.md grew 2473 → 2484 lines; round97 adds §Round 97 correction (the step-budget boundary table — six KV-free rows at nd=1 and nd=4 with the recomputed `4 + T x (5 + nd)` arithmetic — plus four graded probe forgeries; SKILL.md grew 2441 → 2473 lines); round96 adds
+| depth | **7** | `SKILL.md` sha256 `f48f5c8ebaee86943165e7c6008d5333276f49e7f4339cc2ffc3b0866eee01bd` (2511 lines); run `grep -c '^## ' SKILL.md` → `60`; round99 adds §Round 99 unread-autoload reason (the tri-state `/props` rule, eight live cells, S624/S625/S627) and the round-88 unread decision row; SKILL.md grew 2484 → 2511 lines; round98 extends §Round 97 correction to eight boundary rows (adding (800,000, nd=1) and (520,000, nd=4), the overcharge window) and to five graded probe forgeries W14-900k-nd1, W15-700k-nd4, W16-maxmeta, W17-833333-nd1 and the overcharge variant graded by W18-800k-nd1 and W19-520k-nd4, cites S622 for the four preamble fields, and rolls the heading to `five graded forgeries`; SKILL.md grew 2473 → 2484 lines; round97 adds §Round 97 correction (the step-budget boundary table — six KV-free rows at nd=1 and nd=4 with the recomputed `4 + T x (5 + nd)` arithmetic — plus four graded probe forgeries; SKILL.md grew 2441 → 2473 lines); round96 adds
 | coverage | **9** | Round84 appends actual coverage-table rows for round83 entries and SGLang readiness/ping distinction; S572–S575 opened, four A/mined rows. Round86 names the three round-86 instruments on the surface. Round88 adds llama.cpp router mode (`corpus/knowledge/router-mode-readiness.md`, S581) to the governed surface. Round89 adds the unloadable-file rule (`corpus/knowledge/router-unloadable-model.md`, S583–S585) and the wire-bound router error table to the same surface. Round90 adds the probe's own answer boundary (`corpus/knowledge/probe-answer-bounds.md`, S587–S590: 4 MiB transfer cap, control characters out of table/JSON output). Round91 adds the engines' default timeouts and limits (`corpus/knowledge/serving-thresholds.md`, S593–S595, with its round-91 correction; round-91 C2 not verified). Round92 re-binds them to the line the binary uses (same entry, §Round 92 revision; S596–S597). Surface list `PROVINCE.md` sha256 `f4030dccb39b6b52e6e709cf993f428dcce83d61a4528a2d9286cb7eabf807f3` (456 lines); run `python3 -c "import glob;print(len([f for f in glob.glob('corpus/knowledge/*.md') if 'engine-sides' not in f and 'processes' not in f]))"` → `61`. Documentary extension, not registered endpoint readiness; historical row counts remain below. | score round10; anchors re-derived round92 |
-| calibration | **7** | round-92 closure `corpus/lessons/round-92-verifier-spotcheck.md` (round92 rejected-honest-stop: C2 linear-probe-paths re-measured by the non-author closure at base, M2 and tip; C1 not verified because its frozen K2 fired on R01/R08; routed R1–R6). Round 93 answers R2/R3 with a setter sweep a counter can fail (`SKILL.md` §Listen port and slot-count setters (round 93 revision), `tools/round93-setter-rows.py`: 48 population rows P01–P48, R16/R17 superseding R01/R08; pre-freeze control V1 — the round-92 decisions — fails `decisions_bound=0`, `.ufo/waves/round-93/controls/c2-forgeries.out`) and R5 by authoring its report after the final lane push. latest outside closure `corpus/lessons/round-93-verifier-spotcheck.md` (round93 rejected-honest-stop; re-anchored in round 94 after the pre-report `newest-closure` arm named the stale round-92 pointer) (round92, round91, round88, round87, round86, round85, round84 rejected-honest-stop; round90, round89 admitted; round83 rejected-harmed). File-presence-only: run `test -f corpus/lessons/round-92-verifier-spotcheck.md && printf present` → `present` (exit 0); this is not closure authentication. Numeric score unchanged. | score round1; authority corrected round93 |
+| calibration | **7** | round-92 closure `corpus/lessons/round-92-verifier-spotcheck.md` (round92 rejected-honest-stop: C2 linear-probe-paths re-measured by the non-author closure at base, M2 and tip; C1 not verified because its frozen K2 fired on R01/R08; routed R1–R6). Round 93 answers R2/R3 with a setter sweep a counter can fail (`SKILL.md` §Listen port and slot-count setters (round 93 revision), `tools/round93-setter-rows.py`: 48 population rows P01–P48, R16/R17 superseding R01/R08; pre-freeze control V1 — the round-92 decisions — fails `decisions_bound=0`, `.ufo/waves/round-93/controls/c2-forgeries.out`) and R5 by authoring its report after the final lane push. latest outside closure `corpus/lessons/round-98-verifier-spotcheck.md` (round98 admitted; re-anchored in round 99 after the round-98 closure) (round93, round92, round91, round88, round87, round86, round85, round84 rejected-honest-stop; round96 rejected; round98, round97, round95, round94, round90, round89 admitted; round83 rejected-harmed), and round 99 (C2) adds `tools/round99-record-audit.py`: `RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=00394f3b` (`measured/c2.out`; base `mismatches=10`), with the twelve-variant forgery matrix `controls/c2-forge-matrix.out` (one negation-token escape disclosed as limit (a)) (round92, round91, round88, round87, round86, round85, round84 rejected-honest-stop; round90, round89 admitted; round83 rejected-harmed). File-presence-only: run `test -f corpus/lessons/round-98-verifier-spotcheck.md && printf present` → `present` (exit 0); this is not closure authentication. Numeric score unchanged. | score round1; authority corrected round93; C2 round99 |
 | adjacency | **7** | `corpus/knowledge/cross-lane-scope.md` sha256 `c45318b5a7ade2b797c2cf88120fbbcd48bd2c31630620b15c892d13be907f74` (148 lines); run `python3 -c "print(sum(1 for l in open('corpus/knowledge/cross-lane-scope.md') if l.startswith(chr(124))))"` → `16` (lines starting with a table pipe, header and separator lines included); contested scope stays reported, not absorbed (`PROVINCE.md` paragraph "Out of province → report, never absorb") | score round 1; evidence re-anchored round 42 and again round 72 (the round-72 additions name tameshi's binding gate, kaidoku/mori/souji scope instruments and the three shared limits) |
 
 ### Superseded calibration rows (moved verbatim from the live table in round 88)
@@ -6449,4 +6449,73 @@ property than it stated.
 ## Round 99 correction — round-98 wave accounting (appended 2026-11-08; the round-98 entries above are not rewritten)
 
 The round-98 wave line "10 reported, 2 dead" (`SCORECARD.md:6431`; the same sentence is `LOG.md:4040`) is wrong. `.ufo/waves/round-98/w1-results.json` at `649bb2e9` carries **12 seats** and **12 results**, every result with a non-empty output, and `corpus/lessons/round-98.md` M3 records that `RV03Intent` and `EX02BudgetControl` settled inside the same wave: **12 reported, 0 dead**. The split is **7 attack** seats — `RV01SelfAssess`, `RV02BudgetCells`, `CR01Boundary`, `CR02Wording`, `MT01Forgeries`, `SN01StepFlips`, `RV03Intent` — and **5 non-attack** seats — `SC01SiblingScan`, `SC02SourceReopen`, `EX01SelfAssessControl`, `EX02BudgetControl`, `CN01Overlap`. `LOG.md:4044` credits "SB01-equivalent prose carried by the lesson" where the fifth non-attack seat belongs; the seat is `EX02BudgetControl`. The SCORECARD line that lists six attack seats omits `RV03Intent`; the derived count is seven. The round-98 pre-report gate receipt `PRE_REPORT round=98 arms=14 failed=6 uncommitted=1` has six failed arms — `selfdesc`, `newest-closure`, `round-scope`, `round-clean`, `round75-instruments`, `round78-instruments` — and the round-98 erratum named five, omitting `round-clean`. Re-derived by `tools/round99-record-audit.py` (`RECORD_AUDIT99 checks=12`).
+
+## Round 99 — the population the control ran, the records that did not match, and an unread flag that is not "off" (2026-11-08)
+
+L1 `KamaR99`. Base `439fdb3d` (round-98 closed `ok`); freeze `f6e7ccc2`; amendment 1 `00394f3b`
+(wave-1 findings before any scored measurement: the three instruments hardened, the probe call
+shape fixed, the SKILL decision row added, S627 admitted and S628 rejected); measured commit
+`00394f3b`. Plans `plans/round-99-claims.md` + `plans/round-99-amendment-1.md`; wave evidence and
+the prefile ledger under `.ufo/waves/round-99/`.
+
+C1 operability 8 → 8 (the claimed improvement is the control's population proof, not a score move):
+`CONTROL_POP99 … selected=6 ran=5 mutant_control_exit=1 mutant_ok=0 refused=1 positive_exit=0
+positive_ok=1 complete=1 mutant_cell_lines=5 positive_cell_lines=6 population_shaped=1 met=True`
+at `00394f3b` (`measured/c1.out`), against the round-98 counter's acceptance of the same one-line
+drop (`controls/c1-before.out`: `cells=5 … ok=1`, exit 0), the successor's refusal with the id
+sets (`controls/c1-candidate-mutant.out`: `selected_ids=<six> ran_ids=<five> population_ok=0`,
+exit 1), the unmodified acceptance (`controls/c1-positive.out`: exit 0) and the grader-level
+negative arm (`controls/c1-grader-base.out`: `refused=0 … met=False`, exit 1).
+
+C2 calibration 7 → 7 (the claimed improvement is the records' re-derivability, not a score move):
+`RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=00394f3b` (`measured/c2.out`); base
+`mismatches=10` (`controls/c2-base.out`). The twelve-variant forgery matrix
+(`controls/c2-forge-matrix.out`) catches 14 (A, B, B2, C, D, G, H, K, L, M, N, O, P, V) and
+discloses one token-only escape (J: arm names inside a negated sentence); the `--rev` forged replay
+in a scratch clone prints 3 mismatches with no frozen byte edited (`controls/c2-forged-rev.out`).
+
+C3 depth 7 → 7 (the claimed improvement is the decision vocabulary and its grading, not a score
+move): `AUTOLOAD_STATES99 cells=8 mismatches=0 base_mismatches=7 flips=7 stable=1 met=True rev=00394f3b`
+(`measured/c3.out`); base `mismatches=7` (`controls/c3-base.out`); the plain-call regression control
+(`controls/c3-plaincall.out`) and the verdict matrix (`controls/c3-harness.out`, 77/77).
+
+Wave 1 (12 seats, 0 dead — `w1-results.json` carries 12 results with non-empty outputs): 5
+attack-role seats (RV01Wording, RV02Counter reviewers; CR01Records critic; MT01Mutants
+mutation-tester; SN01Bounds sentinel), 1 connector (CN01Overlap) and 6 building seats (SC01Recon,
+SC02Sources scouts; EX01Counter, EX02Records, EX03Autoload executors; SB01Entry scribe), 58% attack
+if the connector counts. The wave falsified all three claims' frozen wording before filing and drove
+amendment 1: C1's count guard was not an identity guard and accepted a vacuous selection, a
+fabricated CONTROL line and a hardcoded `refused` (RV02 rows 4/5/7/9/10, EX01, MT01); C2's freeze
+bytes passed eight meaning-changing record mutations and could not run its own `--tree` forge
+(CR01, EX02, SC01); C3 left the exit code, the role predicate, the absent field and the non-boolean
+field ungraded and the candidate's call shape broke `set -e` on the plain-call subcommands (RV01,
+MT01, SC01, SN01), and a new reason row under the frozen reason-codes table could not bind (CN01).
+No seat committed, pushed or ran a mutating git/jj command.
+
+No axis is harmed: no score moves; every claim replaced a narrower instrument, a missing control or
+a mis-stated self-description, and the wave's own artifacts are the evidence for each narrowing.
+
+### Capabilities added (round 99)
+
+| Capability | What it can now do | Evidence pointer | First-working round |
+|---|---|---|---|
+| control-population-identity | Refuse a counter's control receipt whose selected id set differs from the ids it ran: a dropped, renamed, substituted or injected cell and a vacuous selection all fail; the unmodified counter still accepts a complete population | `tools/round99-control-population.py`, `tools/round99-router-budget.py` at `00394f3b`; `measured/c1.out`, `controls/c1-candidate-mutant.out`, `controls/c1-grader-base.out` | 99 |
+| record-evidence-audit | Re-derive twelve record propositions against committed wave evidence (per-file corrections, derived seat attribution, revision-bound census groups, the receipt's failed arms, the carried mistake) and refuse twelve named forgeries | `tools/round99-record-audit.py` at `00394f3b`; `measured/c2.out`, `controls/c2-forge-matrix.out`, `controls/c2-forged-rev.out` | 99 |
+| autoload-state-vocabulary | Grade the router `/props` autoload tri-state (on / explicit off / unread) on eight live cells with exit codes, covering timeout, oversize, non-JSON, non-router, absent and non-boolean fields, with an explicit-off positive control | `tools/round99-autoload-states.py`, `tools/kama-probe.sh` at `00394f3b`; `measured/c3.out`, `controls/c3-plaincall.out`, `controls/c3-harness.out` | 99 |
+
+### Planned (round 100)
+
+1. Calibration: bind `tools/round90-reason-rows.py`'s receipt to the current probe with a successor
+   capture (the lane is red at base and at `00394f3b`: `bound=0 unbound=24 receipt=stale`; the
+   SCORECARD publications `bound=24 unbound=0` at `SCORECARD.md:311/5840/5944` are stale).
+2. Operability: C1's guard binds ids, not fixture content — a same-id fixture substitution still
+   passes (RV02 row 5); a content digest per cell closes it.
+3. Calibration: C2 does not read negation (J escapes); a fenced/negated-token reader or a narrower
+   claim is the successor.
+4. Depth: the `/props` HTTP status is not consulted (RV01 F5); a 401/403/500 cell and a status rule
+   are the next decision-table move.
+5. Carried: the slow `/props` verdict stays fail-closed; `round75-instruments` `bad_rows=19` (L0
+   r87/r89 open); `round78-instruments` red from the host Ollama listener on 127.0.0.1:8080; the
+   pass-level wall-clock wrapper; the ctime memo shape; the reason-codes table's frozen population.
+
 

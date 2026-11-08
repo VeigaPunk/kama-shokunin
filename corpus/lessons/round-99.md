@@ -89,6 +89,27 @@ burner-raising counters unless the L1 budgets one at a time; a seat that starts 
 on every exit path.
 
 
+## Measurements at `00394f3b` (amendment 1)
+
+- C1: `CONTROL_POP99 … selected=6 ran=5 mutant_control_exit=1 mutant_ok=0 refused=1 positive_exit=0
+  positive_ok=1 complete=1 mutant_cell_lines=5 positive_cell_lines=6 population_shaped=1 met=True`
+  exit 0 (`measured/c1.out`); the round-98 counter accepts the same drop (exit 0,
+  `controls/c1-before.out`), the hardened counter refuses it with the id sets (exit 1,
+  `controls/c1-candidate-mutant.out`), the unmodified counter accepts six cells (exit 0,
+  `controls/c1-positive.out`), and the grader-level negative arm prints `refused=0 … met=False`
+  (exit 1, `controls/c1-grader-base.out`).
+- C2: `RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=00394f3b` exit 0 (`measured/c2.out`); base
+  `mismatches=10` (exit 1, `controls/c2-base.out`); 14 of 15 forged variants are caught
+  (`controls/c2-forge-matrix.out`; J's negated arm sentence escapes as disclosed), and the `--rev`
+  clone replay catches the forged M2 with no frozen byte edited (`controls/c2-forged-rev.out`).
+- C3: `AUTOLOAD_STATES99 cells=8 mismatches=0 base_mismatches=7 flips=7 stable=1 met=True` exit 0
+  (`measured/c3.out`); base `mismatches=7` (exit 1, `controls/c3-base.out`); the plain-call control
+  is green for on/off/non-router (`controls/c3-plaincall.out`) and the verdict matrix is 77/77
+  (`controls/c3-harness.out`).
+- The round-98 19-cell budget regression at `00394f3b` is `controls/c3-regression.out`; it runs with
+  `--burners 0` (a plain second pass) so the vocabulary change is graded on cell expectations
+  without repeating M5/M6's host harm.
+
 ## Routed-defect answers
 
 - **Round-98 spot-check defects 1–4 and 6** (stale wave counts, seat accounting, census mislabel, M3
@@ -97,6 +118,12 @@ on every exit path.
 - **Defect 5** (M2's red-before receipt and the counter-level `n != len(selected)` fix) — answered by C1:
   `controls/c1-before.out` is the round-98 acceptance of the dropped-cell mutation (exit 0) and
   `controls/c1-candidate-mutant.out` is the successor's refusal (exit 1).
+- **Wave-1 findings (amendment 1):** C1's count guard failed on identity and on a vacuous
+  selection (RV02/EX01/MT01); C2's freeze bytes passed eight meaning-changing record mutations and
+  could not run its own `--tree` forge (CR01/EX02/SC01); C3 left the exit, role, absent-field and
+  non-boolean clauses ungraded and the candidate's call shape broke `set -e` on the plain-call
+  subcommands (RV01/MT01/SC01/SN01); a new reason row under the frozen reason-codes table could not
+  bind (CN01). Each is answered in `plans/round-99-amendment-1.md` and the ledger.
 - **Defect 7, carried unchanged:** the slow `/props` **verdict** stays fail-closed `MODEL_UNLOADED`
   (C3 changes only the reason vocabulary); `round75-instruments` `bad_rows=19` (L0 r87/r89 still open);
   `round78-instruments` red from the host's non-lane Ollama listener on 127.0.0.1:8080; the pass-level

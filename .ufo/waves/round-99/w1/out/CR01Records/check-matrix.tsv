@@ -1,0 +1,13 @@
+check	code	mechanism	reads_record	falsifier
+1	tools/round99-record-audit.py:178	token `12 reported, 0 dead` in SCORECARD block + position after stale token; count re-derived only in check 11	no	T_a passes (contradiction); T_b/T_b2 fail (ordering works)
+2	tools/round99-record-audit.py:181	same as 1 for LOG.md	no	T_a passes; T_b/T_b2 fail
+3	tools/round99-record-audit.py:185	token-only: both pointer strings anywhere in the union of blocks	no	T_f passes (SCORECARD names neither pointer)
+4	tools/round99-record-audit.py:188	population re-derived but graded as: two count tokens + every name present anywhere in the union; membership not graded	partial	T_e2 passes (CN01 as attack, SN01 as non-attack); T_e fails (old 4-name list)
+5	tools/round99-record-audit.py:192	token-only: `EX02BudgetControl` and `SB01-equivalent` substrings	no	T_a passes (sentence denies the attribution)
+6	tools/round99-record-audit.py:195	token-only: `RV03Intent` substring	no	T_a passes (`RV03Intent` was never dispatched)
+7	tools/round99-record-audit.py:201	line-local labelled regex for base/tip count groups; revision hashes never read	no	T_d fails (numbers swapped); T_h and T_h2 pass (hashes swapped / wrong)
+8	tools/round99-record-audit.py:212	re-derives census at hardcoded R98_BASE/R98_TIP vs hardcoded EXPECT; does not read any record	n/a (no record)	passes at base with no correction (controls/c2-base.out mismatch list omits 8,12)
+9	tools/round99-record-audit.py:217	receipt re-derives verdict+six arms; correction graded by name presence only, verdict string not required	partial	T_g passes with `PRE_REPORT round=98...` deleted from both blocks
+10	tools/round99-record-audit.py:224	token-only: `M3`,`round-98.md`,`sampling` inside ## Mistakes slice	no	T_i passes with `no record was carried`
+11	tools/round99-record-audit.py:227	re-derives seats=12/results=12/dead=0 from w1-results.json; correction graded by `12 seats`+`12 results` tokens	partial	T_a passes (`12 seats and 12 results are miscounted`)
+12	tools/round99-record-audit.py:231	pure re-derivation of the results-file split; reads no record; implied by check 11	n/a (no record)	passes at base with no correction; redundant

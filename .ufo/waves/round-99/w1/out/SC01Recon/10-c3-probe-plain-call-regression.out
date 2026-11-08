@@ -1,0 +1,46 @@
+# C3 depth: probe call-shape regression on plain-call paths (measured 2026-11-08, seat SC01Recon)
+
+Why: the candidate moves `router_autoload` out of an `if` condition into a plain statement
+(`router_autoload "$port"; ra=$?`). The probe runs `set -euo pipefail` (candidate line 93) and
+`main "$@"` as a plain top-level call (candidate line 1741), so errexit is active in the plain-call
+paths. `cmd_check` masks it (`eval_rows || exit_code=$?`, candidate line 1483); `cmd_listeners`
+(line 1319) and `cmd_consumers` (line 1383) call `classify` as a simple command and do not.
+
+Method: scratch copies of both probes with the `listeners)` branch of `main()` replaced by a single
+plain `classify "$KAMA_TEST_PORT" ""` against a loopback stub serving `/v1/models` (one `unloaded`,
+not-failed entry, existing local args[0]) and one `/props` answer per scenario. No tracked file edited;
+no host service contacted (only the stub port was dialled).
+
+Patched line (identical in both copies):
+    listeners) classify "$KAMA_TEST_PORT" ""; printf 'PLAIN_CALL verdict=%s reason=%s\n' "$C_VERDICT" "$C_REASON"; exit 0 ;;
+
+Probe shas:
+  829fbde5859d9111c85a3d6fe1aa63d0e7c830a40a5fc83c3a0595001fda7f21  candidate kama-probe.r99.sh
+  40ab387ee9877a9505af61172db5fc1cd2006021fb026e761e558e307a5b4a6e  base tools/kama-probe.sh @ 439fdb3d
+
+## Observed
+
+=== scenario=nonrouter port=44581 (props = {"status":"ok"}) ===
+-- candidate --   (no PLAIN_CALL line printed)  rc=2
+-- base --        PLAIN_CALL verdict=MODEL_UNLOADED reason=router-unloaded  rc=0
+
+=== scenario=off port=37955 (props = {"role":"router","models_autoload":false}) ===
+-- candidate --   (no PLAIN_CALL line printed)  rc=1
+-- base --        PLAIN_CALL verdict=MODEL_UNLOADED reason=router-unloaded  rc=0
+
+=== scenario=on port=42107 (props = {"role":"router","models_autoload":true}) ===
+-- candidate --   PLAIN_CALL verdict=MODEL_OK reason=router-unloaded-autoload  rc=0
+-- base --        PLAIN_CALL verdict=MODEL_OK reason=router-unloaded-autoload  rc=0
+
+Control that errexit really does abort on this shape (same bash, minimal):
+  bash -c 'set -euo pipefail; f(){ return 2; }; g(){ f; rc=$?; echo "after rc=$rc"; }; g; echo done'
+  -> no output, outer exit=2
+
+## Reading
+
+* On `check` (the only path the five AUTOLOAD_STATES99 cells exercise) the new call shape is
+  harmless: the C3 counter measured `mismatches=0` at the candidate.
+* On `listeners`/`consumers` an unread **or even explicit-off** `/props` now aborts the whole
+  subcommand with a bare exit status and no table/JSON rows. The base probe emitted a row for both.
+  The explicit-off case is not new vocabulary — it is a behavioural regression of the call shape.
+* The claim's five cells cannot see this: all five run `check`.

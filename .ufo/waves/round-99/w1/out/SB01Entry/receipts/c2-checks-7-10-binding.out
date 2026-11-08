@@ -1,0 +1,44 @@
+# SB01Entry: what the frozen C2 counter's checks 7 and 10 actually bind (measured)
+# date: 2026-11-08
+
+== A. the draft lesson's ## Mistakes section, token by token (check 10's tokens: M3, round-98.md, sampling) ==
+--- the ## Mistakes slice ---
+**M1 — the round-98 wave accounting was written from a directory scan, not from `w1-results.json`.**
+Class: `sampling`. Evidence: `corpus/lessons/round-98.md` M3 records that `RV03Intent` and
+`EX02BudgetControl` settled inside the same wave; `SCORECARD.md:6431` and `LOG.md:4040` still said
+"10 reported, 2 dead" and the LOG credited a "SB01-equivalent" seat that does not exist. Captured-by:
+the round-98 non-author spot-check (routed defect 1), not any lane counter — no counter read the wave
+accounting against the results file. Fix: the round-99 corrections in `SCORECARD.md` and `LOG.md`
+state **12 reported, 0 dead**, the derived **7 attack / 5 non-attack** split naming `EX02BudgetControl`
+and `RV03Intent`, re-derived by `tools/round99-record-audit.py` (C2). Shown able to fail: the same
+counter prints `mismatches=10` at base (`controls/c2-base.out`) and 0 after the corrections at M2.
+
+**M2 — the round-98 lesson labelled the base census numbers as HEAD.** Class: `labelling`. Evidence:
+`corpus/lessons/round-98.md:28` says "tiers measured with the census at HEAD" and quotes the r98
+**base** `681c80a4` → 361 rows (A 344, B 11, C 6; mined 324, queued 8, rejected 29); the r98
+**tip** `649bb2e9` → 363 rows (A 345, B 11, C 7; mined 325, queued 8, rejected 30). Captured-by: the
+round-98 spot-check's row-count cross-check. Fix: this lesson states the two groups with their
+revisions, and `t
+--- token presence in the slice ---
+  'M3': True
+  'round-98.md': True
+  'sampling': True
+--- which records carry each token ---
+  'M3' appears in record M1
+  'M3' appears in record M3
+  'round-98.md' appears in record M1
+  'round-98.md' appears in record M2
+  'round-98.md' appears in record M3
+  'sampling' appears in record M1
+  'sampling' appears in record M3
+
+== B. check 10 with the M3 record moved out of ## Mistakes: does the counter notice? ==
+M3 record moved out of ## Mistakes (its text is unchanged, only its section changed)
+RECORD_AUDIT99 checks=12 mismatches=0 met=True rev=tree:/fast/scratch/hyaku/kama-r99/SB01Entry/tree-draft-forged
+exit=0
+
+== C. check 7 with the census NUMBERS changed (not the revision ids) ==
+base census group numbers changed
+RECORD_AUDIT99_MISMATCH 7 lesson carries the base/tip census correction
+RECORD_AUDIT99 checks=12 mismatches=1 met=False rev=tree:/fast/scratch/hyaku/kama-r99/SB01Entry/tree-draft-forged
+exit=1

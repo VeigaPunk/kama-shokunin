@@ -1,0 +1,16 @@
+diff --git i/tools/round99-record-audit.py w/tools/round99-record-audit.py
+index 39a4c085..460840b5 100755
+--- i/tools/round99-record-audit.py
++++ w/tools/round99-record-audit.py
+@@ -250,9 +250,8 @@ def main() -> int:
+ 
+ 
+ def read_bytes_at(rev: str, path: str, repo: Path, tree):
+-    if tree:
+-        p = tree / path
+-        return p.read_bytes() if p.exists() else None
++    # The two census revisions are historical and always come from git, also under --tree:
++    # a materialized tree holds only the current bytes.
+     p = subprocess.run(["git", "-C", str(repo), "show", f"{rev}:{path}"], capture_output=True)
+     return p.stdout if p.returncode == 0 else None
+ 
