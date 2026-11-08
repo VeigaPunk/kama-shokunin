@@ -97,7 +97,8 @@ MID_TENSORS = 700_000
 SLOW_FILES = 40
 BASE_WRAPPER = 60.0   # the round-94 probe's constant pass limit
 MARGIN = 1.25         # the honest pass must exceed 1.25 x the base constant, or nothing is claimed
-MARGIN_HELP = "distinct slow files in the W03 cell; below the margin guard the base control refuses"
+MARGIN_HELP = ("distinct slow files in the W03 cell; below the margin guard the base control refuses. "
+               "The count is a host-speed parameter: the guard needs the W03 pass to cost >= 1.25 x 60 s")
 
 
 class CannotEvaluate(Exception):
@@ -175,7 +176,7 @@ def gguf_strbig() -> bytes:
     out = [b"GGUF", struct.pack("<I", 3), struct.pack("<QQ", 0, 1)]
     out.append(struct.pack("<Q", 1) + b"k")
     out.append(struct.pack("<IIQ", 9, 8, n))
-    out.append(struct.pack("<Q", 1) * n + b"x" * n)
+    out.append((struct.pack("<Q", 1) + b"x") * n)  # interleaved: length prefix, then payload
     return b"".join(out)
 
 
@@ -440,7 +441,7 @@ def main() -> int:
             # (--allow-clock) is expected to come back early precisely because it truncated.
             if not a.allow_clock and w03 < MARGIN * BASE_WRAPPER:
                 print(f"ROUTER_BUDGET96 could-not-evaluate: W03 natural pass {w03:.1f}s < "
-                      f"{MARGIN:.1f} x {BASE_WRAPPER:.0f}s — the round-94 constant wrapper would not "
+                      f"{MARGIN:.2f} x {BASE_WRAPPER:.0f}s — the round-94 constant wrapper would not "
                       f"truncate this listing on this host, so no discriminator is claimed")
                 return 2
             if a.skip_load:
