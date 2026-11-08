@@ -83,3 +83,12 @@ entry), and `${C_SERVED%,}` on a 1.6 MB list, which alone took 38 s in a UTF-8 l
 assignment is read as an awk STRING token and its backslashes would be processed (S592, POSIX awk lines
 107-108); ids compare as strings (`x ""`), because an ENVIRON element may be a numeric string (lines
 796-797) and `1.0` would otherwise equal `1`.
+
+## Superseded reading of the oversize `/props` row (appended round 100; the lines above are not rewritten)
+
+Item 2's last sentence and the table row "`/props` body over 4 MiB | router treated as not autoloading" describe the
+probe at `f968fb19` (this file's `verified-at`). Since round 99 an oversize `/props` reads `MODEL_UNLOADED` /
+`router-autoload-unread` (an unread flag, not an autoload-off answer; `corpus/knowledge/router-props-autoload.md`, cell
+U2, `.ufo/waves/round-99/measured/c3.out`), and since round 100 any `/props` answer whose final HTTP status is not 200
+is read the same way (`SKILL.md` §Round 100 `/props` status rule; `.ufo/waves/round-100/measured/c2.out`). The verdict
+(`MODEL_UNLOADED`, drift) is unchanged; only the reason differs.

@@ -4119,3 +4119,30 @@ was read at, because an unbound `file:line` moves when anything is inserted abov
   C1, C2 and C3 (frozen bytes, not rewritten). The measured predicate lines, byte-equal to the first
   predicate line of `.ufo/waves/round-99/measured/c1.out`, `c2.out` and `c3.out` (each `exit=0`),
   are recorded in `.ufo/waves/round-100/r99-measured.json`.
+
+## round 100 — the round-99 records re-bound to revisions, and a `/props` body read only on HTTP 200 (2026-11-08)
+
+L1 `KamaR100`. Base `6776c667`; freeze = measured commit `2e27e6f1` (plan `plans/round-100-claims.md`,
+counters `tools/round100-record-audit.py` and `tools/round100-props-status.py`, the probe change in
+`tools/kama-probe.sh` `router_autoload()`, the correction blocks above, S629–S631, freeze-time controls);
+receipts `3626e06c`; wave spec/dispatch `6d0e3abc`.
+
+**Motivating evidence.** The round-99 non-author spot-check routed: an unbound `SCORECARD.md:6431` pointer that
+had drifted to line 6446 by the round-99 tip (defect 1), an arithmetic-wrong "58% attack" (defect 2), the S628
+404 at the wrong upstream path (defect 3) and `claims.json` `"measured": "pending"` (defect 4). The round-99
+SKILL section itself disclosed that the probe did not consult the `/props` HTTP status; at base a router-shaped
+body under 500/403/202/302 graded a false `MODEL_OK` cold start (`.ufo/waves/round-100/controls/c2-base.out`).
+
+**C1 calibration** (as narrowed by `plans/round-100-amendment-1.md`): `RECORD_AUDIT100 checks=9 mismatches=0
+met=True` at `2e27e6f1`, base `mismatches=9`, forgeries P0 green / F1–F7 red. **C2 depth** (as narrowed):
+`ROUTER_PROPS_STATUS100 cells=9 mismatches=0 base_mismatches=6 flips=6 stable=3 met=True` at `2e27e6f1`,
+base `mismatches=6`, blanket mutant `mismatches=2`, round-99 regression 8/8.
+
+**Wave.** 12 seats, 12 results, 0 dead (`.ufo/waves/round-100/w1-results.json`). Policy attack roles 5 of 12
+(42%), ledger attack roles 7 of 12 (58%). Ten seat verdicts `falsifies-wording` (C1: EX02, CR01, RV01, SB01,
+SC01, SN01; C2: EX01, SB01, SC02, SN01), seven `neutral`, none `falsifies-number`. Amendment 1 narrows both
+claims to what the counters enforce; the killer cells and the widened pointer grammar are §Planned (round 101).
+
+**Integration.** Depth row re-anchored (CN01 §4c / SN01 F1: the freeze's `SKILL.md` edit had turned the axes
+reconciler and the round-97 self-assessment audit red); stale knowledge statements superseded by appended notes;
+QUALITY KQ153–KQ155; lesson `corpus/lessons/round-100.md`; census 368 → 371.

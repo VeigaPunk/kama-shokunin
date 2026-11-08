@@ -56,3 +56,11 @@ resident is observed on the lane child only.
 - `/props?model=<id>` routes to a model instance (S581 line 2339); the probe reads bare `/props` only, which never triggers a reload.
 - A per-request `?autoload=false` consumer is not modelled: the probe grades the router default.
 - Without python3 the probe keeps the pre-round-88 verdict.
+
+## Unread autoload flag (appended round 100; the table above is not rewritten)
+
+The row "`unloaded` without autoload … → `MODEL_UNLOADED` / `router-<value>[-failed]`" covers an explicit
+`models_autoload: false` (reason `router-unloaded`). When the probe could not read the flag — timeout, over the 4 MiB
+cap, not JSON, not a router document, no boolean field (round 99), or a final HTTP status other than 200 (round 100) —
+the same entry reads `MODEL_UNLOADED` / `router-autoload-unread`: `corpus/knowledge/router-props-autoload.md`,
+`SKILL.md` §Round 99 unread-autoload reason and §Round 100 `/props` status rule.
