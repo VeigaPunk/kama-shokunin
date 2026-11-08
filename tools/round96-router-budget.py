@@ -45,6 +45,8 @@ Fixtures (deterministic bytes, in the run's private work dir):
                   4 200 000 <= MAX_STEPS 5 000 000 at M1; `-` at base -> the W11 discriminator)
   strbig.gguf     GGUF v3, 0 tensors, one uint32 string array of 6 000 000 one-byte strings
                   (54 MB: each element carries its u64 length) -> `-` (disclosed)
+  budgetkill.gguf the same 54 MB array followed by one tensor whose declared offset is 1<<40:
+                  capped parse -> `-`, a parse without a step cap -> `invalid` (amendment 6)
   missing         a path under the work dir that does not exist
 
 Cells (expect `good`; verdict/reason read from `check --json` rows[0]):
@@ -66,6 +68,8 @@ Cells (expect `good`; verdict/reason read from `check --json` rows[0]):
                      (the base probes grades this `-` loadable; see amendment-4 F1)
   W12-strings        1 entry -m strbig.gguf                       MODEL_OK router-unloaded-autoload
                      (disclosed: 6 000 000 string elements > MAX_STEPS -> `-` loadable)
+  W13-budget-kill    1 entry -m budgetkill.gguf                   MODEL_OK router-unloaded-autoload
+                     (the cap is load-bearing: without MAX_STEPS the same bytes are `invalid`)
 
 Exit: 0 predicate met | 1 not met | 2 could-not-evaluate.
 """
@@ -88,7 +92,7 @@ import time
 from pathlib import Path
 
 BASE = "a27656a454b1a2364f8b6e55f42fbca8c2e86ee4"  # round-94 M1 (per-file 15 s slice, timeout 60)
-CELLS = 12
+CELLS = 13
 RUNS = 2
 KILL = 1200
 CAP = 4194304
@@ -180,6 +184,21 @@ def gguf_strbig() -> bytes:
     return b"".join(out)
 
 
+def gguf_budgetkill() -> bytes:
+    # Round 96 amendment 6 (wave-1 MT01 G1): the frozen cells cannot distinguish a bounded step
+    # budget from an unbounded one, because every fixture's full parse is also `-`. This one is
+    # capped-`-` but, parsed without a cap, reaches a tensor whose declared offset is wrong and
+    # returns `invalid`: deleting MAX_STEPS therefore flips a graded cell.
+    n = 6_000_000
+    out = [b"GGUF", struct.pack("<I", 3), struct.pack("<QQ", 1, 1)]
+    out.append(struct.pack("<Q", 1) + b"k")
+    out.append(struct.pack("<IIQ", 9, 8, n))
+    out.append((struct.pack("<Q", 1) + b"x") * n)
+    name = b"t0"
+    out.append(struct.pack("<Q", len(name)) + name + struct.pack("<IQIQ", 1, 1, 0, 1 << 40))
+    return b"".join(out)
+
+
 def fixture_class(path: Path) -> str:
     """The class this counter DESIGNED for its own fixture, decided from the bytes it wrote.
 
@@ -194,6 +213,8 @@ def fixture_class(path: Path) -> str:
         return "invalid"
     n_tensors = struct.unpack_from("<Q", b, 8)[0]
     n_kv = struct.unpack_from("<Q", b, 16)[0]
+    if n_tensors == 1 and len(b) > 50_000_000:  # budgetkill: capped `-`, uncapped `invalid`
+        return "-"
     if n_tensors == 0 and n_kv >= 1:  # strbig: string-array past MAX_STEPS -> undecidable
         return "-"
     if n_tensors > 1_000_000:  # the probe's MAX_TENSORS: designed undecidable
@@ -301,19 +322,22 @@ def build_fixtures(w: Path, n_slow: int = SLOW_FILES):
     mid.write_bytes(gguf(MID_TENSORS, 1, False))
     strbig = w / "strbig.gguf"
     strbig.write_bytes(gguf_strbig())
+    budgetkill = w / "budgetkill.gguf"
+    budgetkill.write_bytes(gguf_budgetkill())
     for p, want in ((ok, "ok"), (ok2, "ok"), (Path(slow[0]), "invalid"),
-                    (Path(fast[0]), "invalid"), (big, "-"), (mid, "invalid"), (strbig, "-")):
+                    (Path(fast[0]), "invalid"), (big, "-"), (mid, "invalid"), (strbig, "-"),
+                    (budgetkill, "-")):
         got = fixture_class(p)
         if got != want:
             raise CannotEvaluate(f"fixture {p.name} designed {want!r}, oracle says {got!r}")
-    return slow, str(ok), str(ok2), fast, str(big), str(mid), str(strbig)
+    return slow, str(ok), str(ok2), fast, str(big), str(mid), str(strbig), str(budgetkill)
 
 
 def evaluate_pass(R: Runner, w: Path, label: str, n_runs: int, n_slow: int = SLOW_FILES):
     n_slow = max(8, n_slow)
     fx = w / label
     fx.mkdir(parents=True, exist_ok=True)
-    slow, ok, ok2, fast, big, mid, strbig = build_fixtures(fx, n_slow)
+    slow, ok, ok2, fast, big, mid, strbig, budgetkill = build_fixtures(fx, n_slow)
     missing = str(fx / "absent" / "missing.gguf")
     exe = ok  # status.args[0] must be an existing absolute local file
 
@@ -340,6 +364,7 @@ def evaluate_pass(R: Runner, w: Path, label: str, n_runs: int, n_slow: int = SLO
         ("W09-undecided-big", [[exe, "-m", big]], "MODEL_OK", "router-unloaded-autoload"),
         ("W11-700k", [[exe, "-m", mid]], "MODEL_UNLOADED", "router-model-invalid"),
         ("W12-strings", [[exe, "-m", strbig]], "MODEL_OK", "router-unloaded-autoload"),
+        ("W13-budget-kill", [[exe, "-m", budgetkill]], "MODEL_OK", "router-unloaded-autoload"),
     ]
     results = {}
     durations = {}
