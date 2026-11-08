@@ -2397,3 +2397,31 @@ clamps) and chooses nothing; `unrelated` = text, tracing, URL parsing or a readb
 | R21 | n_parallel | shared | the shared entry point, when none of these rows applies the value is not set by this entry | P37 | `common_params::n_parallel` initialises to 1 for every tool; a config.ini `parallel` line reaches the caller's params only from the `[default]` or `[*]` section. | S593, S604 |
 | R20 | port | other | the other entry point, when none of these rows applies the value is not set by this entry | P55, P57 | rpc-server has its own port default 50052 and its own `-p`/`--port` parser, so a value set here is that tool's own listen port; llama-server's port rows never reach it. | S615 |
 | R21 | n_parallel | other | the other entry point, when none of these rows applies the value is not set by this entry | P52, P53, P54 | imatrix sets its own sequence count and perplexity clamps its own (`max(4, n_parallel)`, then `max(1, n_batch / n_ctx)`); each value is that tool's own, not llama-server's. | S613, S614 |
+
+### Round 95 correction (wave-1 K2 findings; dated 2026-11-08)
+
+The rows and decisions above are the frozen round-95 bytes and are not rewritten. The wave's non-author read
+(`.ufo/waves/round-95/w1/RV02SetterRows.md`) falsified four statements of the section's own prose; the corrected
+readings are here, and every registry row, decision or future row cites these.
+
+- **c1 — the router-child *slot* count is not decided by this section.** There is no `R21` row for `router-child`
+  because no population line sets a child's `n_parallel`: the child's slot count arrives through the router's
+  inherited environment and its own argv (`AIP_*`/`LLAMA_ARG_*` copied by `get_environment`, P72/P76), which the
+  population records as carriers and which no `default`/`overrides` row owns. The opening sentence's "each entry
+  now has its own `R20`/`R21` row" therefore overstates: nine decision rows exist for the (parameter, entry) pairs
+  that own a setter row — `port` × {server, cli, router-child, shared, other} and `n_parallel` × {server, cli,
+  shared, other}. A child's slot count is the round-94 measurement's open case (4/5/6/7/9) and stays frontier.
+- **c2 — `[*]` is a decision-text token, not a population pattern token.** The pattern admits
+  `COMMON_PRESET_DEFAULT_NAME` and the lines that compare a section name with `"*"`; it does not match
+  `preset.name == "*"` as its own pattern entry, and no row is keyed on it. The section's opening sentence is
+  corrected to that reading. The `[*]` route is grounded by the decision rows' precedence token (graded) and by
+  the archive lines quoted there, not by a dedicated row.
+- **c3 — the `cli-server.h:43` copy does not carry the listen port.** `common_params server_params = params;`
+  copies the whole struct, but the embedded server's port is replaced before start (`:35` takes a free port,
+  `:44` writes it into `server_params`), so what actually reaches it from the CLI is the slot count and the model
+  parameters, never `params.port`. P100's condition is corrected to that reading by this note; its Text cell stands.
+- **c4 — `cli` is the right Entry for P15–P17, and the other tools' own `--parallel` is P52–P54.** The
+  non-server `--parallel` (`common/arg.cpp:2526-2531`) is what llama-cli's embedded server parses, so those rows
+  are `cli`; imatrix and perplexity register the same option and then overwrite the value with their own rows, which
+  is why `R21 other` cites P52–P54 and not P16. A row's Entry cell is single-valued, so "reaches other tools" is not
+  an entry: it is the reason those tools carry their own setter rows.
