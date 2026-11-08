@@ -2440,13 +2440,13 @@ The binding tensor ceiling is the step budget, not the `MAX_TENSORS` constant. O
 
 At the old `MAX_STEPS = 4 000 000` the `nd = 1` ceiling was 666,666, so a 700 000-tensor file (4 200 004 steps) graded `-` — undecidable → loadable, the round-89 rule, i.e. `MODEL_OK` for a file the router rejects. That file now decides `invalid` at `nd ≤ 2` and stays `-` at `nd ≥ 3`; a listing's real ceiling is the average rank of its headers. KV and string-array work also charges steps. Sourced on S618 (`ggml/include/ggml.h` @ b12177, sha256 `590e00a5…67392`, opened 2026-11-08): "nb[0] = ggml_type_size(type)" (line 697).
 
-### Round 97 correction (step-budget boundary table and the three graded forgeries; dated 2026-11-08)
+### Round 97 correction (step-budget boundary table and the five graded forgeries; dated 2026-11-08; amended round 98)
 
 The round-96 table above is the arithmetic; this section is the boundary decision a reader can
 apply without re-parsing `tools/kama-probe.sh`. A file pays `4 + T x (5 + nd)` steps, where `T`
 is its declared tensor count and `nd` its rank; `MAX_STEPS = 5,000,000` decides it (`invalid`)
 when that sum fits and leaves it `-` (undecidable → loadable, the round-89 rule) when it does
-not. The six rows below are the two boundary classes the round-96 table does not name:
+not. The eight rows below are the boundary classes the round-96 table does not name:
 
 | tensors T | rank nd | steps = 4 + T x (5 + nd) | vs MAX_STEPS | verdict |
 |---|---|---|---|---|
@@ -2456,6 +2456,8 @@ not. The six rows below are the two boundary classes the round-96 table does not
 | 700,000 | nd=4 | 6,300,004 | > budget | - |
 | 555,555 | nd=4 | 4,999,999 | <= budget | invalid |
 | 555,556 | nd=4 | 5,000,008 | > budget | - |
+| 800,000 | nd=1 | 4,800,004 | <= budget | invalid |
+| 520,000 | nd=4 | 4,680,004 | <= budget | invalid |
 
 Read it as one rule for the class the rows cover — a KV-free file at `nd <= 4`: the ceiling is
 `(5,000,000 - 4) / (5 + nd)` per rank, so a 900,000-tensor `nd=1` file and a 700,000-tensor
@@ -2463,11 +2465,20 @@ Read it as one rule for the class the rows cover — a KV-free file at `nd <= 4`
 700,000-tensor `nd=1` file decides `invalid`. A file with KV entries pays at least 4 more steps
 per entry (a string value 5), and a header whose `nd > 4` is `invalid` before a step is charged,
 so the rows do not bound those classes. A green round-96 receipt does not prove this arithmetic
-is enforced: four probe variants survive all 13 of its cells — one that stopped charging per
+is enforced: five probe variants survive all 13 of its cells — one that stopped charging per
 header (parses 900,000 headers fully), one that charges a constant 6 steps per header regardless
 of rank (decides the 700,000 `nd=4` file), one whose `MAX_META` is 100 MiB instead of 512 MiB
-(grades the 160 MiB-header file `-`), and one that drops the four preamble steps (decides the
-833,333-header nd=1 file). The round-97 counter `tools/round97-router-budget.py` grades each with
-W14-900k-nd1, W15-700k-nd4, W16-maxmeta and W17-833333-nd1 respectively. Sourced on S620 (GGUF spec, ggml `57e2c2ca`: `gguf_tensor_info_t` carries `name`,
-`n_dimensions`, `dimensions[n_dimensions]`, `type`, `offset` — the five fields the probe prices)
-and S621 (supersedes S618's constant-6 cell; the `5 + nd` arithmetic above).
+(grades the 160 MiB-header file `-`), one that drops the four preamble steps (decides the
+833,333-header nd=1 file), and one that **overcharges** by a step per header (charges `6 + nd`
+where the parser charges `5 + nd`, so its nd=1 ceiling is 714,285 headers, not 833,332). The
+overcharge variant survives all 17 round-97 cells because every one of their fixtures' +1 parse
+lands on the same side of the budget as its real parse; the two rows this table adds —
+(800,000, nd=1) and (520,000, nd=4) — are the window where the real parse decides `invalid` and a
+uniform +1 parse cannot. The round-97 counter `tools/round97-router-budget.py` grades the first
+four with W14-900k-nd1, W15-700k-nd4, W16-maxmeta and W17-833333-nd1; the round-98 successor
+`tools/round98-router-budget.py` adds W18-800k-nd1 and W19-520k-nd4 for the overcharge variant.
+Sourced on S620 (GGUF spec, ggml `57e2c2ca`: `gguf_tensor_info_t` carries `name`,
+`n_dimensions`, `dimensions[n_dimensions]`, `type`, `offset` — the five fields the probe prices),
+S621 (supersedes S618's constant-6 cell; the `5 + nd` arithmetic above), and S622 (the same spec's
+`gguf_header_t`, whose four fields — magic, version, tensor_count, metadata_kv_count — are the
+four preamble steps the table's `4 +` term pays).
