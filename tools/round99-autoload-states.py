@@ -4,28 +4,29 @@
 PREDICATE (same sentence as plans/round-99-claims.md section C3):
 
     `python3 tools/round99-autoload-states.py --repo . --rev <M3> --work <scratch>`
-    prints `AUTOLOAD_STATES99 cells=5 mismatches=0 base_mismatches=4 flips=4 stable=1 met=True
-    rev=<resolved> probe_sha256=<sha>` and exits 0 at M3.
+    prints `AUTOLOAD_STATES99 cells=8 mismatches=0 base_mismatches=7 flips=7 stable=1 met=True
+    rev=<resolved> probe_sha256=<sha>` and exits 0 at M3 (the amendment-1 commit).
 
     Before (do-nothing control): `--rev 439fdb3d` (the same counter against the base probe)
-    prints `mismatches=4 base_mismatches=4 flips=0 stable=1 met=False` and exits 1 — the four
+    prints `mismatches=7 base_mismatches=7 flips=0 stable=8 met=False` and exits 1 — the seven
     unread `/props` cells read `router-unloaded`, as if autoload had answered "off".
 
-The five live cells run the lane's own probe against a stub router on a free loopback port. Each
+The eight live cells run the lane's own probe against a stub router on a free loopback port. Each
 stub serves `/v1/models` with one `unloaded`, not-failed entry whose `status.args[0]` is an existing
-local file, and a different `/props` answer per cell:
+local file, and a different `/props` answer per cell. Each cell grades (verdict, reason, exit):
 
-  U1-slow-props          valid autoload-true body after a 6.5 s delay (probe --timeout 5)
-                         tip MODEL_UNLOADED/router-autoload-unread   base MODEL_UNLOADED/router-unloaded
+  U1-slow-props          valid autoload-true body after a 6.5 s delay (probe default --timeout 5)
   U2-oversize-props      a 4.5 MiB body (over the probe's 4 MiB cap)
-                         tip MODEL_UNLOADED/router-autoload-unread   base MODEL_UNLOADED/router-unloaded
   U3-nonjson-props       an HTML body (not JSON)
-                         tip MODEL_UNLOADED/router-autoload-unread   base MODEL_UNLOADED/router-unloaded
   U4-nonrouter-props     `{"status":"ok"}`: valid JSON, no router role, no autoload field
-                         tip MODEL_UNLOADED/router-autoload-unread   base MODEL_UNLOADED/router-unloaded
+  U5-field-absent        `{"role":"router"}`: a router document with no models_autoload field
+  U6-field-nonboolean    `{"role":"router","models_autoload":"false"}`: a string, not a boolean
+  U7-wrong-role          `{"role":"worker","models_autoload":false}`: a non-router document
+                         U1-U7 tip MODEL_UNLOADED/router-autoload-unread exit 2;
+                         base MODEL_UNLOADED/router-unloaded exit 2
   P1-autoload-off        `{"role":"router","models_autoload":false}`: an explicit off
-                         tip and base MODEL_UNLOADED/router-unloaded (positive control: a blanket
-                         rename of every unread-or-off answer fails this cell)
+                         tip and base MODEL_UNLOADED/router-unloaded exit 2 (positive control:
+                         a blanket rename of every unread-or-off answer fails this cell)
 
 Grounding (SOURCES.md): S624 `tools/server/server-models.cpp:2030` builds the bare `/props` body
 with `{"models_autoload", params.models_autoload}`; S625 `common/common.h:705` defaults the field
@@ -37,6 +38,7 @@ Exit: 0 predicate met | 1 not met | 2 could-not-evaluate | 64 usage.
 
 import argparse
 import hashlib
+import os
 import http.server
 import json
 import re
@@ -51,8 +53,8 @@ from pathlib import Path
 
 BASE = "439fdb3d41b55e5b9e6d7c480d17f2c428bae978"
 EXPECT_ID = "fixture-model"
-UNREAD = ("MODEL_UNLOADED", "router-autoload-unread")
-OFF = ("MODEL_UNLOADED", "router-unloaded")
+UNREAD = ("MODEL_UNLOADED", "router-autoload-unread", 2)
+OFF = ("MODEL_UNLOADED", "router-unloaded", 2)
 SLOW_DELAY = 6.5
 
 
@@ -94,6 +96,15 @@ class Handler(http.server.BaseHTTPRequestHandler):
         elif self.scenario == "nonrouter":
             body = b'{"status":"ok"}'
             ctype = "application/json"
+        elif self.scenario == "roleonly":
+            body = b'{"role":"router"}'
+            ctype = "application/json"
+        elif self.scenario == "strfalse":
+            body = b'{"role":"router","models_autoload":"false"}'
+            ctype = "application/json"
+        elif self.scenario == "wrongrole":
+            body = b'{"role":"worker","models_autoload":false}'
+            ctype = "application/json"
         else:  # off
             body = b'{"role":"router","models_autoload":false}'
             ctype = "application/json"
@@ -125,7 +136,9 @@ class Stub(http.server.ThreadingHTTPServer):
 def verdict_reason(probe: Path, port: int, work: Path, timeout: int):
     cmd = ["bash", str(probe), "check", "--port", str(port), "--expect", EXPECT_ID,
            "--id", "r99", "--json"]
-    p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    env = dict(os.environ)
+    env["TMPDIR"] = str(work)   # keep the probe's own mktemp files under the counter's scratch
+    p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, env=env)
     text = p.stdout
     try:
         doc = json.loads(text)
@@ -138,11 +151,14 @@ def verdict_reason(probe: Path, port: int, work: Path, timeout: int):
     return row.get("verdict"), row.get("reason"), p.returncode
 
 
-CELLS = [("U1-slow-props", "slow", UNREAD, "MODEL_UNLOADED/router-autoload-unread"),
-         ("U2-oversize-props", "oversize", UNREAD, "MODEL_UNLOADED/router-autoload-unread"),
-         ("U3-nonjson-props", "nonjson", UNREAD, "MODEL_UNLOADED/router-autoload-unread"),
-         ("U4-nonrouter-props", "nonrouter", UNREAD, "MODEL_UNLOADED/router-autoload-unread"),
-         ("P1-autoload-off", "off", OFF, "MODEL_UNLOADED/router-unloaded")]
+CELLS = [("U1-slow-props", "slow", UNREAD, "MODEL_UNLOADED/router-autoload-unread/2"),
+         ("U2-oversize-props", "oversize", UNREAD, "MODEL_UNLOADED/router-autoload-unread/2"),
+         ("U3-nonjson-props", "nonjson", UNREAD, "MODEL_UNLOADED/router-autoload-unread/2"),
+         ("U4-nonrouter-props", "nonrouter", UNREAD, "MODEL_UNLOADED/router-autoload-unread/2"),
+         ("U5-field-absent", "roleonly", UNREAD, "MODEL_UNLOADED/router-autoload-unread/2"),
+         ("U6-field-nonboolean", "strfalse", UNREAD, "MODEL_UNLOADED/router-autoload-unread/2"),
+         ("U7-wrong-role", "wrongrole", UNREAD, "MODEL_UNLOADED/router-autoload-unread/2"),
+         ("P1-autoload-off", "off", OFF, "MODEL_UNLOADED/router-unloaded/2")]
 
 
 def run_pass(probe: Path, tag: str, work: Path):
@@ -205,11 +221,12 @@ def main() -> int:
     flips = 0
     stable = 0
     for cid, _scenario, want, label in CELLS:
-        got = (tip[cid][0], tip[cid][1])
+        got = tuple(tip[cid])
         if got != want:
             mismatches += 1
-            print(f"AUTOLOAD_STATES99_MISMATCH {cid} want={label} got={got[0]}/{got[1]}")
-        bgot = (base[cid][0], base[cid][1])
+            print(f"AUTOLOAD_STATES99_MISMATCH {cid} want={label} "
+                  f"got={got[0]}/{got[1]}/{got[2]}")
+        bgot = tuple(base[cid])
         if bgot != want:
             base_mismatches += 1
         if got != bgot:

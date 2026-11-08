@@ -671,12 +671,13 @@ def main() -> int:
             if a.control:
                 # Round 99 (C1): a control receipt grades the population it was asked for. The
                 # round-98 predecessor printed `cells=<ran>` and returned ok on a dropped-cell
-                # mutation (observed cells=16, exit 0); here the selected count is compared to the
-                # cells the pass actually ran, and a short pass cannot pass.
-                want_selected = CELLS if selected is None else len(selected)
+                # mutation (observed cells=16, exit 0); here the selected id set is compared to the
+                # ids the pass actually ran, and a short, substituted or renamed pass cannot pass
+                # (amendment 1, from RV02 rows 4/5/7/9/10).
+                want_ids = sorted(LEGACY_CELLS | NEW_CELLS if selected is None else set(selected))
                 n_ok = sum(1 for good, _, _, _ in natural.values() if good)
                 n = len(natural)
-                population_ok = int(n == want_selected)
+                population_ok = int(bool(want_ids) and set(want_ids) == set(natural))
                 survived = int(n_ok == n)
                 caught = int(n_ok < n)
                 cell = "-"
@@ -692,8 +693,9 @@ def main() -> int:
                 else:
                     ok = survived if a.expect == "survived" else caught
                 ok = int(ok and population_ok)
-                print(f"ROUTER_BUDGET99_CONTROL cells={n} cells_ok={n_ok} selected={want_selected} "
-                      f"ran={n} population_ok={population_ok} mutant={a.mutant} "
+                print(f"ROUTER_BUDGET99_CONTROL cells={n} cells_ok={n_ok} selected={len(want_ids)} "
+                      f"ran={n} selected_ids={','.join(want_ids)} ran_ids={','.join(sorted(natural))} "
+                      f"population_ok={population_ok} mutant={a.mutant} "
                       f"slow_files={a.slow_files} runs={runs} "
                       f"expect={a.expect} expect_cell={cell} cell_ok="
                       f"{'-' if cell_ok is None else cell_ok} survived={survived} caught={caught} "

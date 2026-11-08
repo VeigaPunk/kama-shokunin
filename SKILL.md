@@ -1770,7 +1770,8 @@ the served-id match, before `MODEL_OK` is final):
 | matching entry `sleeping` | `MODEL_OK` / `router-sleeping` | Serves; the next request wakes it (cold start). |
 | matching entry `unloaded` (not failed) and bare `GET /props` says `"role":"router","models_autoload":true` | `MODEL_OK` / `router-unloaded-autoload` | Serves; the next request loads it (cold start). |
 | matching entry `status.value` `loading` or `downloading` | `MODEL_LOADING` / `router-<value>`, drift, exit 2 | Not ready; re-probe later. |
-| matching entry `unloaded` without autoload, `failed: true` (reason gains `-failed`), `incomplete` or unknown | `MODEL_UNLOADED` / `router-<value>`, drift, exit 2 | A request fails until loaded: `POST /models/load {"model":"<id>"}`. |
+| matching entry `unloaded` (not failed) and `/props` could not be read: timeout, over the 4 MiB cap, not JSON, not a router document, or no boolean `models_autoload` | `MODEL_UNLOADED` / `router-autoload-unread`, drift, exit 2 | The flag is unread, not an observed off state; re-probe `/props` before concluding anything about autoload (round 99; §Round 99 unread-autoload reason) |
+| matching entry `unloaded` with `models_autoload: false` (read "without autoload" below as this explicit state), `failed: true` (reason gains `-failed`), `incomplete` or unknown | `MODEL_UNLOADED` / `router-<value>`, drift, exit 2 | A request fails until loaded: `POST /models/load {"model":"<id>"}`. |
 
 The sleeping and autoload rows are the round-88 repair: the frozen claim rule graded them `MODEL_UNLOADED`,
 and the completion oracle answered 200 for both (`.ufo/waves/round-88/repair/oracle-cells-M.out`). Read
@@ -1806,6 +1807,32 @@ Gate: `python3 tools/round89-unloadable-cells.py --repo . --rev master --work <s
 lane-owned b12177 children, oracle = a real completion; 0 all agree, 1 mismatch, 2 could-not-evaluate). Header
 checks only; the probe never opens a non-regular file or anything under `/proc`, `/sys` or `/dev`, reads no tensor data, checks only the matching entries' files and only on an autoload router, and gives up (no verdict change) after a 4 s deadline or 4 M reads (wave-1 repair `5b1e0fb3`: EX02 measured +1.3 s per live check and SN01 a 41 s stall on a 219-byte answer at `4f9eacf7`). Known limit: a file whose header
 is intact but whose tensor bytes are corrupt still grades `MODEL_OK` (only a load can tell).
+
+## Round 99 unread-autoload reason (owner: kama)
+
+The router's bare `GET /props` body is built from the running configuration: `{"models_autoload", params.models_autoload},`
+(`tools/server/server-models.cpp:2030`, `get_router_props`), that field defaults to `true` (`common/common.h:705`;
+S624/S625), and its only writer is the option callback (`common/arg.cpp:3682`, S627). An autoload-off router is therefore an explicit `--no-models-autoload` state, and an answer the probe could
+not read is not evidence of it. `router_autoload()` is tri-state; the verdict stays fail-closed:
+
+| `/props` outcome for a matching `unloaded`, not-failed entry | reason |
+|---|---|
+| valid router document, `models_autoload: true` | `MODEL_OK` / `router-unloaded-autoload` (unchanged) |
+| valid router document, `models_autoload: false` | `MODEL_UNLOADED` / `router-unloaded` |
+| timeout, over the 4 MiB cap, non-JSON, not a router document, field absent, or field non-boolean | `MODEL_UNLOADED` / `router-autoload-unread` |
+
+Eight live cells on loopback stubs grade the three states (seven unread classes plus an explicit-off positive control
+that kills a blanket rename), including the seven's exit code: `python3 tools/round99-autoload-states.py --repo .
+--rev <rev> --work <scratch>` (`cells=8 mismatches=0 base_mismatches=7 flips=7 stable=1`;
+`.ufo/waves/round-99/measured/c3.out`). Limits: the cells are stub-fed, not a live router; the verdict and exit code
+are unchanged (still drift); the probe does not consult the `/props` HTTP status, so a non-200 body that parses as a
+router document is graded as its explicit state; `/props?model=` and per-request `?autoload=` are not modelled; a
+valid router document that omits the field is unread, because off requires an explicit `false`; a
+`models_autoload: true` body is outside the unread cells and is protected by the round-98 19-cell regression. The
+round-90 `## Probe reason codes` table below stays byte-identical and is the frozen 23-reason population bound to its
+capture; `router-autoload-unread` is documented here and in the decision row above, not as a row there (a row there
+cannot bind without editing the round-90 instrument — CN01's A/B/C fixtures in
+`.ufo/waves/round-99/w1/CN01Overlap.md` §4).
 
 ## Router error signatures (llama.cpp router mode)
 

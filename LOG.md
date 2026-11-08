@@ -4043,3 +4043,8 @@ recorded in lesson M3). Attack seats 7 of 12 (58%): RV01/RV02 reviewers, CR01/CR
 mutation-tester, SN01 sentinel, CN01 connector; building seats 5: SC01/SC02 scouts, EX01 executor,
 SB01-equivalent prose carried by the lesson, CN01 also bounded. No seat committed, pushed or ran a
 mutating git/jj command.
+
+## Round 99 correction — round-98 wave accounting (appended 2026-11-08; the entry above is not rewritten)
+
+The round-98 wave line "10 reported, 2 dead" (`LOG.md:4040`; the SCORECARD twin is `SCORECARD.md:6431`) is wrong: `.ufo/waves/round-98/w1-results.json` carries **12 seats** and **12 results**, every result with a non-empty output, so it is **12 reported, 0 dead** (lesson M3: `RV03Intent` and `EX02BudgetControl` settled). The split is **7 attack** (`RV01SelfAssess`, `RV02BudgetCells`, `CR01Boundary`, `CR02Wording`, `MT01Forgeries`, `SN01StepFlips`, `RV03Intent`) and **5 non-attack** (`SC01SiblingScan`, `SC02SourceReopen`, `EX01SelfAssessControl`, `EX02BudgetControl`, `CN01Overlap`); the "SB01-equivalent prose" seat above is `EX02BudgetControl`. The gate receipt `PRE_REPORT round=98 arms=14 failed=6 uncommitted=1` names six failed arms (`selfdesc`, `newest-closure`, `round-scope`, `round-clean`, `round75-instruments`, `round78-instruments`), not five.
+

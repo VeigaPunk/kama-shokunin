@@ -55,6 +55,11 @@
 # router-unloaded-autoload (a cold start, not drift). Precedence: loaded or status-less,
 # then these cold-start states, then loading/downloading, then MODEL_UNLOADED. /props is
 # read bare only (`/props?model=` would route to, and may load, an instance).
+# Round 99 (C3; plans/round-99-claims.md): an unread /props answer -- a fetch that timed out, was
+# over the 4 MiB cap, was not JSON, or carried no explicit router `models_autoload` -- is NOT an
+# autoload-off answer. It reads MODEL_UNLOADED reason router-autoload-unread; only an explicit
+# {"role":"router","models_autoload":false} reads router-unloaded (S624, S625: the field is built
+# from params.models_autoload, default true, so "off" is an explicit state, never an absence).
 # Round 89 (receipts .ufo/waves/round-89/; plans/round-89-claims.md C1): a listed
 # `unloaded` entry whose model file cannot load answers a real request with 500 "model
 # name=<id> failed to load" even on an autoload router. When status.args[0] is a local
@@ -99,7 +104,8 @@ CONNECT_TIMEOUT=2
 # Round 90 (C1; S587 curl max-filesize, S588 RFC 8259 section 7): a listener's answer body is
 # capped at MAX_BODY bytes. curl aborts at the cap (exit 63; since curl 8.4.0 also for a body of
 # unknown length) and the written size is re-checked for older curl. An oversize /v1/models
-# answer is FOREIGN_SERVICE body-too-large, never MODEL_OK; an oversize /props is "not autoload".
+# answer is FOREIGN_SERVICE body-too-large, never MODEL_OK; an oversize /props is unread (round 99:
+# reason router-autoload-unread, never an autoload-off claim).
 MAX_BODY=4194304
 JSON_OUT=0
 OPT_PORT=""
@@ -879,29 +885,43 @@ router_file_states() { # $1 body file, $2 candidate count, $3... entry indexes -
   fi
 }
 
-# $1 port -> 0 when the bare GET /props body is {"role":"router",...,"models_autoload":true}
+# $1 port -> 0 autoload explicitly on, 1 autoload explicitly off, 2 unread (fetch failed,
+# over the 4 MiB cap, not JSON, not a router props doc, or the field is absent).
 router_autoload() {
-  [ "$HAVE_PY" -eq 1 ] || return 1
-  local port=$1 pbody="$TMP_ROOT/props$1.body"
+  [ "$HAVE_PY" -eq 1 ] || return 2
+  local port=$1 pbody="$TMP_ROOT/props$1.body" state
   curl -sS --noproxy '*' --connect-timeout "$CONNECT_TIMEOUT" --max-time "$TIMEOUT" \
-    --max-filesize "$MAX_BODY" -o "$pbody" "http://127.0.0.1:$port/props" 2>/dev/null || return 1
-  [ "$(wc -c < "$pbody")" -le "$MAX_BODY" ] || return 1
-  python3 - "$pbody" <<'PY' 2>/dev/null
+    --max-filesize "$MAX_BODY" -o "$pbody" "http://127.0.0.1:$port/props" 2>/dev/null || return 2
+  [ "$(wc -c < "$pbody")" -le "$MAX_BODY" ] || return 2
+  state=$(python3 - "$pbody" <<'PY' 2>/dev/null
 import json, sys
 try:
     doc = json.load(open(sys.argv[1]))
 except Exception:
-    sys.exit(1)
-ok = isinstance(doc, dict) and doc.get("role") == "router" and doc.get("models_autoload") is True
-sys.exit(0 if ok else 1)
+    print("unread")
+    raise SystemExit(0)
+if not isinstance(doc, dict) or doc.get("role") != "router":
+    print("unread")
+elif doc.get("models_autoload") is True:
+    print("on")
+elif doc.get("models_autoload") is False:
+    print("off")
+else:
+    print("unread")
 PY
+) || return 2
+  case "$state" in
+    on) return 0 ;;
+    off) return 1 ;;
+    *) return 2 ;;
+  esac
 }
 
 # $1 body file, $2 expected, $3 port -> sets RT_VERDICT/RT_REASON when the router `status`
 # of the matching entries refines a MODEL_OK; leaves both empty otherwise (see header).
 router_refine() {
   local body=$1 expected=$2 port=$3 id val failed idx wild=0 any_status=0 ok=0 loading='' down=''
-  local sleeping=0 unloaded=0 unloadable='' autoload=0 fidx fstate nbad=0 ncand=0
+  local sleeping=0 unloaded=0 unloadable='' autoload=0 fidx fstate nbad=0 ncand=0 ra=1
   # Round 92 (C2; r91 wave-1 SC02 F2): autoload candidates collect in an array; the former
   # `cand="$cand $idx"` copied the whole string per unloaded entry (O(n^2): 80 000 entries > 180 s).
   # `$idx` stays unquoted so the words passed on are exactly those of the former word-split string.
@@ -928,7 +948,13 @@ router_refine() {
   [ "$any_status" -eq 1 ] || return 0
   [ "$ok" -eq 1 ] && return 0
   if [ "$sleeping" -eq 1 ]; then RT_VERDICT=MODEL_OK; RT_REASON=router-sleeping; return 0; fi
-  if [ "$ncand" -gt 0 ] && router_autoload "$port"; then
+  if [ "$ncand" -gt 0 ]; then
+    # The call must stay inside a condition: `set -e` is active on the plain-call paths
+    # (listeners/consumers), and a bare nonzero return would abort the whole subcommand
+    # (round 99 amendment 1, SC01's plain-call receipt).
+    if router_autoload "$port"; then ra=0; else ra=$?; fi
+  fi
+  if [ "$ncand" -gt 0 ] && [ "$ra" -eq 0 ]; then
     autoload=1
     # Round 89: only the matching autoload candidates' model files are checked; an entry the
     # check cannot decide (or a check that fails or times out) stays loadable.
@@ -944,7 +970,13 @@ router_refine() {
   fi
   if [ -n "$loading" ]; then RT_VERDICT=MODEL_LOADING; RT_REASON="router-$loading"
   elif [ -n "$unloadable" ] && [ "$autoload" -eq 1 ]; then RT_VERDICT=MODEL_UNLOADED; RT_REASON=$unloadable
-  elif [ -n "$down" ]; then RT_VERDICT=MODEL_UNLOADED; RT_REASON=$down
+  elif [ -n "$down" ]; then
+    RT_VERDICT=MODEL_UNLOADED
+    if [ "$down" = "router-unloaded" ] && [ "$ncand" -gt 0 ] && [ "$ra" -eq 2 ]; then
+      RT_REASON=router-autoload-unread
+    else
+      RT_REASON=$down
+    fi
   fi
 }
 

@@ -1,0 +1,8 @@
+# regression-timeout burner leak + reap (2026-11-08)
+# trigger: python3 tools/round98-router-budget.py --repo . --rev 439fdb3d --probe-file .ufo/waves/round-99/candidates/kama-probe.r99.sh --work /fast/scratch/hyaku/kama-r99/regression --slow-files 72
+# run under the tool's 900 s timeout; the counter was SIGKILLed before its finally: stop_burners ran, leaving its 64 load burners orphaned (PPID 1487 systemd --user).
+# detection: ps -eo pid,ppid,etime,args | grep '[w]hile True: pass' -> 64 rows, etime 08:20, load1 94.31
+# reap (own burners only, exact PIDs, no pattern-kill of other lanes): cut -d' ' -f1 /fast/scratch/hyaku/kama-r99/leaked-burners.txt | xargs -r kill -TERM
+# after: remaining=0, load1 decayed from 94.31
+# lesson: never wrap a burner-raising counter in a job timeout; run it without a tool deadline and verify 0 'while True: pass' processes afterwards.
+reaped=64 remaining=0 load1_before=94.31

@@ -949,7 +949,10 @@ router_refine() {
   [ "$ok" -eq 1 ] && return 0
   if [ "$sleeping" -eq 1 ]; then RT_VERDICT=MODEL_OK; RT_REASON=router-sleeping; return 0; fi
   if [ "$ncand" -gt 0 ]; then
-    router_autoload "$port"; ra=$?
+    # The call must stay inside a condition: `set -e` is active on the plain-call paths
+    # (listeners/consumers), and a bare nonzero return would abort the whole subcommand
+    # (round 99 amendment 1, SC01's plain-call receipt).
+    if router_autoload "$port"; then ra=0; else ra=$?; fi
   fi
   if [ "$ncand" -gt 0 ] && [ "$ra" -eq 0 ]; then
     autoload=1
