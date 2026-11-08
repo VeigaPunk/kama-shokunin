@@ -1,0 +1,41 @@
+# S629 candidate — llama.cpp tools/server/server-http.cpp @ tag b12177
+url: https://raw.githubusercontent.com/ggml-org/llama.cpp/b12177/tools/server/server-http.cpp
+accessed: 2026-11-08 (curl HTTP 200, 39157 bytes)
+sha256: aad15b757323f36b81235182c4a0a35d448399012ae3ef4fed9902b716fa17ea
+line 290-325:
+        // API key is invalid or not provided
+        res.status = 401;
+        res.set_content(
+            safe_json_to_str(json {
+                {"error", {
+                    {"message", "Invalid API Key"},
+                    {"type", "authentication_error"},
+                    {"code", 401}
+                }}
+            }),
+            "application/json; charset=utf-8"
+        );
+
+        SRV_WRN("%s", "unauthorized: Invalid API Key\n");
+
+        return false;
+    };
+
+    auto middleware_server_state = [this](const httplib::Request & req, httplib::Response & res) {
+        if (!is_ready.load()) {
+            if (frontend_paths.count(req.path)) {
+                return true; // frontend asset, allow it to load and show "loading"
+            }
+            // no endpoints are allowed to be accessed when the server is not ready
+            // this is to prevent any data races or inconsistent states
+            res.status = 503;
+            res.set_content(
+                safe_json_to_str(json {
+                    {"error", {
+                        {"message", "Loading model"},
+                        {"type", "unavailable_error"},
+                        {"code", 503}
+                    }}
+                }),
+                "application/json; charset=utf-8"
+            );

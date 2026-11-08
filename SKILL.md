@@ -1770,7 +1770,7 @@ the served-id match, before `MODEL_OK` is final):
 | matching entry `sleeping` | `MODEL_OK` / `router-sleeping` | Serves; the next request wakes it (cold start). |
 | matching entry `unloaded` (not failed) and bare `GET /props` says `"role":"router","models_autoload":true` | `MODEL_OK` / `router-unloaded-autoload` | Serves; the next request loads it (cold start). |
 | matching entry `status.value` `loading` or `downloading` | `MODEL_LOADING` / `router-<value>`, drift, exit 2 | Not ready; re-probe later. |
-| matching entry `unloaded` (not failed) and `/props` could not be read: timeout, over the 4 MiB cap, not JSON, not a router document, or no boolean `models_autoload` | `MODEL_UNLOADED` / `router-autoload-unread`, drift, exit 2 | The flag is unread, not an observed off state; re-probe `/props` before concluding anything about autoload (round 99; §Round 99 unread-autoload reason) |
+| matching entry `unloaded` (not failed) and `/props` could not be read: timeout, over the 4 MiB cap, a final HTTP status other than 200, not JSON, not a router document, or no boolean `models_autoload` | `MODEL_UNLOADED` / `router-autoload-unread`, drift, exit 2 | The flag is unread, not an observed off state; re-probe `/props` before concluding anything about autoload (round 99; §Round 99 unread-autoload reason; the status rule is round 100, §Round 100 `/props` status rule) |
 | matching entry `unloaded` with `models_autoload: false` (read "without autoload" below as this explicit state), `failed: true` (reason gains `-failed`), `incomplete` or unknown | `MODEL_UNLOADED` / `router-<value>`, drift, exit 2 | A request fails until loaded: `POST /models/load {"model":"<id>"}`. |
 
 The sleeping and autoload rows are the round-88 repair: the frozen claim rule graded them `MODEL_UNLOADED`,
@@ -1825,14 +1825,39 @@ Eight live cells on loopback stubs grade the three states (seven unread classes 
 that kills a blanket rename), including the seven's exit code: `python3 tools/round99-autoload-states.py --repo .
 --rev <rev> --work <scratch>` (`cells=8 mismatches=0 base_mismatches=7 flips=7 stable=1`;
 `.ufo/waves/round-99/measured/c3.out`). Limits: the cells are stub-fed, not a live router; the verdict and exit code
-are unchanged (still drift); the probe does not consult the `/props` HTTP status, so a non-200 body that parses as a
-router document is graded as its explicit state; `/props?model=` and per-request `?autoload=` are not modelled; a
+are unchanged (still drift); the `/props` HTTP status was not consulted in round 99 (a non-200 body that parsed as a
+router document was graded as its explicit state; round 100 closes this, §Round 100 `/props` status rule); `/props?model=` and per-request `?autoload=` are not modelled; a
 valid router document that omits the field is unread, because off requires an explicit `false`; a
 `models_autoload: true` body is outside the unread cells and is protected by the round-98 19-cell regression. The
 round-90 `## Probe reason codes` table below stays byte-identical and is the frozen 23-reason population bound to its
 capture; `router-autoload-unread` is documented here and in the decision row above, not as a row there (a row there
 cannot bind without editing the round-90 instrument — CN01's A/B/C fixtures in
 `.ufo/waves/round-99/w1/CN01Overlap.md` §4).
+
+## Round 100 `/props` status rule (owner: kama)
+
+llama.cpp answers a refused request with its own status and an error document, never with the configuration: the
+API-key middleware sets `res.status = 401` with `{"error":{"message":"Invalid API Key","type":"authentication_error","code":401}}`
+(`tools/server/server-http.cpp:291-299` @ b12177, S629) and the readiness middleware sets `res.status = 503` with
+`Loading model` (`server-http.cpp:315-321`, S629); handler errors carry 400/401/403/404/500/501/503 from
+`format_error_response` (`tools/server/server-common.cpp:93-124`, S630). Upstream's own router test asserts
+`res.status_code == 200` before it reads `models_autoload` (`tools/server/tests/unit/test_router.py:20-23`, S631).
+So `router_autoload()` reads the bare `/props` body only when curl's final `%{http_code}` is exactly `200`; any other
+status is unread, whatever the body says. curl runs without `-L`, so a 3xx is graded by its own status.
+
+| `/props` final status | body | reason (matching `unloaded`, not-failed entry) |
+|---|---|---|
+| 200 | router document, `models_autoload: true` | `MODEL_OK` / `router-unloaded-autoload` (unchanged) |
+| 200 | router document, `models_autoload: false` | `MODEL_UNLOADED` / `router-unloaded` (unchanged) |
+| any other (401, 403, 500, 503, 202, 302, ...) | anything, including a router document | `MODEL_UNLOADED` / `router-autoload-unread`, exit 2 |
+
+Nine live cells on loopback stubs grade (verdict, reason, exit): six router-shaped non-200 answers (401 off, 500 on,
+503 off, 403 on, 202 on, 302 on) that the round-99 probe read as explicit states (four as a false `MODEL_OK` cold
+start), the exact llama.cpp 401 document (unread before and after), and two 200 positive controls (off, on) that kill a
+blanket refusal: `python3 tools/round100-props-status.py --repo . --rev <rev> --work <scratch>`
+(`plans/round-100-claims.md` C2; `corpus/knowledge/router-props-autoload.md` §Round 100). Limits: stub-fed, not a live
+router; a 200 answer from a non-router intermediary is still read as the router's document; `/v1/models` statuses are
+graded by the existing `classify()` rules, not by this rule.
 
 ## Router error signatures (llama.cpp router mode)
 

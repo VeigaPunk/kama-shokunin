@@ -6534,3 +6534,26 @@ a mis-stated self-description, and the wave's own artifacts are the evidence for
    pass-level wall-clock wrapper; the ctime memo shape; the reason-codes table's frozen population.
 
 
+
+## Round 100 correction — round-99 records (appended 2026-11-08; the round-99 entries above are not rewritten)
+
+Routed by `corpus/lessons/round-99-verifier-spotcheck.md` defects 1, 2 and 4. Graded by
+`tools/round100-record-audit.py` (round-100 C1); every line pointer below is bound to the revision it
+was read at, because an unbound `file:line` moves when anything is inserted above it.
+
+- **Wave share.** Round-99 wave 1 had 12 seats, 0 dead (`.ufo/waves/round-99/w1-results.json`: 12
+  results, every output non-empty). By `.ufo/waves/round-99/w1-spec.json` roles, the policy attack
+  roles (reviewer, critic, mutation-tester, labrat) were 4 of 12 (33%): RV01Wording, RV02Counter,
+  CR01Records, MT01Mutants. The prefile ledger's attack roles (adding sentinel and connector) were
+  6 of 12 (50%): the four above plus SN01Bounds and CN01Overlap. The round-99 sentence
+  `SCORECARD.md@6776c667:6500` ("58% attack") is arithmetic-wrong under either set; the LOG's list
+  `LOG.md@6776c667:4065` ("CN01Overlap (attack)") is the ledger set and stays correct.
+- **Stale pointer.** The round-99 correction blocks cite the round-98 wave sentence as an unbound
+  `SCORECARD.md` line 6431. It was there at the measured commit, `SCORECARD.md@00394f3b:6431`
+  ("10 reported, 2 dead"), and had moved by the round-99 tip, `SCORECARD.md@6776c667:6446`
+  ("10 reported, 2 dead"), when the round-100 plan block was inserted above it. The LOG twin did not
+  move: `LOG.md@6776c667:4040` ("10 reported, 2 dead").
+- **Measured values.** `.ufo/waves/round-99/claims.json` still carries `"measured": "pending"` for
+  C1, C2 and C3 (frozen bytes, not rewritten). The measured predicate lines, byte-equal to the first
+  predicate line of `.ufo/waves/round-99/measured/c1.out`, `c2.out` and `c3.out` (each `exit=0`),
+  are recorded in `.ufo/waves/round-100/r99-measured.json`.

@@ -886,12 +886,22 @@ router_file_states() { # $1 body file, $2 candidate count, $3... entry indexes -
 }
 
 # $1 port -> 0 autoload explicitly on, 1 autoload explicitly off, 2 unread (fetch failed,
-# over the 4 MiB cap, not JSON, not a router props doc, or the field is absent).
+# over the 4 MiB cap, a status other than 200, not JSON, not a router props doc, or the field is
+# absent).
+# Round 100 (C2; plans/round-100-claims.md): the body is read only when the final HTTP status is
+# exactly 200. llama.cpp answers a refused /props with its own status and an error document
+# (401 Invalid API Key from the API-key middleware, 503 Loading model while not ready: S629
+# server-http.cpp; 400/401/403/404/500/501 from format_error_response: S630 server-common.cpp),
+# so a non-200 answer is never the configuration; a router-shaped body under a non-200 status
+# (a proxy, a cache, a redirect page) is unread, never an explicit on/off answer. curl does not
+# follow redirects here (no -L), so a 3xx is graded by its own status.
 router_autoload() {
   [ "$HAVE_PY" -eq 1 ] || return 2
-  local port=$1 pbody="$TMP_ROOT/props$1.body" state
-  curl -sS --noproxy '*' --connect-timeout "$CONNECT_TIMEOUT" --max-time "$TIMEOUT" \
-    --max-filesize "$MAX_BODY" -o "$pbody" "http://127.0.0.1:$port/props" 2>/dev/null || return 2
+  local port=$1 pbody="$TMP_ROOT/props$1.body" state pcode
+  pcode=$(curl -sS --noproxy '*' --connect-timeout "$CONNECT_TIMEOUT" --max-time "$TIMEOUT" \
+    --max-filesize "$MAX_BODY" -o "$pbody" -w '%{http_code}' \
+    "http://127.0.0.1:$port/props" 2>/dev/null) || return 2
+  [ "$pcode" = 200 ] || return 2
   [ "$(wc -c < "$pbody")" -le "$MAX_BODY" ] || return 2
   state=$(python3 - "$pbody" <<'PY' 2>/dev/null
 import json, sys

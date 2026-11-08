@@ -1,0 +1,17 @@
+# S631 candidate — llama.cpp tools/server/tests/unit/test_router.py @ tag b12177
+url: https://raw.githubusercontent.com/ggml-org/llama.cpp/b12177/tools/server/tests/unit/test_router.py
+accessed: 2026-11-08 (curl HTTP 200, 33103 bytes)
+sha256: fed2ff448c55422d64c4667aa40a8922e2f3fab01420ea35ccbfa875dfacd1ef
+line 14-25:
+def test_router_props():
+    global server
+    server.models_max = 2
+    server.no_models_autoload = True
+    server.start()
+    res = server.make_request("GET", "/props")
+    assert res.status_code == 200
+    assert res.body["role"] == "router"
+    assert res.body["max_instances"] == 2
+    assert res.body["models_autoload"] is False
+    assert res.body["build_info"].startswith("b")
+
