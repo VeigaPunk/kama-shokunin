@@ -1,0 +1,35 @@
+{
+  "round": 94,
+  "lane": "kama",
+  "start_commit": "e6f1dcce",
+  "freeze_commit": "285f17832d0e26364366bbf19888d68f1838249b",
+  "C1": {
+    "axis": "operability",
+    "type": "measurement",
+    "name": "per-file GGUF parse deadline makes the router file-state verdict load-stable",
+    "before": "shared 4.0 s call deadline; one slow GGUF file starves later candidates, '-' undecidable flips to MODEL_OK under load (r93 SC02 F1/F2/F3)",
+    "after": "per-file 15.0 s wall deadline reset in each gguf_parse + 60 s wrapper; ROUTER_BUDGET 19 cells load_stable=1 at load1=232 with 96 burners",
+    "counter": "tools/round94-router-budget.py",
+    "measured": "a27656a454b1a2364f8b6e55f42fbca8c2e86ee4"
+  },
+  "C2": {
+    "axis": "depth",
+    "type": "sweep",
+    "name": "every b12177 port/slot setter named per entry point, config.ini route included",
+    "before": "round-93 section omitted the config.ini fifth setter and per-entry-point scoping (r93 SC01 F1/F2, CN01)",
+    "after": "round-94 section: 92 population rows + R18/R19 decision rows; SETTER_SWEEP 92 92 2 92 0 0 0 0 decisions=2/2 met=True",
+    "counter": "tools/round94-setter-sweep.py",
+    "measured": "6aa5fa6bd9bbf44c4b2ca3f1e2158e7d5aa92623"
+  },
+  "C3": {
+    "axis": "calibration",
+    "type": "self-verification",
+    "name": "frontier-step census + lesson self-check",
+    "before": "census 343 rows; no round-94 lesson",
+    "after": "census 355 rows (S604-S615 added), exit 0; corpus/lessons/round-94.md with Gate + 3 Mistakes",
+    "counter": "scripts/sources-census.sh validate",
+    "measured": "6aa5fa6bd9bbf44c4b2ca3f1e2158e7d5aa92623"
+  },
+  "planner": "KamaR94",
+  "wave_role_mix": {"attack": ">=25%", "connectors": "<=2", "total": "8-16"}
+}
