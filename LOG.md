@@ -3913,3 +3913,30 @@ honest; C2 (depth) — the step-cost table (1 tensor header = 6 steps, ceiling 8
 96 correction, sourced on S618; C3 (calibration) — the probe's ceiling comment, the frozen counter's
 formula and the `router-byte-decided` evidence pointer each consistent with the bytes beside them.
 Measurement follows the wave; verdicts land in SCORECARD.md.
+
+**Round-96 wave 1 (12 seats, `w1-results.json`).** Attack seats 4 (RV01 reviewer, CR01/CR02 critics,
+MT01 mutation-tester) + SN01 sentinel = 5; connectors 1 (CN01); scouts 2 (SC01, SC02); executors 2
+(EX01, EX02); scribe 1 (SB01). Findings that changed the round:
+
+- **RV01 F1 / CR01 B1 (BLOCKER, same defect found twice independently):** the frozen W12 fixture wrote
+  one 6 MB string with a declared array length of 6 000 000, so the probe's `base + 8n > size` guard
+  graded it `invalid` and the cell could never reach its expectation. Amendments 2 and 3 repaired it; the
+  cell now grades `MODEL_OK` in 0.8 s (SN01 B1 re-measured it end to end).
+- **RV01 F2/F3 + SN01 + SC02:** the per-header cost is `5 + nd`, not 6, and four preamble steps put the
+  nd=1 ceiling at 833,332. Amendment 2 adopted both; SC02 then binary-searched every row and caught the
+  nd=3 row still stating the naive 625,000 → amendment 4 (624,999) plus a per-rank arithmetic check the
+  counter now enforces.
+- **RV01 F5:** the new counter's docstring still said `MAX_STEPS (4 000 000)`; the disclosure counter gained
+  a fourth check that reads the counter's own docstring against the probe.
+- **RV01 F6 / SC02 / M3 (scratch):** the first base control was run at the *tip* and both measurement
+  receipts were destroyed by a shared-scratch collision; the control was re-run at `5d43528b` under a
+  seat-private `--work`, and both receipts are now complete.
+- **MT01 G1 (the round's best instrument finding):** four probe mutants survived all 12 cells because
+  every fixture's complete parse is also `-`; its proposed `WK-budget` shape became **W13-budget-kill**
+  (amendment 6), which flips `MODEL_OK`→`MODEL_UNLOADED` when `MAX_STEPS` is removed, measured.
+- **CR02 B1:** the freeze-time identity clause made C3 unsatisfiable once amendment 1 repaired the
+  counter's regex; amendment 5 restates the identity clauses against the amended commits and records the
+  instrument's remaining literal-presence limits (B2–B5) as round-97 frontier.
+- **CN01:** the same two defect classes (disclosed constant vs enforcing code; counter passes without
+  load evidence) were searched across all 20 sibling lanes; 32 PRESENT rows recorded in
+  `w1/out/CN01SiblingOverlap/`.
