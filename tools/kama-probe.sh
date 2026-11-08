@@ -684,11 +684,15 @@ def gguf_parse(path):
             if base + 8 * n > size:
                 raise Bad()
             unpack = struct.Struct("<Q").unpack_from
+            # Round 95 (C1; wave-1 RV01 DEFECT-2): one step per STRING ELEMENT, not one per 64.
+            # The bulk credit priced a 49M-element array at 766 014 steps while it cost 8 s of CPU,
+            # so MAX_STEPS did not bound the work and the derived pass limit was unsound. Every
+            # element now costs a step, so the budget is a function of the bytes alone.
             for _ in range(n):
+                steps[0] += 1
+                if steps[0] > MAX_STEPS:
+                    raise Unknown()
                 if off + 8 > len(buf):
-                    steps[0] += 1
-                    if steps[0] > MAX_STEPS:
-                        raise Unknown()
                     base += off
                     f.seek(base)
                     buf, off = f.read(1 << 20), 0
@@ -699,7 +703,6 @@ def gguf_parse(path):
                     raise Bad()
                 if base + off > MAX_META:
                     raise Unknown()
-            steps[0] += n // 64
             f.seek(base + off)
         try:
             if rd(4) != b"GGUF":
@@ -758,6 +761,21 @@ def gguf_parse(path):
             return "-"
 
 
+def path_count(args):
+    # Round 95 (C1; wave-1 RV01 DEFECT-3): one candidate can name several distinct model paths
+    # (-m, -mm, -md ...), and every one of them is parsed. The pass allowance must price PATHS,
+    # not entries, or a single candidate with three 200 MB files truncates the pass.
+    if not isinstance(args, list) or not args or not all(isinstance(a, str) for a in args):
+        return 0
+    n = 0
+    for i, a in enumerate(args):
+        if a in PATH_FLAGS and i + 1 < len(args):
+            n += 1
+        elif "=" in a and a.split("=", 1)[0] in PATH_FLAGS:
+            n += 1
+    return n
+
+
 def file_state(args):
     if not isinstance(args, list) or not args or not all(isinstance(a, str) for a in args):
         return "-"
@@ -784,6 +802,15 @@ if not isinstance(doc, dict):
     sys.exit(0)
 seq = doc.get("data") if isinstance(doc.get("data"), list) else doc.get("models")
 seq = seq if isinstance(seq, list) else []
+if sys.argv[2] == "count":
+    total = 0
+    for idx in sys.argv[3:]:
+        try:
+            total += path_count(seq[int(idx)]["status"].get("args"))
+        except Exception:
+            pass
+    print(total)
+    sys.exit(0)
 if sys.argv[2] == "files":
     for idx in sys.argv[3:]:
         try:
@@ -818,15 +845,21 @@ router_entries() { # $1 body file
 router_file_states() { # $1 body file, $2 candidate count, $3... entry indexes -> "<index>\t<state>" lines
   [ "$HAVE_PY" -eq 1 ] || return 0
   local body=$1 ncand=$2; shift 2
-  # Round 95 (C1; r94 closure SC02 F3/M10): the pass-level limit is derived from the candidate
-  # count instead of the round-94 constant `timeout 60`. A constant cannot bound work: a listing
-  # of N distinct slow files took N x (that file's parse) whatever the constant was, so 40 files
-  # truncated the pass at 60 s, the truncated candidates stayed `-` (loadable) and the listing
-  # graded MODEL_OK for an invalid model. Per-candidate allowance covers the worst legitimate
-  # parse (MAX_STEPS work, measured ~4 s for a 1M-tensor header on the lane host, ~12 s under
-  # heavy load) with headroom; the base 20 s covers the interpreter start and the body read.
-  # Repeated paths share one memo entry, so ncand over-estimates the work and never under-estimates.
-  local limit=$((20 + 15 * ncand))
+  # Round 95 (C1; r94 closure SC02 F3/M10, wave-1 RV01 BLOCKER-1/DEFECT-3): the pass-level limit is
+  # derived from the WORK the pass must do - the number of model paths named by the candidate entries
+  # - instead of the round-94 constant `timeout 60` or a per-entry allowance. A constant cannot bound
+  # work: 40 distinct slow files exceeded it, the truncated candidates stayed `-` (loadable) and the
+  # listing graded MODEL_OK for a model that can never load. Pricing paths fixes the multi-path
+  # regression RV01 reproduced (one candidate naming three 200 MB files); 25 s per path covers a
+  # MAX_STEPS-bounded parse at a loaded host, and the base 20 s covers interpreter start and read.
+  # Price PATHS, not entries: one candidate can name several model files (RV01 DEFECT-3 reproduced
+  # a base-green/new-red regression on exactly that shape). The allowance per path must also cover
+  # a parse whose work is bounded by MAX_STEPS at a loaded host, not the idle cost.
+  local npaths
+  npaths=$(python3 -c "$ROUTER_PY" "$body" count "$@" 2>/dev/null || true)
+  case "$npaths" in ''|*[!0-9]*) npaths=$ncand ;; esac
+  [ "$npaths" -ge 1 ] || npaths=$ncand
+  local limit=$((20 + 25 * npaths))
   if command -v timeout >/dev/null 2>&1; then
     timeout "$limit" python3 -c "$ROUTER_PY" "$body" files "$@" 2>/dev/null || true
   else
