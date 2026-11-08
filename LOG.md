@@ -3940,3 +3940,22 @@ MT01 mutation-tester) + SN01 sentinel = 5; connectors 1 (CN01); scouts 2 (SC01, 
 - **CN01:** the same two defect classes (disclosed constant vs enforcing code; counter passes without
   load evidence) were searched across all 20 sibling lanes; 32 PRESENT rows recorded in
   `w1/out/CN01SiblingOverlap/`.
+
+**Round-96 measurements (post-wave).**
+
+```
+$ python3 tools/round96-router-budget.py --repo . --rev f175a902 --work /fast/scratch/hyaku/kama-r96-c1/m1b --burners 0 --slow-files 96
+ROUTER_BUDGET96 cells=13 mismatches=0 positive_mismatches=0 load_cells=13 load_stable=1 budget=work probe=rev \
+  probe_sha256=11e5b01b… rev=f175a902 w03_seconds=161.4 load1_nat=9.44 burners=0        # exit 0
+$ python3 tools/round96-router-budget.py --repo . --rev 5d43528b --work <private> --burners 0 --allow-clock
+ROUTER_BUDGET96 cells=13 mismatches=1 positive_mismatches=1 load_cells=13 load_stable=1 \
+  probe_sha256=b49d961a… rev=5d43528b w03_seconds=46.3                                  # exit 1, W11-700k red alone
+$ python3 tools/round96-depth-audit.py --repo . --rev 20317286
+DEPTH_AUDIT checks=14 mismatches=0 met=True                                            # exit 0
+$ python3 tools/round96-disclosure-audit.py --repo . --rev 20317286
+DISCLOSURE_AUDIT checks=6 mismatches=0 met=True                                        # exit 0
+```
+
+Census: `scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama` → `kama ok`, exit 0;
+rows 357 → 358 (S618 admitted, S619 rejected, `ggml/src/gguf.cpp` rejected as S129's duplicate). Lesson:
+`corpus/lessons/round-96.md` (`## Gate`, `## Mistakes` M1–M5).

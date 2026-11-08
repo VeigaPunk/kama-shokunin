@@ -1,0 +1,157 @@
+RV01StepBudget — round-96 wave-1 receipts (kama-shokunin @ bbdfc930, base 5d43528b)
+All commands run with cwd /fast/scratch/hyaku/kama-r96/RV01StepBudget unless noted.
+Probe under test: /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-probe.sh
+Counter under test: /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round96-router-budget.py
+
+================================================================================
+[0] C1 diff surface and source verification
+================================================================================
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff 5d43528b -- tools/kama-probe.sh | wc -l
+22
+$ git -C ... diff 5d43528b -- tools/kama-probe.sh | grep -c '^@@'
+1
+  -> one hunk: MAX_STEPS 4_000_000 -> 5_000_000 plus the replaced ceiling comment.
+  -> MAX_STEP_BYTES is defined and never read (grep: only line 585).
+$ git diff 5d43528b --stat   (tools/kama-probe.sh | 11 +-, one file of the 18)
+$ git show 5d43528b:tools/kama-probe.sh | grep -n 'MAX_STEPS = '
+575:MAX_STEPS = 4_000_000
+$ grep -n 'MAX_STEPS = ' tools/kama-probe.sh
+581:MAX_STEPS = 5_000_000
+
+b12177 tarball (used for the true header layout):
+$ sha256sum /fast/scratch/hyaku/kama-r94/l1-controls/llama-b12177.tar.gz
+f50a52f4ba45dd5b4b906db97cf230ce2e3b1117a0b9017411322ecba63eea13
+$ tar xzf ... && sha256sum llama.cpp-b12177/ggml/include/ggml.h
+590e00a522b8791235353a8c7388d67ff2fe929554f1834c58528b82afd67392   <- matches S618
+S618 anchor (ggml.h:690-697): "int64_t ne[GGML_MAX_DIMS]; size_t nb[GGML_MAX_DIMS];
+  nb[0] = ggml_type_size(type)"
+Loader layout (gguf.cpp:655-745): name (u64 len + bytes), n_dims u32, n_dims x ne u64,
+  type u32, offset u64  => 5 + nd read fields per header, nd in 0..4 (GGML_MAX_DIMS).
+
+================================================================================
+[1] Step cost per tensor header (kama-probe.sh:744-750)
+================================================================================
+skip(u64())         -> need() x2   (u64 = rd(8) 1 + skip 1)
+nd = u32()          -> need() x1
+ne = [u64()]*nd     -> need() x nd
+tt, off = u32(),u64 -> need() x2
+total = 5 + nd steps per header; 6 only when nd == 1.
+Preamble: rd(4) magic, u32 version, u64 n_tensors, u64 n_kv = 4 steps before any header
+(kama-probe.sh:717-722).
+
+================================================================================
+[2] Exact nd=1 decision boundary (frozen ceiling claim)
+================================================================================
+Fixtures: GGUF v3, 0 KV, nd=1 F32 ne0=1, contiguous offsets, no data section.
+$ python3 (bound{n}.gguf -> ROUTER_PY files mode)
+830000 invalid  steps=4980004
+831000 invalid  steps=4986004
+832000 invalid  steps=4992004
+833000 invalid  steps=4998004
+833332 invalid  steps=4999996     <- decides
+833333 -        steps=5000002     <- undecidable (preamble 4 steps push over)
+=> enforced nd=1 ceiling = 833,332 headers, not 833,333.
+
+================================================================================
+[3] nd sweep at 700 000 tensors (C1 headline sentence)
+================================================================================
+$ (700k-tensor GGUF, variable nd, probe check --expect good --json)
+700k nd=0: MODEL_UNLOADED/router-model-invalid   steps 3,500,004
+700k nd=1: MODEL_UNLOADED/router-model-invalid   steps 4,200,004
+700k nd=2: MODEL_UNLOADED/router-model-invalid   steps 4,900,004
+700k nd=3: MODEL_OK/router-unloaded-autoload     steps 5,600,004   ('-' undecidable)
+700k nd=4: MODEL_OK/router-unloaded-autoload     steps 6,300,004   ('-')
+Budget for 700k: average nd <= 2.1428.
+Counter's own W11 fixture (gguf(): struct.pack("<IQIQ", 1, elems, 0, off)) is nd=1 only.
+
+================================================================================
+[4] W12-strings: frozen cell cannot grade MODEL_OK (BLOCKER)
+================================================================================
+Counter fixture gguf_strbig() (tools/round96-router-budget.py:164-172):
+  6,000,000 elements, each written as struct.pack("<Q",1) + b"x"  -> 9 bytes each
+  BUT the element loop only emits ONE such pair after the <IIQ count:
+  out.append(struct.pack("<Q", 1) + b"x" * 6_000_000)
+  file size = 6,000,057 bytes; minimum for 6M length-prefixed strings = 49 + 8*6,000,000
+  = 48,000,049 bytes.
+Probe branch (kama-probe.sh:693-694):
+  if base + 8 * n > size: raise Bad()        # fires BEFORE the per-element step loop
+  -> state "invalid", never reaches MAX_STEPS (lines 700-703).
+Observed through the counter's own Runner+Stub+check:
+  W12-strings: got MODEL_UNLOADED/router-model-invalid, want MODEL_OK/router-unloaded-autoload -> MISMATCH
+Full natural pass, counter's own evaluate_pass, 40 slow files, 1 run:
+  ROUTER_BUDGET96_CELL natural-tip W01..W09 ok=1
+  ROUTER_BUDGET96_CELL natural-tip W11-700k ok=1 want=MODEL_UNLOADED/router-model-invalid run1=MODEL_UNLOADED/router-model-invalid/1.64s
+  ROUTER_BUDGET96_CELL natural-tip W12-strings ok=0 want=MODEL_OK/router-unloaded-autoload run1=MODEL_UNLOADED/router-model-invalid/0.14s
+  ROUTER_BUDGET96_CELL natural-tip W10-rewrite ok=1 v1=...invalid v2=MODEL_OK v3=...invalid
+  NATURAL PASS tip: cells=12 mismatches=1 bad=['W12-strings'] elapsed=97.2s
+Correct-shaped fixture (9 bytes/element, 54,000,049-byte file, same 6M elements):
+  -> MODEL_OK/router-unloaded-autoload 0.9s   (step budget trips at element 5,000,001 -> '-')
+Base control already red on W12:
+  controls/c1-base.out:11 ROUTER_BUDGET96_CELL nat W12-strings ok=0 ... MODEL_UNLOADED/router-model-invalid
+=> the frozen predicate line (mismatches=0) is unreachable at M1; K1 fires.
+
+================================================================================
+[5] W11 discriminator (confirmed)
+================================================================================
+Fixture mid.gguf = 700,000 tensors nd=1, no data section (28,000,048 bytes).
+tip probe  (MAX_STEPS=5,000,000): MODEL_UNLOADED/router-model-invalid  1.64s  (4,200,004 steps)
+base probe (5d43528b, 4,000,000): MODEL_OK/router-unloaded-autoload    1.7s   ('-')
+base W12 (5d43528b):              MODEL_UNLOADED/router-model-invalid  0.1s   (also red)
+
+================================================================================
+[6] Other branches that could decide first
+================================================================================
+MAX_META (512 MiB, kama-probe.sh:650): 700k nd=1 header 28 MB, 1M nd=4 ~64 MB  -> never binds
+n_kv*13 + n_tensors*24 > size (kama-probe.sh:726-727): truncated declaration
+   GGUF v3 declaring 700,000 tensors in a 124-byte file -> MODEL_UNLOADED/router-model-invalid (guard), 0.1s
+MAX_TENSORS (1,000,000, line 728): 1,000,000 tensors nd=1 -> MODEL_OK ('-', 6,000,004 steps);
+   1,000,001 -> MODEL_OK ('-', guard)
+MAX_ARR (50,000,000, line 677): 6,000,000 < 50,000,000 -> not the decider for W12;
+   the short-file check decides (see [4]).
+
+================================================================================
+[7] Frozen counters at tip and base
+================================================================================
+$ python3 tools/round96-depth-audit.py --repo . --rev HEAD
+DEPTH_AUDIT checks=7 mismatches=0 met=True                       rc=0
+$ python3 tools/round96-depth-audit.py --repo . --rev 5d43528b
+DEPTH_AUDIT checks=7 mismatches=6 met=False                      rc=1
+$ python3 tools/round96-disclosure-audit.py --repo . --rev HEAD
+DISCLOSURE_AUDIT checks=5 mismatches=0 met=True                  rc=0
+$ python3 tools/round96-disclosure-audit.py --repo . --rev 5d43528b
+DISCLOSURE_AUDIT checks=5 mismatches=2 met=False                 rc=1
+
+C2 counter constants: CEILING = 833_333; derived = 5_000_000 // 6 = 833_333 -> equal, so the
+counter prints met=True without ever evaluating the 833,332/833,333 decision boundary.
+C2 counter check `if "ceiling 1,000,000" in skill` is false at base and tip (vacuous).
+$ git show 5d43528b:SKILL.md | grep -n '1 000 000\|1,000,000\|MAX_TENSORS'
+(no tensor-ceiling hit; only n_ctx/errata/memory-ceiling prose)
+
+C3 counter never reads the new counter's docstring MAX_STEPS value:
+$ grep -n '4 000 000' tools/round96-router-budget.py
+19:Work is bounded deterministically - `MAX_STEPS` (4 000 000) counts the parser's read/seek steps,
+(probe beside it: MAX_STEPS = 5_000_000)
+
+SCORECARD capability row: SCORECARD.md:6320 cites `c810f51e`;
+$ git cat-file -e c810f51e^{commit}  -> exists
+$ git merge-base --is-ancestor c810f51e HEAD -> ancestor
+
+================================================================================
+[8] Before-state checks for C1/C3
+================================================================================
+$ git show 5d43528b:tools/round95-router-budget.py | grep -n '^KILL\|MAX_STEPS'
+19: ... `MAX_STEPS` (4 000 000) ...
+85:KILL = 400
+$ git show 5d43528b:tools/round95-router-budget.py | grep -n '20 + 15\|20 + 25'
+21:bytes, and the pass-level limit is derived from the candidate count (`20 + 15 * ncand` seconds).
+Wrapper literal (tip): kama-probe.sh:871  local limit=$((20 + 25 * npaths))
+W03 worst case: 20 + 25*40 = 1020 s; counter KILL = 1200.
+Base ceiling arithmetic at 4M: (4,000,000 - 4) / 6 = 666,666  (matches claim's ~666,666).
+
+================================================================================
+[9] Host load during measurements
+================================================================================
+$ cat /proc/loadavg
+18.58 16.33 18.39 22/7108 156324
+Natural W03 at this load: 52.62 s < counter MARGIN 1.25*60 = 75 s -> a full counter run would
+return 2 (could-not-evaluate) here. Freeze receipt recorded load1=93.48, W03=101.73 s.

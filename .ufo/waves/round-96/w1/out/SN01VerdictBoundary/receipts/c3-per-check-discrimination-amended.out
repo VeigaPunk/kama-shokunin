@@ -1,0 +1,32 @@
+
+--- 5d43528badc31ad6c0ca1848c00561f531924e4d (pointer f6325660) ---
+  FAIL  c1 max_steps==5M and '6 steps per tensor header' present in probe
+  FAIL  c2 old 'MAX_TENSORS = 1_000_000' + 'the ceiling is 1,000,000' both present
+  FAIL  c3 counter docstring '20 + 25 * npaths' and not '20 + 15 * ncand'
+  FAIL  c4 counter docstring states MAX_STEPS (4 000 000)
+  PASS  c5 capability evidence pointer (f6325660) resolves AND ancestor of rev
+  PASS  c6 probe contains '20 + 25 * npaths'
+
+--- HEAD (pointer c810f51e) ---
+  PASS  c1 max_steps==5M and '6 steps per tensor header' present in probe
+  FAIL  c2 old 'MAX_TENSORS = 1_000_000' + 'the ceiling is 1,000,000' both present
+  PASS  c3 counter docstring '20 + 25 * npaths' and not '20 + 15 * ncand'
+  PASS  c4 counter docstring states MAX_STEPS (5 000 000)
+  PASS  c5 capability evidence pointer (c810f51e) resolves AND ancestor of rev
+  PASS  c6 probe contains '20 + 25 * npaths'
+
+=== DISCRIMINATION ===
+  DISCRIMINATES                          c1 max_steps==5M and '6 steps per tensor header' present in probe
+  both fail                              c2 old 'MAX_TENSORS = 1_000_000' + 'the ceiling is 1,000,000' both present
+  DISCRIMINATES                          c3 counter docstring '20 + 25 * npaths' and not '20 + 15 * ncand'
+  DISCRIMINATES                          c4 counter docstring states MAX_STEPS (4 000 000)
+  NO DISCRIMINATION (true of base)       c5 capability evidence pointer (f6325660) resolves AND ancestor of rev
+  NO DISCRIMINATION (true of base)       c6 probe contains '20 + 25 * npaths'
+
+=== probe comment vs SKILL table at HEAD ===
+  probe says '6 steps per tensor header': True
+  probe says '~833 333 tensor headers'   : False
+  SKILL says '`5 + nd` steps'            : True
+  SKILL says '833,332'                   : True
+  SKILL says '833,333'                   : False
+  -> the C3 audit REQUIRES the probe to keep the string '6 steps per tensor header': True

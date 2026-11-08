@@ -1,0 +1,31 @@
+# CR02 receipt — core runs, 2026-11-08T09:19:41Z
+repo: /home/vgpnk/Projects/shokunin/kama-shokunin tip bbdfc930cf99845f7b5c4ab63f3bfd51ba39e582
+
+$ python3 tools/round96-disclosure-audit.py --repo . --rev bbdfc930
+DISCLOSURE_AUDIT checks=5 mismatches=0 met=True
+exit=0
+
+$ python3 tools/round96-disclosure-audit.py --repo . --rev 5d43528b
+DISCLOSURE_AUDIT checks=5 mismatches=2 met=False
+exit=1
+
+$ python3 frozen-audit-at-F.py --repo . --rev bbdfc930   # frozen bytes at F, run against tip
+DISCLOSURE_AUDIT checks=5 mismatches=1 met=False
+exit=1
+
+$ sha256 F vs tip (disclosure counter)
+62c79775c282198e53a02cb3d5eaafe407768f353ec4f4e230108a778694512f  -
+39ab0575dac980ced568666bd15ffabcee7b7c0c9e91d44338bc69c1b6bb90ae  -
+
+$ sha256 F vs tip (C1 counter, contrast)
+3f6107c325d946ea9e6843a1a2895e9eecc635777c915df7da1e7415c538069f  -
+3f6107c325d946ea9e6843a1a2895e9eecc635777c915df7da1e7415c538069f  -
+
+$ git diff 58001b71 bbdfc930 -- plans/round-96-claims.md
+(empty above = claims not restated)
+
+$ git log --all -S "the ceiling is 1,000,000" -- tools/kama-probe.sh
+(empty above = legacy sentence never existed)
+
+$ git log --all --oneline -- measured/c1-m1b.out
+(empty above = cited evidence file never committed)
