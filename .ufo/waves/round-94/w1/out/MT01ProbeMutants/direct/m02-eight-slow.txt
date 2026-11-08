@@ -1,0 +1,37 @@
+M02 (per-invocation instead of per-file deadline) — distinguishing input
+=======================================================================
+Input: one ROUTER_PY `files` invocation naming 8 DISTINCT slow invalid GGUFs (the frozen counter's
+R08 cell uses 4). Files built by scripts/build-slow.py from the counter's own gguf() writer
+(150,000 tensors, no tensor data -> invalid).
+
+Command (scripts/direct-check.py <probe> <path>...):
+  cd /fast/scratch/hyaku/kama-r94/MT01ProbeMutants
+  python3 direct-check.py mutants/BASE/kama-probe.sh $PWD/distinct/slow/s0.gguf ... s7.gguf
+  python3 direct-check.py mutants/M02/kama-probe.sh  $PWD/distinct/slow/s0.gguf ... s7.gguf
+
+Output (load1 246.25 / 245.31, 2026-11-08T01:36):
+== mutants/BASE
+0	invalid	.../slow/s0.gguf
+1	invalid	.../slow/s1.gguf
+2	invalid	.../slow/s2.gguf
+3	invalid	.../slow/s3.gguf
+4	invalid	.../slow/s4.gguf
+5	invalid	.../slow/s5.gguf
+6	invalid	.../slow/s6.gguf
+7	invalid	.../slow/s7.gguf
+WALL 30.46s rc=0
+== mutants/M02
+0	invalid	.../slow/s0.gguf
+1	invalid	.../slow/s1.gguf
+2	invalid	.../slow/s2.gguf
+3	invalid	.../slow/s3.gguf
+4	invalid	.../slow/s4.gguf
+5	-	.../slow/s5.gguf
+6	-	.../slow/s6.gguf
+7	-	.../slow/s7.gguf
+WALL 15.22s rc=0
+
+Reading: M02 spends one 15 s budget on the whole invocation and leaves candidates 5-7 undecided
+("-", round-89 rule -> loadable), i.e. exactly the starvation the claim removes. The frozen counter
+never names more than 4 distinct slow files (R08), and 4 files fit inside one 15 s invocation budget
+(measured: R08 = 10.67 s natural / 15.48 s under 32 burners, cell passes), so no cell is red.

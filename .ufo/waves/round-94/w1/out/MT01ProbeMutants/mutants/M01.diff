@@ -1,0 +1,19 @@
+diff -u M1-probe.sh mutants/M01/kama-probe.sh
++++ mutants/M01/kama-probe.sh	2026-11-07 23:43:43.276858462 -0300
+@@ -567,7 +567,7 @@
+ # load. Each file now gets its own slice; MAX_STEPS stays the deterministic work bound.
+ MAX_STEPS = 4_000_000
+ PER_FILE_SECONDS = 15.0
+-DEADLINE = time.monotonic() + PER_FILE_SECONDS
++DEADLINE = time.monotonic() + 4.0
+ PATH_FLAGS = ("-m", "--model", "-mm", "--mmproj", "-md", "--model-draft")
+ NO_OPEN = ("/proc/", "/sys/", "/dev/")
+ 
+@@ -604,7 +604,6 @@
+ 
+ def gguf_parse(path):
+     global DEADLINE
+-    DEADLINE = time.monotonic() + PER_FILE_SECONDS
+     try:
+         st = os.stat(path)
+     except FileNotFoundError:

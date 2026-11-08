@@ -1,0 +1,26 @@
+M14 (MAX_KV/MAX_TENSORS overflow counted as invalid instead of undecided) — distinguishing input
+===============================================================================================
+Input: a 48,000,000-byte sparse file whose header declares GGUF v3, n_kv=0, n_tensors=2,000,000.
+The parser's size pre-check passes (24 bytes of tensor info per tensor = 48,000,000 <= size), then
+`n_tensors > MAX_TENSORS` decides the state: "-" (base) = undecided = loadable, "invalid"
+(M14) = MODEL_UNLOADED.
+
+Built by scripts/build-distinct.py -> distinct/nt2000000_kv0.gguf (sparse; du 0, stat 48,000,000).
+
+Command:
+  python3 direct-check.py mutants/BASE/kama-probe.sh $PWD/distinct/nt1_kv0.gguf $PWD/distinct/nt2000000_kv0.gguf
+  python3 direct-check.py mutants/M14/kama-probe.sh  $PWD/distinct/nt1_kv0.gguf $PWD/distinct/nt2000000_kv0.gguf
+
+Output (load1 ~250, 2026-11-08T01:36):
+== mutants/BASE
+0	-	.../distinct/nt1_kv0.gguf
+1	-	.../distinct/nt2000000_kv0.gguf
+WALL 0.11s rc=0
+== mutants/M14
+0	-	.../distinct/nt1_kv0.gguf
+1	invalid	.../distinct/nt2000000_kv0.gguf
+WALL 0.12s rc=0
+
+Reading: deterministic, sub-second, load-independent. The frozen counter has no cell whose header
+overflows MAX_TENSORS/MAX_KV, so the "undecided counted as invalid" forgery shape is only half
+covered: M13 (missing path -> "-") IS caught by P03/P04, M14 (count overflow -> "invalid") is not.

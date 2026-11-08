@@ -1,0 +1,18 @@
+diff -u M1-probe.sh mutants/M02/kama-probe.sh
++++ mutants/M02/kama-probe.sh	2026-11-07 23:43:43.721860513 -0300
+@@ -604,7 +604,6 @@
+ 
+ def gguf_parse(path):
+     global DEADLINE
+-    DEADLINE = time.monotonic() + PER_FILE_SECONDS
+     try:
+         st = os.stat(path)
+     except FileNotFoundError:
+@@ -780,6 +779,7 @@
+ seq = doc.get("data") if isinstance(doc.get("data"), list) else doc.get("models")
+ seq = seq if isinstance(seq, list) else []
+ if sys.argv[2] == "files":
++    DEADLINE = time.monotonic() + PER_FILE_SECONDS
+     for idx in sys.argv[3:]:
+         try:
+             fs = file_state(seq[int(idx)]["status"].get("args"))

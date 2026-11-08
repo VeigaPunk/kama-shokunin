@@ -92,3 +92,35 @@ exit 0 at M3; `## Gate` and `## Mistakes` present; both census outputs pasted in
 
 `.ufo/waves/round-94/claim-falsification.tsv` records one row per (claim, wave artifact), covering
 every attack seat that produced an artifact this round and the residual seat that did not.
+
+## Addendum (2026-11-08, after the late-arriving MT01 artifact)
+
+`w1/MT01ProbeMutants.md` (the wave's dead seat — lost handle, settled dead, artifact written late)
+adds four falsifications to the C1 record above and one to the plan's own control text:
+
+- The plan's F1 control sentence ("a per-call (not per-file) deadline → the synthetic-load cell red")
+  is **false**: mutant M02 (the reset moved from `gguf_parse` into the `files` loop) scores
+  `mismatches=0 positive_mismatches=0 load_stable=1`, exit 0 at load1 323.04. Its separating input is
+  one invocation naming 8 distinct slow invalid GGUFs (R08 uses 4, and four fit inside a single 15 s
+  budget). This matches CR01's F3_shared_deadline survivor byte-for-byte in shape.
+- Four further survivor classes with measured separating inputs: a mid-invocation same-size rewrite
+  with restored mtime (ctime-less key), a 2 M-tensor sparse header (count overflow graded invalid), a
+  ~20-file listing that reaches the 60 s wrapper, and the per-invocation budget above. M04/M05/M11 are
+  measured **equivalents** (the MAX_STEPS and wall bounds are crossed within ±10 % of each other),
+  not gaps.
+- The plan's "counter's own 20 s cell budget" is wrong: `tools/round94-router-budget.py:108` is
+  `BUDGET = 30.0`.
+- K1 as worded ("positive_mismatches>0 or load_stable=0") is narrower than the counter's exit
+  condition: `mismatches>0` alone also exits 1 (M06: `mismatches=3 positive_mismatches=0
+  load_stable=1`, exit 1). The predicate's `exit 0` requirement is what catches that class.
+- `round89-unloadable-cells.py` (named as a K2 harm suite) is unrunnable after 00:11 unless
+  `LLAMA_CACHE`/`HF_HOME` point at an empty dir: a cache-sourced router model created by another seat
+  makes its identity guard abort (rc=2). The round's harm re-run therefore used
+  `LLAMA_CACHE`/`HF_HOME` overrides, and the round-89 baseline is recorded at M1 as
+  `cells=11 mismatches=0 positive_mismatches=0`, exit 0.
+
+Net effect on the claim: unchanged in direction, wider in the disclosed residual set. C1 remains
+"predicate met on the frozen 19 cells; wording narrowed"; the residual classes routed to round 95 are
+now: per-invocation budget (M02), ctime-less memo key (M12), count overflow (M14), 60 s wrapper
+(M10/F3), a single file's own 15 s slice (SC02 F2 / MT01 NOTE-3), the counter's sanity gate (SC02 F1),
+and a slow `/props` (SC02 F4).

@@ -1,0 +1,34 @@
+M12 (memo key without st_ctime_ns) — distinguishing input
+=========================================================
+The frozen counter's T01-rewrite cell uses THREE separate probe invocations (SEEN is per process), so
+it cannot see a memo key that drops ctime. The distinguishing input is a rewrite inside ONE
+invocation, between two candidates that name the same inode.
+
+scripts/m12-race.py <probe> <slow-invalid> <big-valid> builds one `files` invocation with
+  0: -m slow        (invalid; first look-up caches the state under its identity)
+  1: -m big-valid   (900k-tensor valid GGUF, seconds of parse = the rewrite window)
+  2: -m slow-link   (hard link to the same inode)
+and rewrites `slow` in place at t=6 s to the same byte length with mtime restored (only ctime changes).
+
+Command:
+  python3 m12-race.py mutants/BASE/kama-probe.sh $PWD/distinct/slow/s1.gguf $PWD/distinct/slow/big-valid.gguf
+  python3 m12-race.py mutants/M12/kama-probe.sh  $PWD/distinct/slow/s1.gguf $PWD/distinct/slow/big-valid.gguf
+
+Output (load1 242.92 / 244.52, 2026-11-08T01:39):
+== mutants/BASE
+REWRITE at 6.05s size=6000048
+0	invalid
+1	-
+2	-
+WALL 18.11s rc=0 restored_size=6000048
+== mutants/M12
+REWRITE at 6.06s size=6000048
+0	invalid
+1	-
+2	invalid
+WALL 18.22s rc=0 restored_size=6000048
+
+Reading: after the in-place rewrite the base re-parses the hard-linked candidate (index 2 -> "-",
+the file now parses ok) while M12 serves the stale cached "invalid". This is the r93 RV01 DEFECT-1
+shape ctime was added for; no frozen cell exercises it (base's own T01 flips correctly because it
+re-runs the probe).

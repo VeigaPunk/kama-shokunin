@@ -1,0 +1,22 @@
+# MT01ProbeMutants — C1 (round-94) single-point mutants of tools/kama-probe.sh at M1 a27656a4
+# Measured with the frozen counters:
+#   94: python3 tools/round94-router-budget.py --repo . --rev a27656a4 --work <scratch>/<m> --probe-file <mutant> --burners 32 --runs 1
+#   89: python3 tools/round89-unloadable-cells.py --repo . --rev a27656a4 --work <scratch>/<m>89 --probe-file <mutant>
+# 89 runs after 00:11 needed LLAMA_CACHE/HF_HOME isolation (see report NOTE-3).
+# Columns: mutant | M1-probe.sh line(s) | change | 94 exit | 94 summary | 94 killing cells | 89 exit | 89 killing cells | verdict
+
+BASE	-	unmutated M1 bytes (probe_sha256 27065a5c...)	0	cells=19 mismatches=0 positive_mismatches=0 load_stable=1 load1_nat=190.64	none	0	cells=11 mismatches=0	none	baseline green
+M01	570,606-607	deadline set once at import (+4.0 s), per-file reset removed	1	cells=19 mismatches=3 positive_mismatches=0 load_stable=0 load1_nat=234.76	R04-slow-x2048 nat MODEL_OK; R08-distinct-slow-k4 nat+load MODEL_OK; UNSTABLE R04/R05/T01	0	cells=11 mismatches=0	none	KILLED
+M02	607->782	per-file reset removed; one 15 s budget per `files` invocation (the claim's F1 shape)	0	cells=19 mismatches=0 positive_mismatches=0 load_stable=1 load1_nat=323.04; R08 10.67 s nat / 15.48 s load	none	0	cells=11 mismatches=0	none	SURVIVED - coverage gap
+M03	569	PER_FILE_SECONDS = 0.0	1	cells=19 mismatches=11 positive_mismatches=2	R01,R02,R03,R04,R05,R05b,R06,R07,R08,P04,T01 (both passes; T01 v1/v3 MODEL_OK)	1	cells=11 mismatches=1	U4-truncated-half	KILLED
+M04	569	PER_FILE_SECONDS = 3600.0	0	cells=19 mismatches=0 positive_mismatches=0 load_stable=1 load1_nat=255.39	none	0	cells=11 mismatches=0	none	SURVIVED - equivalent (measured)
+M05	568	MAX_STEPS = 10**15 (deterministic work bound removed)	0	cells=19 mismatches=0 positive_mismatches=0 load_stable=1 load1_nat=275.12	none	0	cells=11 mismatches=0	none	SURVIVED - equivalent (measured)
+M06	599	memo key = path string (identity dropped)	1	cells=19 mismatches=3 positive_mismatches=0 load_stable=1 load1_nat=212.63	R05 60.84/61.11 s MODEL_OK; R05b 60.81/61.02 s MODEL_OK; R07 35.17/43.04 s > BUDGET	0	cells=11 mismatches=0	none	KILLED
+M07	595-596	gguf_state OSError branch returns "-" instead of gguf_parse	1	cells=19 mismatches=2 positive_mismatches=2 load_stable=1 load1_nat=217.63	P03-missing-x64, P04-slow-x1-mixed (both passes)	1	cells=11 mismatches=2	U1-missing-preset, U5-deleted-after-list	KILLED
+M08	593	SEEN.clear() on every gguf_state call (memo disabled)	1	cells=19 mismatches=9 positive_mismatches=3 load_stable=0 load1_nat=173.04	R03,R04,R05,R06,P02,P02b,P05 (both passes); R05b nat / R07 load by BUDGET; UNSTABLE R05b	0	cells=11 mismatches=0	none	KILLED
+M09	820	router_file_states wrapper `timeout 60` -> `timeout 8`	1	cells=19 mismatches=1 positive_mismatches=0 load_stable=0 load1_nat=159.92	R08 load MODEL_OK at 8.67 s (nat passed at 7.x s)	0	cells=11 mismatches=0	none	KILLED
+M10	820	wrapper `timeout 60` -> `timeout 3600`	0	cells=19 mismatches=0 positive_mismatches=0 load_stable=1 load1_nat=296.18	none	0	cells=11 mismatches=0	none	SURVIVED - coverage gap
+M11	634,684-685	wall-clock deadline removed (MAX_STEPS alone bounds the parse)	0	cells=19 mismatches=0 positive_mismatches=0 load_stable=1 load1_nat=263.92	none	0	cells=11 mismatches=0	none	SURVIVED - equivalent (measured)
+M12	599	memo key drops st_ctime_ns	0	cells=19 mismatches=0 positive_mismatches=0 load_stable=1 load1_nat=263.18	none	0	cells=11 mismatches=0	none	SURVIVED - coverage gap
+M13	610-611	FileNotFoundError -> "-" (missing becomes undecided)	1	cells=19 mismatches=2 positive_mismatches=2 load_stable=1 load1_nat=224.82	P03-missing-x64, P04-slow-x1-mixed (both passes)	1	cells=11 mismatches=2	U1-missing-preset, U5-deleted-after-list	KILLED
+M14	711-712	n_kv/MAX_KV overflow -> "invalid" instead of "-"	0	cells=19 mismatches=0 positive_mismatches=0 load_stable=1 load1_nat=277.35	none	0	cells=11 mismatches=0	none	SURVIVED - coverage gap

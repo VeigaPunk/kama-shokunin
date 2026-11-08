@@ -1,0 +1,39 @@
+M04 (PER_FILE_SECONDS 3600), M05 (MAX_STEPS 10**15), M11 (wall deadline removed) — equivalence
+==============================================================================================
+All three survived both counters (94: cells=19 mismatches=0, load_stable=1; 89: 11/0). The probes
+below show why no input separates them from base at this host's measured parse speed.
+
+Input: distinct/nt900000_kv0.gguf = 28,800,000-byte sparse header, GGUF v3, n_kv=0, n_tensors=900,000
+(built by scripts/build-distinct.py). Tensor-info parse is ~4 needs/tensor = ~3.6M-4.0M steps.
+
+Command / output:
+  python3 direct-check.py mutants/BASE/kama-probe.sh <nt1> <nt900000>   ->  0 "-", 1 "-", WALL 15.27 s (load 245.28)
+  python3 direct-check.py mutants/M05/kama-probe.sh  <nt1> <nt900000>   ->  0 "-", 1 "-", WALL 15.20 s (load 244.49)
+  python3 direct-check.py mutants/BASE/kama-probe.sh <nt1> <nt900000>   ->  0 "-", 1 "-", WALL 14.74 s (load 243.76)
+  python3 direct-check.py mutants/M04/kama-probe.sh  <nt1> <nt900000>   ->  0 "-", 1 "-", WALL 15.89 s (load 242.10)
+
+  python3 direct-check.py mutants/BASE/kama-probe.sh <distinct/slow/s0.gguf>
+       ->  0 "invalid", WALL 2.09 s (load 243.36)
+  python3 direct-check.py mutants/M04/kama-probe.sh  <distinct/slow/s0.gguf>
+       ->  0 "invalid", WALL 3.65 s (load 243.65)
+
+Measured step cost (the argument):
+  * frozen counter baseline, load1 190.64: cell R01 (one 150,000-tensor file, ~0.6M steps) = 2.51 s
+    -> ~4.2 us/step; 4,000,000 steps ~= 16.8 s.
+  * M02's 8-distinct-slow run, load1 246: 8 x 0.6M steps in 30.46 s -> 3.6 us/step; 4,000,000
+    steps ~= 14.5 s.
+  So MAX_STEPS = 4,000,000 and PER_FILE_SECONDS = 15.0 are crossed at nearly the same point on this
+  host (+/-10%). Consequences:
+  * M05 (no step bound): a file that would exceed 4M steps also exceeds 15 s wall; the wall check
+    still fires -> "-" (measured: 900k-tensor file, "-" at 15.20 s). To separate M05 one needs a
+    file that completes >4M steps in <15 s, i.e. a host >=1.4x faster per step than measured here.
+  * M04 (3600 s wall): the step bound fires first on every parse long enough to break 15 s ->
+    same "-" state (measured: 900k-tensor file, "-" at 15.89 s for M04 = MAX_STEPS, 14.74 s for
+    base = DEADLINE).
+  * M11 (no wall check): the wall check cannot fire before MAX_STEPS at <=4.2 us/step
+    (4M steps <= 16.8 s is the whole reachable range below the step bound), and both raise Unknown
+    -> "-", so the state is identical for every input reachable at this speed.
+Verdict: equivalent (not a coverage gap) at the measured step cost, with the explicit proviso that a
+host ~1.4x faster per step would make M05 (and a host ~1.4x slower with a 700k-tensor header would
+make M04) distinguishable. The step bound and the wall bound are not independently exercised by any
+frozen cell: the slowest fixture is 0.6M steps / ~2.5-3.8 s, far from both.

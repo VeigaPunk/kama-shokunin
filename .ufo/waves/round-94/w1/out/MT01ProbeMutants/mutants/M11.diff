@@ -1,0 +1,20 @@
+diff -u M1-probe.sh mutants/M11/kama-probe.sh
++++ mutants/M11/kama-probe.sh	2026-11-07 23:43:52.711901869 -0300
+@@ -631,7 +631,7 @@
+     with f:
+         def need(n):
+             steps[0] += 1
+-            if steps[0] > MAX_STEPS or (steps[0] & 0xFFF) == 0 and time.monotonic() > DEADLINE:
++            if steps[0] > MAX_STEPS:
+                 raise Unknown()
+             pos = f.tell()
+             if pos > MAX_META:
+@@ -682,8 +682,6 @@
+             unpack = struct.Struct("<Q").unpack_from
+             for _ in range(n):
+                 if off + 8 > len(buf):
+-                    if time.monotonic() > DEADLINE:
+-                        raise Unknown()
+                     base += off
+                     f.seek(base)
+                     buf, off = f.read(1 << 20), 0
