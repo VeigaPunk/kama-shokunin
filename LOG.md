@@ -4003,3 +4003,43 @@ load_stable=1 ... slow_files=72 runs=2 rev=be590351` (exit 0) with the four muta
 legacy cells and each named new cell red; C3 `DEPTH_BOUNDARY97 rows=6 checks=10 mismatches=0 met=True
 rev=be590351` (base rows=0, exit 1). SCORECARD §Round 97 and the `probe-forgery-grading` capability
 row record them.
+
+## round 98 — the overcharge window and the heading no counter read (2026-11-08)
+
+L1 `KamaR98`. Base `681c80a4` (round-97 closed `ok`). Three claims, causally separable: C1
+calibration (the lane's 20 named self-assessment surfaces match the repo, heading included —
+`tools/round98-self-assessment-audit.py`, 20 checks; base `mismatches=4`), C2 operability (the
+budget counter grades the +1/header overcharge probe the 17 round-97 cells miss —
+`tools/round98-router-budget.py`, 19 cells, W18-800k-nd1 and W19-520k-nd4 plus the `overcharge`
+mutant), C3 depth (the §Round 97 boundary table grades the two rows inside the overcharge window —
+`tools/round98-depth-boundary-audit.py`, 8 required rows).
+
+**Freeze (`34ad44e9`).** The three counters, `plans/round-98-claims.md`, S622 (GGUF `gguf_header_t`,
+the four preamble fields) and the rejected S623 (naming convention, no header cost), the lesson
+skeleton, `claims.json`, the wave spec, and every freeze-time control (census 361 → 363 exit 0,
+`c1-base`, `c3-base`, `c2-legacy-mutants` 17/17 survived under the overcharge mutant,
+`c2-new-mutants` six cells with five named catches).
+
+**Amendment 1 (`3185c257`).** Wave-1 findings, recorded before any measurement: SN01StepFlips
+measured that C1's count term parsed `adds (\w+) cells` against a docstring whose true sentence is
+"new set = six cells" — an unreachable predicate — and that a `+1/header` probe was invisible to
+both audits; RV01SelfAssess found the numeral-heading false red and the duplicate-heading hole;
+CR02Wording found the false `W11` lower-bound clause and the over-wide C1 headline. Amendment 1
+re-froze check 16's term, added the overcharge term to C1 check 18 and C3, required exactly one
+live heading, corrected the window edges to `714,286 ≤ T ≤ 833,332` (nd=1) and
+`500,000 ≤ T ≤ 555,555` (nd=4), narrowed the C1 headline to the 20 named surfaces, and re-attributed
+lesson M2 to the L1's read of the `cells=` line.
+
+**Measurements at `160e22dd`.** C1 `SELF_ASSESS98 checks=20 mismatches=0 met=True
+skill_sha256=3021fc5d…` exit 0 (base 4, exit 1; amendment-1 overcharge control `mismatches=1`).
+C2 `ROUTER_BUDGET98 cells=19 mismatches=0 positive_mismatches=0 load_cells=19 load_stable=1
+slow_files=72 runs=2 w03_seconds=85.9` exit 0, with the 17-cell survival and the six named catches
+in the controls. C3 `DEPTH_BOUNDARY98 rows=8 checks=13 mismatches=0 met=True` exit 0 (base 6 rows,
+4 mismatches).
+
+**Wave.** 12 seats dispatched through the inline handoff; 10 reported, 2 dead (`RV03Intent-2`,
+`EX02BudgetControl-2` — no out dir, no scratch dir, absent from the process table; never replaced,
+recorded in lesson M3). Attack seats 7 of 12 (58%): RV01/RV02 reviewers, CR01/CR02 critics, MT01
+mutation-tester, SN01 sentinel, CN01 connector; building seats 5: SC01/SC02 scouts, EX01 executor,
+SB01-equivalent prose carried by the lesson, CN01 also bounded. No seat committed, pushed or ran a
+mutating git/jj command.

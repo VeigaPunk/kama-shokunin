@@ -79,3 +79,14 @@ Non-author closure pending; this lesson is the author's Gate/Mistakes record.
 round 94 (`.ufo/waves/round-94/measured/gate-final.out`); rounds 95–97 filed `prefile-gate.out`
 only. The continuity check proposal is a pointer, not evidence; the gate continuity this round is
 recorded here for the closure to verify.
+
+**M3 — two wave seats were dispatched and never produced an artifact.**
+Class: `dead-seat`. Evidence: `RV03Intent-2` (revenger) and `EX02BudgetControl-2` (executor) created
+neither their out dir nor their scratch dir; neither appears in the process table at 11:15, while
+the other ten seats produced reports or matrices. Captured-by: nothing in the lane — the wave's
+own settlement is the only signal, and the L1 had to read `proc://` to see it. Fix: this round's
+ledger and report name both seats as dead with their last state (no output, no artifact), and the
+two items they carried (the round-97/98 control-gaming review and the do-nothing re-run) are
+re-run by the L1 from the committed receipts instead of a replacement seat (the protocol forbids
+replacing a dead seat). Routed: a pre-spawn check that asserts each seat's out dir exists within
+10 minutes is a driver-side defect, not a lane one; filed here for the next round's seat-brief.

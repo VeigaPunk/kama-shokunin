@@ -6395,3 +6395,53 @@ verdict (r94 SC02 F4), the pass-level wall-clock wrapper (SC01), and the unobser
 | capability | what it can now do | evidence | first-working round |
 |---|---|---|---|
 | `probe-forgery-grading` | grade four probe forgeries the 13-cell set cannot see: per-header charging stopped (W14), a constant 6 steps/header (W15), `MAX_META` at 100 MiB (W16), and a true preamble-charge drop (W17) | `tools/round97-router-budget.py` at `be590351`; `--control --expect caught` receipts `.ufo/waves/round-97/controls/c2-new-mutants.out`; legacy survival `.ufo/waves/round-97/controls/c2-legacy-mutants.out` | 97 |
+
+## Round 98 — the overcharge window and the heading no counter read (2026-11-08)
+
+L1 `KamaR98`. Base `681c80a4` (round-97 closed `ok`); freeze `34ad44e9`; amendment 1 `3185c257`
+(wave-1 repairs before any measurement: the unreachable C1 count term, the overcharge term in C1
+check 18 and C3, the single-heading rule, the window's lower edges, M2's attribution); measurement
+candidate `160e22dd`. Plans `plans/round-98-claims.md` + `plans/round-98-amendment-1.md`; wave
+evidence and the prefile ledger under `.ufo/waves/round-98/`.
+
+Measured commit: `160e22ddf31f368fe802d3512cd09d51adf59784`.
+
+C1 calibration 7 → 7 (the claimed improvement is the self-assessment's re-derivability, not a score
+move): `SELF_ASSESS98 checks=20 mismatches=0 met=True rev=160e22dd skill_sha256=3021fc5d…`, exit 0
+(`.ufo/waves/round-98/measured/c1.out`); base control `mismatches=4`, exit 1
+(`controls/c1-base.out` — the heading word, the count surfaces, the missing W18/W19 and the missing
+overcharge name). Amendment-1 control: the same instrument on a scratch clone whose probe carries
+one extra `steps[0] += 1` in the tensor loop prints `mismatches=1`, exit 1
+(`controls/c1-amendment1-overcharge.out`), so the new overcharge term is false on the honest probe
+and true on the forgery.
+
+C2 operability 8 → 8: `ROUTER_BUDGET98 cells=19 mismatches=0 positive_mismatches=0 load_cells=19
+load_stable=1 budget=work probe=rev mutant=none slow_files=72 runs=2 probe_sha256=40ab387e…
+base_sha256=27065a5c… rev=160e22dd w03_seconds=85.9`, exit 0 (`measured/c2.out`; the loaded leg ran
+under the counter's own 64 burners with `load1_nat=141.68`). The 17 round-97 cells survive the
+overcharge mutant (`controls/c2-legacy-mutants.out`: `cells=17 cells_ok=17 survived=1`, exit 0) and
+each named cell reddens under its mutant (`controls/c2-new-mutants.out`: flat6 → W15-700k-nd4,
+undercharge → W14-900k-nd1, maxmeta → W16-maxmeta, nopreamble → W17-833333-nd1, overcharge →
+W18-800k-nd1 and → W19-520k-nd4, each `expect_cell=… cell_ok=0 caught=1 ok=1`).
+
+C3 depth 7 → 7: `DEPTH_BOUNDARY98 rows=8 checks=13 mismatches=0 met=True rev=160e22dd`, exit 0
+(`measured/c3.out`); base `rows=6 mismatches=4`, exit 1 (`controls/c3-base.out` — the two
+overcharge-window rows and S622 are absent).
+
+Wave 1 (12 dispatched seats, 10 reported, 2 dead — `RV03Intent-2` and `EX02BudgetControl-2` created
+neither an out dir nor a scratch dir and do not appear in the process table; never replaced).
+Attack seats: RV01/RV02 reviewers, CR01/CR02 critics, MT01 mutation-tester, SN01 sentinel,
+CN01 connector. The wave falsified the freeze-time filings before filing: the C1 count term that no
+edit could satisfy and the overcharge-shaped probe both audits were blind to (SN01), the numeral
+count and duplicate-heading shapes (RV01), the false `W11` lower-bound clause and the over-wide C1
+headline (CR02), and the window's lower-edge off-by-one (SN01, echoed by CN01/CR01/RV02). Amendment 1
+answers each with a re-frozen instrument and a measured control. No axis is harmed: no score moves,
+and every claim replaces or corrects an instrument or self-description that could pass on a narrower
+property than it stated.
+
+### Capabilities added (round 98)
+
+| capability | what it can now do | evidence | first-working round |
+|---|---|---|---|
+| `overcharge-forgery-grading` | grade a probe that charges one extra step per tensor header — the shape that survives all 17 round-97 cells — with W18-800k-nd1 and W19-520k-nd4 inside the window where the real parse decides `invalid` and a uniform +1 parse cannot | `tools/round98-router-budget.py` at `160e22dd`; `--control --expect caught` receipts `.ufo/waves/round-98/controls/c2-new-mutants.out` (overcharge → W18/W19 `cell_ok=0 caught=1`), survival `.ufo/waves/round-98/controls/c2-legacy-mutants.out` (`cells=17 survived=1`) | 98 |
+| `heading-count-grading` | grade a section heading's count word against the counter's parsed population and require exactly one live heading, closing the section()-skips-the-heading blindness | `tools/round98-self-assessment-audit.py` check 19 at `160e22dd`; control `.ufo/waves/round-98/controls/c1-base.out` (`mismatches=4`, heading among them) | 98 |
