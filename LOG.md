@@ -3810,3 +3810,40 @@ shown able to fail on that class). Depth was the lowest axis (7).
   contradicting the section's glossary and R16's router-child clause defeated by a `--vision-gemma-*` child preset
   (argv order); dated correction `SKILL.md` §Round 93 correction, lesson M4/M5, QUALITY KQ151
   (`measured/kq151-twins.out`).
+
+## Round 94 — 2026-11-08 (per-file GGUF parse budget; every port/slot setter per entry point; census self-check)
+
+Frozen plan `plans/round-94-claims.md` (`285f1783`); post-freeze narrowing `plans/round-94-amendment-1.md`.
+Motivating evidence: round-93 C1 verdict correction (the shared 4 s `ROUTER_PY` deadline still flips the verdict
+under load; wave-1 SC02 F1/F2/F3) and the round-93 closure R2/R3/R4/R7 (`.ufo/waves/round-93/w1/SC01SetterSweep.md`,
+`corpus/lessons/round-93-verifier-spotcheck.md`). Operability was the worked axis pair's first half; depth and
+calibration were the lowest axes (7).
+
+- **C1 operability (narrowed):** `tools/kama-probe.sh` `ROUTER_PY` gives each GGUF candidate its own 15.0 s wall
+  slice reset inside `gguf_parse` (replacing the shared `DEADLINE = monotonic()+4.0`) and the file-state wrapper goes
+  `timeout 8` → `timeout 60` (`a27656a4`); counter `tools/round94-router-budget.py` grades 19 cells at two loads
+  (`measured/c1.out`: `cells=19 mismatches=0 positive_mismatches=0 load_cells=19 load_stable=1`, `load1_nat=232.08`);
+  do-nothing control at base re-run this round `mismatches=3 load_stable=0` (R04/T01 flip, `load1_nat=197.96`).
+  Wave-1 SC02 F1/F2/F3/F4 falsified the wide wording (a 400k-tensor file still flips at 15 s; `timeout 60` truncates
+  a 40-distinct-slow listing to a false green; a `/props` slower than 5 s is graded `MODEL_UNLOADED`; the counter's
+  sanity gate reuses the round-93 probe and exits 2 on a loaded host) — narrowed in `plans/round-94-amendment-1.md`,
+  routed to round 95. Wave-1 CR01: five further forgeries still pass (shared deadline, no-inode memo, MAX_STEPS
+  1.5 M, NO_OPEN, wrapper 30) — routed.
+- **C2 depth (not verified):** `SKILL.md` §Listen port and slot-count setters (round 94 revision) — P01–P92 and
+  decisions R18/R19 with the config.ini route and the entry-point cell (`6aa5fa6b`); counter
+  `tools/round94-setter-sweep.py` `92 92 2 92 0 0 0 0 derived_checked=47 derived_disagree=0 decisions=2/2 met=True`
+  (`measured/c2.out`), base re-run `92 0 0 0 0 92 0 0 met=False`. K2 fired: wave-1 SC01 F1 (R19 silent for
+  `cli`/`router-child`; "1 slot" prose falsified — measured 1/4/5/6/0, auto→4), F2 (`AIP_HTTP_PORT` inherited by
+  the router child overrides its assigned free port; measured beside a router on 18230 and beating `--port 18260`),
+  F3 (config.ini reaches the process only through `[default]`/`[*]`); CN01 F4 (the lane's registry violated R18's
+  citation duty — repaired). Corrected readings in `SKILL.md` §Round 94 correction c1–c4; R20/R21 routed.
+- **C3 calibration (verified):** census 343 → 355 rows (S604–S615) exit 0 at `6aa5fa6b`; S604's quote line repaired
+  150 → 151 in `corpus/SOURCES.md` and the lesson Gate (wave-1 CN02 F1 / SB01 DEFECT-1, open by 1); lesson carries
+  `## Gate` (12 admits, 1 reject with flip, 9 re-opened) and `## Mistakes` (M1–M3) plus wave-1 M4–M7 and the
+  r93-closure dispositions R1–R7.
+- **End-to-end domain task:** wave-1 EX02 ran a lane-owned b12177 router child (13-entry preset, 32 burners) and
+  measured the C1 mechanism on the live binary: base `--expect '*'` false-greens `MODEL_OK` on 8 distinct slow
+  invalid files while the router oracle answers 500 (2/2 reps), M1 stays `MODEL_UNLOADED` (2/2); EX01 swept
+  N = 2…256 distinct slow files and located the probe's 60 s wrapper ceiling at N≈21–24.
+- **After wave 1:** five wave findings landed as this log's repairs — S604 line, SKILL §Round 94 correction,
+  registry citations (rows 35–37), lesson dispositions + M4–M7, and this round's SCORECARD section.

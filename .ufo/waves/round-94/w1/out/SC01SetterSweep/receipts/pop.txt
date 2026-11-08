@@ -1,0 +1,93 @@
+POPULATION_N 92
+POP	common/arg.cpp:727	// 1. system-wide: /etc/llama.cpp/config.ini (%PROGRAMDATA%\llama.cpp\config.ini on windows)
+POP	common/arg.cpp:728	// 2. user-level: ${XDG_CONFIG_HOME:-~/.config}/llama.cpp/config.ini (%APPDATA%\llama.cpp\config.ini on windows)
+POP	common/arg.cpp:729	static void common_params_apply_system_config(common_params & params, llama_example ex) {
+POP	common/arg.cpp:735	paths.push_back(program_data / "llama.cpp" / "config.ini");
+POP	common/arg.cpp:738	paths.push_back("/etc/llama.cpp/config.ini");
+POP	common/arg.cpp:742	paths.push_back(fs_get_config_directory() / "config.ini");
+POP	common/arg.cpp:763	common_presets presets = ctx.load_from_ini(path, global);
+POP	common/arg.cpp:764	global.apply_to_params(params);
+POP	common/arg.cpp:767	it->second.apply_to_params(params);
+POP	common/arg.cpp:779	common_params_apply_system_config(params, ctx_arg.ex);
+POP	common/arg.cpp:1373	params.n_parallel = -1;     // auto by default
+POP	common/arg.cpp:2515	{"-np", "--parallel"}, "N",
+POP	common/arg.cpp:2521	params.n_parallel = value;
+POP	common/arg.cpp:2523	).set_env("LLAMA_ARG_N_PARALLEL").set_examples({LLAMA_EXAMPLE_SERVER}));
+POP	common/arg.cpp:2526	{"-np", "--parallel"}, "N",
+POP	common/arg.cpp:2529	params.n_parallel = value;
+POP	common/arg.cpp:2531	).set_env("LLAMA_ARG_N_PARALLEL"));
+POP	common/arg.cpp:3318	{"--port"}, "PORT",
+POP	common/arg.cpp:3321	params.port = value;
+POP	common/arg.cpp:3323	).set_examples({LLAMA_EXAMPLE_SERVER}).set_env("LLAMA_ARG_PORT"));
+POP	common/arg.cpp:4613	params.port = 8011;
+POP	common/arg.cpp:4616	params.n_parallel = 32;
+POP	common/arg.cpp:4629	params.port = 8012;
+POP	common/arg.cpp:4643	params.port = 8012;
+POP	common/arg.cpp:4657	params.port = 8012;
+POP	common/arg.cpp:4673	params.port = 8012;
+POP	common/arg.cpp:4689	params.port = 8012;
+POP	common/arg.cpp:4703	params.port = 8012;
+POP	common/arg.cpp:4717	params.port = 8013;
+POP	common/arg.cpp:4720	params.n_parallel = 2;
+POP	common/arg.cpp:4735	params.port = 8013;
+POP	common/arg.cpp:4738	params.n_parallel = 2;
+POP	common/arg.cpp:4753	params.port = 8014;
+POP	common/arg.cpp:4764	params.port = 8014;
+POP	common/arg.h:91	bool operator<(const common_arg& other) const {
+POP	common/common.cpp:1001	std::filesystem::path fs_get_config_directory() {
+POP	common/common.h:464	int32_t n_parallel            =     1; // number of parallel sequences to decode
+POP	common/common.h:632	int32_t port                = 9931;          // server listens on this network port
+POP	common/common.h:939	std::filesystem::path fs_get_config_directory();
+POP	common/http.h:90	parts.port = std::stoi(port_str);
+POP	common/http.h:92	parts.port = 80;
+POP	common/http.h:94	parts.port = 443;
+POP	common/http.h:324	int port = ntohs(serv_addr.sin_port);
+POP	common/preset.cpp:142	void common_preset::apply_to_params(common_params & params, const std::set<std::string> & handled_keys) const {
+POP	common/preset.cpp:285	common_presets common_preset_context::load_from_ini(const std::filesystem::path & path, common_preset & global) const {
+POP	common/preset.h:47	void apply_to_params(common_params & params, const std::set<std::string> & handled_keys = std::set<std::string>()) const;
+POP	common/preset.h:70	common_presets load_from_ini(const std::filesystem::path & path, common_preset & global) const;
+POP	tools/cli/cli-context.h:6	#include "cli-server.h"
+POP	tools/cli/cli-server.h:13	int port = -1;
+POP	tools/cli/cli-server.h:35	port = common_http_get_free_port();
+POP	tools/cli/cli-server.h:44	server_params.port = port;
+POP	tools/imatrix/imatrix.cpp:1869	params.n_parallel = n_seq;
+POP	tools/perplexity/perplexity.cpp:2009	params.n_parallel = std::max(4, params.n_parallel);
+POP	tools/perplexity/perplexity.cpp:2012	params.n_parallel = std::max(1, params.n_batch / n_ctx);
+POP	tools/rpc/rpc-server.cpp:80	int                      port        = 50052;
+POP	tools/rpc/rpc-server.cpp:132	} else if (arg == "-p" || arg == "--port") {
+POP	tools/rpc/rpc-server.cpp:136	params.port = std::stoi(argv[i]);
+POP	tools/server/server-common.cpp:2236	return std::getenv(SERVER_ENV_ROUTER_PORT) != nullptr;
+POP	tools/server/server-common.h:765	#define SERVER_ENV_ROUTER_PORT "LLAMA_SERVER_ROUTER_PORT" // its presence makes the process a child
+POP	tools/server/server-connect.cpp:194	bool server_connect::start(const common_params & params, int port) {
+POP	tools/server/server-connect.cpp:208	"--port", std::to_string(port),
+POP	tools/server/server-http.cpp:96	port = std::stoi(getenv("AIP_HTTP_PORT", "8080"));
+POP	tools/server/server-http.cpp:116	port = params.port;
+POP	tools/server/server-http.cpp:119	SRV_TRC("Google Cloud Platform compat: health route = %s, predict route = %s, port = %d\n", gcp.path_health.c_str(), gcp.path_predict.c_str(), gcp.port);
+POP	tools/server/server-http.cpp:122	SRV_WRN("Google Cloud Platform compat: overriding server port %d with AIP_HTTP_PORT %d\n", port, gcp.port);
+POP	tools/server/server-http.cpp:125	port = gcp.port;
+POP	tools/server/server-http.cpp:512	port = bound_port;
+POP	tools/server/server-http.h:92	int port    = 9931;
+POP	tools/server/server-models-sched.cpp:423	child_env.push_back(std::string(SERVER_ENV_ROUTER_PORT) + "=" + std::to_string(models.base_params.port));
+POP	tools/server/server-models.cpp:69	c.port = port;
+POP	tools/server/server-models.cpp:90	int port = 0;
+POP	tools/server/server-models.cpp:288	static std::vector<std::string> get_environment() {
+POP	tools/server/server-models.cpp:312	void server_model_meta::update_args(common_preset_context & ctx_preset, std::string bin_path) {
+POP	tools/server/server-models.cpp:316	preset.set_option(ctx_preset, "LLAMA_ARG_PORT",  std::to_string(port));
+POP	tools/server/server-models.cpp:343	preset.apply_to_params(params, {
+POP	tools/server/server-models.cpp:399	base_env(get_environment()),
+POP	tools/server/server-models.cpp:478	meta.update_args(ctx_preset, bin_path); // render args
+POP	tools/server/server-models.cpp:742	custom_presets = ctx_preset.load_from_ini(base_params.models_preset, global);
+POP	tools/server/server-models.cpp:863	// update_args() injects HOST/PORT/ALIAS/LOG_COLORS, so strip them before comparing presets
+POP	tools/server/server-models.cpp:866	p.unset_option("LLAMA_ARG_PORT");
+POP	tools/server/server-models.cpp:1020	inst.meta.update_args(ctx_preset, bin_path);
+POP	tools/server/server-models.cpp:1218	inst.meta.port        = common_http_get_free_port();
+POP	tools/server/server-models.cpp:1231	inst.meta.update_args(ctx_preset, bin_path); // render args
+POP	tools/server/server-models.cpp:1235	child_env.push_back(std::string(SERVER_ENV_ROUTER_PORT) + "=" + std::to_string(base_params.port));
+POP	tools/server/server-models.cpp:1292	int  port = inst.meta.port;
+POP	tools/server/server-models.cpp:2157	preset_copy.unset_option("LLAMA_ARG_PORT");
+POP	tools/server/server-models.h:80	int port = 0;
+POP	tools/server/server-models.h:111	void update_args(common_preset_context & ctx_presets, std::string bin_path);
+POP	tools/server/server.cpp:103	static server_role_type server_role_detect(const common_params & params, server_role & role) {
+POP	tools/server/server.cpp:127	SRV_TRC("%s", "n_parallel is set to auto, using n_parallel = 4 and kv_unified = true\n");
+POP	tools/server/server.cpp:129	params.n_parallel = 4;
+POP	tools/server/server.cpp:752	const server_role_type role_type = server_role_detect(params, role);

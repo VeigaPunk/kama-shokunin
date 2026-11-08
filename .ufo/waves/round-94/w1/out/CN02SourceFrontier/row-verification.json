@@ -1,0 +1,357 @@
+[
+ {
+  "id": "S604",
+  "md_line": 359,
+  "path": "common/preset.cpp",
+  "scope": "How a config.ini or preset INI applies port/slot options to params, and the option ordering that decides which setter wins",
+  "usedby": "SKILL.md",
+  "teaches": "`apply_to_params` runs each preset option's handler (string/int/bool) against params; `load_from_ini` parses the INI into presets \u2014 the mechanism config.ini and --models-preset use to set port/n_parallel",
+  "anchor": "Tag b12177, `apply_to_params` lines 142-160 and `load_from_ini` line 285, sha256 793ad2c7f4589376cceab11a3172e2b5f80adf645182a71b5a2398aa377cbb25, opened2026-11-07: \"opt.handler_string(params, val);\" (line 150, inside apply_to_params)",
+  "problems": [
+   "quote NOT at stated line 150 (found at [151]); line 150 = 'if (opt.handler_string) {'"
+  ],
+  "quote": "opt.handler_string(params, val);",
+  "stated_line": 150,
+  "quote_words": 2,
+  "actual_at_stated_line": "        if (opt.handler_string) {",
+  "quote_found_at": [
+   151
+  ],
+  "ranges": [
+   {
+    "range": "142-160",
+    "first": "void common_preset::apply_to_params(common_params & params, const std::set<std::string> & ",
+    "last": "                __func__"
+   },
+   {
+    "range": "285-285",
+    "first": "common_presets common_preset_context::load_from_ini(const std::filesystem::path & path, co",
+    "last": "common_presets common_preset_context::load_from_ini(const std::filesystem::path & path, co"
+   },
+   {
+    "range": "150-150",
+    "first": "        if (opt.handler_string) {",
+    "last": "        if (opt.handler_string) {"
+   }
+  ]
+ },
+ {
+  "id": "S605",
+  "md_line": 360,
+  "path": "common/common.cpp",
+  "scope": "The user-level config directory the config.ini route reads",
+  "usedby": "SKILL.md",
+  "teaches": "The user config.ini path is XDG_CONFIG_HOME or ~/.config, then /llama.cpp/config.ini; on Windows %APPDATA%",
+  "anchor": "Tag b12177, `fs_get_config_directory` lines 1001-1015, sha256 1b41b3613a10d579e2808bf5e1a73531980ca836d0f4d23dba22d7130d78985e, opened2026-11-07: \"config_directory = common_get_env(\\\"XDG_CONFIG_HOME\\\");\" (line 1009)",
+  "problems": [],
+  "quote": "config_directory = common_get_env(\"XDG_CONFIG_HOME\");",
+  "stated_line": 1009,
+  "quote_words": 3,
+  "actual_at_stated_line": "    config_directory = common_get_env(\"XDG_CONFIG_HOME\");",
+  "quote_found_at": [
+   1009
+  ],
+  "ranges": [
+   {
+    "range": "1001-1015",
+    "first": "std::filesystem::path fs_get_config_directory() {",
+    "last": "}"
+   },
+   {
+    "range": "1009-1009",
+    "first": "    config_directory = common_get_env(\"XDG_CONFIG_HOME\");",
+    "last": "    config_directory = common_get_env(\"XDG_CONFIG_HOME\");"
+   }
+  ]
+ },
+ {
+  "id": "S606",
+  "md_line": 361,
+  "path": "tools/cli/cli-server.h",
+  "scope": "Which port llama-cli's embedded server listens on",
+  "usedby": "SKILL.md",
+  "teaches": "llama-cli's embedded server binds a free port from common_http_get_free_port and sets server_params.port to it, ignoring the parsed params.port \u2014 a different entry point from llama-server",
+  "anchor": "Tag b12177, `cli_server::start` lines 34-50, sha256 d463b06b589e9967b25c746f9f751ab484efe37f696a3032d3f5b0f89f4e205d, opened2026-11-07: \"port = common_http_get_free_port();\" (line 35)",
+  "problems": [],
+  "quote": "port = common_http_get_free_port();",
+  "stated_line": 35,
+  "quote_words": 3,
+  "actual_at_stated_line": "        port = common_http_get_free_port();",
+  "quote_found_at": [
+   35
+  ],
+  "ranges": [
+   {
+    "range": "34-50",
+    "first": "    bool start(common_params & params) {",
+    "last": "                fprintf(stderr, \"llama_server exited with code %d\\n\", res);"
+   },
+   {
+    "range": "35-35",
+    "first": "        port = common_http_get_free_port();",
+    "last": "        port = common_http_get_free_port();"
+   }
+  ]
+ },
+ {
+  "id": "S607",
+  "md_line": 362,
+  "path": "tools/server/server-common.cpp",
+  "scope": "How a llama-server process knows it is a router child rather than a router",
+  "usedby": "SKILL.md",
+  "teaches": "A process with LLAMA_SERVER_ROUTER_PORT in its environment is managed by a router; the router sets that env (with its own port) on each child it spawns",
+  "anchor": "Tag b12177, `server_role::is_managed_by_router` lines 2235-2237, sha256 b686729ed7d098e2f0c3da1ba28325d0e6d30721dab09f71cb9b53f342710ddb, opened2026-11-07: \"return std::getenv(SERVER_ENV_ROUTER_PORT) != nullptr;\" (line 2236)",
+  "problems": [],
+  "quote": "return std::getenv(SERVER_ENV_ROUTER_PORT) != nullptr;",
+  "stated_line": 2236,
+  "quote_words": 4,
+  "actual_at_stated_line": "    return std::getenv(SERVER_ENV_ROUTER_PORT) != nullptr;",
+  "quote_found_at": [
+   2236
+  ],
+  "ranges": [
+   {
+    "range": "2235-2237",
+    "first": "bool server_role::is_managed_by_router() {",
+    "last": "}"
+   },
+   {
+    "range": "2236-2236",
+    "first": "    return std::getenv(SERVER_ENV_ROUTER_PORT) != nullptr;",
+    "last": "    return std::getenv(SERVER_ENV_ROUTER_PORT) != nullptr;"
+   }
+  ]
+ },
+ {
+  "id": "S608",
+  "md_line": 363,
+  "path": "tools/server/server-common.h",
+  "scope": "The environment variable name that marks a router child",
+  "usedby": "SKILL.md",
+  "teaches": "SERVER_ENV_ROUTER_PORT is the env var name; its presence makes the process a child of a router",
+  "anchor": "Tag b12177, line 765, sha256 335a09e65306cb14d18760b2be6710d586b08a23316c79d7ebfab3148e82ba1b, opened2026-11-07: \"#define SERVER_ENV_ROUTER_PORT \\\"LLAMA_SERVER_ROUTER_PORT\\\"\" (line 765)",
+  "problems": [],
+  "quote": "#define SERVER_ENV_ROUTER_PORT \"LLAMA_SERVER_ROUTER_PORT\"",
+  "stated_line": 765,
+  "quote_words": 3,
+  "actual_at_stated_line": "#define SERVER_ENV_ROUTER_PORT \"LLAMA_SERVER_ROUTER_PORT\" // its presence makes the process a child",
+  "quote_found_at": [
+   765
+  ],
+  "ranges": [
+   {
+    "range": "765-765",
+    "first": "#define SERVER_ENV_ROUTER_PORT \"LLAMA_SERVER_ROUTER_PORT\" // its presence makes the proces",
+    "last": "#define SERVER_ENV_ROUTER_PORT \"LLAMA_SERVER_ROUTER_PORT\" // its presence makes the proces"
+   },
+   {
+    "range": "765-765",
+    "first": "#define SERVER_ENV_ROUTER_PORT \"LLAMA_SERVER_ROUTER_PORT\" // its presence makes the proces",
+    "last": "#define SERVER_ENV_ROUTER_PORT \"LLAMA_SERVER_ROUTER_PORT\" // its presence makes the proces"
+   }
+  ]
+ },
+ {
+  "id": "S609",
+  "md_line": 364,
+  "path": "tools/server/server-models-sched.cpp",
+  "scope": "The measure process a router spawns also gets the router-port env",
+  "usedby": "SKILL.md",
+  "teaches": "The router's measure child receives LLAMA_SERVER_ROUTER_PORT=<router port> like a model child, marking it managed",
+  "anchor": "Tag b12177, `server_models_sched` lines 423-424, sha256 b786ea0917ec1d9578c273b6f3930cf9ba90865be7878c18d6337d2f1cfdd54a, opened2026-11-07: \"child_env.push_back(std::string(SERVER_ENV_ROUTER_PORT) + \\\"=\\\" + std::to_string(models.base_params.port));\" (line 423)",
+  "problems": [],
+  "quote": "child_env.push_back(std::string(SERVER_ENV_ROUTER_PORT) + \"=\" + std::to_string(models.base_params.port));",
+  "stated_line": 423,
+  "quote_words": 5,
+  "actual_at_stated_line": "        child_env.push_back(std::string(SERVER_ENV_ROUTER_PORT) + \"=\" + std::to_string(models.base_params.port));",
+  "quote_found_at": [
+   423
+  ],
+  "ranges": [
+   {
+    "range": "423-424",
+    "first": "        child_env.push_back(std::string(SERVER_ENV_ROUTER_PORT) + \"=\" + std::to_string(mod",
+    "last": "        child_env.push_back(std::string(SERVER_ENV_CHILD_ROLE) + \"=\" + server_role_type_to"
+   },
+   {
+    "range": "423-423",
+    "first": "        child_env.push_back(std::string(SERVER_ENV_ROUTER_PORT) + \"=\" + std::to_string(mod",
+    "last": "        child_env.push_back(std::string(SERVER_ENV_ROUTER_PORT) + \"=\" + std::to_string(mod"
+   }
+  ]
+ },
+ {
+  "id": "S610",
+  "md_line": 365,
+  "path": "common/arg.h",
+  "scope": "How preset options are ordered when a router renders a child's argv",
+  "usedby": "SKILL.md",
+  "teaches": "Preset options are ordered by first arg name, so a router child's argv order \u2014 and thus which setter is parsed last \u2014 follows strcmp on the option's first name",
+  "anchor": "Tag b12177, `common_arg::operator<` lines 91-96, sha256 42f21df75ada0e5bba795a40edc02724f0e0be03db288b64eed6057c1dfa261b, opened2026-11-07: \"return strcmp(args[0], other.args[0]) < 0;\" (line 95)",
+  "problems": [],
+  "quote": "return strcmp(args[0], other.args[0]) < 0;",
+  "stated_line": 95,
+  "quote_words": 5,
+  "actual_at_stated_line": "        return strcmp(args[0], other.args[0]) < 0;",
+  "quote_found_at": [
+   95
+  ],
+  "ranges": [
+   {
+    "range": "91-96",
+    "first": "    bool operator<(const common_arg& other) const {",
+    "last": "    }"
+   },
+   {
+    "range": "95-95",
+    "first": "        return strcmp(args[0], other.args[0]) < 0;",
+    "last": "        return strcmp(args[0], other.args[0]) < 0;"
+   }
+  ]
+ },
+ {
+  "id": "S611",
+  "md_line": 366,
+  "path": "common/preset.h",
+  "scope": "The declarations of the preset apply/load mechanism",
+  "usedby": "SKILL.md",
+  "teaches": "`apply_to_params` and `load_from_ini` are declared here; the config.ini and --models-preset routes both go through them",
+  "anchor": "Tag b12177, lines 47 and 70, sha256 ec0f5014821f2894f39cef96503cf36b84baf73742aa425f419eb2a5bd0e32f3, opened2026-11-07: \"common_presets load_from_ini(const std::filesystem::path & path, common_preset & global) const;\" (line 70)",
+  "problems": [],
+  "quote": "common_presets load_from_ini(const std::filesystem::path & path, common_preset & global) const;",
+  "stated_line": 70,
+  "quote_words": 9,
+  "actual_at_stated_line": "    common_presets load_from_ini(const std::filesystem::path & path, common_preset & global) const;",
+  "quote_found_at": [
+   70
+  ],
+  "ranges": [
+   {
+    "range": "47-47",
+    "first": "    void apply_to_params(common_params & params, const std::set<std::string> & handled_key",
+    "last": "    void apply_to_params(common_params & params, const std::set<std::string> & handled_key"
+   },
+   {
+    "range": "70-70",
+    "first": "    common_presets load_from_ini(const std::filesystem::path & path, common_preset & globa",
+    "last": "    common_presets load_from_ini(const std::filesystem::path & path, common_preset & globa"
+   }
+  ]
+ },
+ {
+  "id": "S612",
+  "md_line": 367,
+  "path": "tools/cli/cli-context.h",
+  "scope": "That llama-cli pulls in the embedded-server helper",
+  "usedby": "SKILL.md",
+  "teaches": "cli-context.h includes cli-server.h, so llama-cli's embedded server (S606) is part of the CLI entry point",
+  "anchor": "Tag b12177, line 6, sha256 e1ae9fc601d08e968b3bb03ee6ac0a2bfa252b6e8c1f591656337a5ed0dc8c04, opened2026-11-07: \"#include \\\"cli-server.h\\\"\" (line 6)",
+  "problems": [],
+  "quote": "#include \"cli-server.h\"",
+  "stated_line": 6,
+  "quote_words": 2,
+  "actual_at_stated_line": "#include \"cli-server.h\"",
+  "quote_found_at": [
+   6
+  ],
+  "ranges": [
+   {
+    "range": "6-6",
+    "first": "#include \"cli-server.h\"",
+    "last": "#include \"cli-server.h\""
+   },
+   {
+    "range": "6-6",
+    "first": "#include \"cli-server.h\"",
+    "last": "#include \"cli-server.h\""
+   }
+  ]
+ },
+ {
+  "id": "S613",
+  "md_line": 368,
+  "path": "tools/imatrix/imatrix.cpp",
+  "scope": "That imatrix sets its own n_parallel, not llama-server's",
+  "usedby": "SKILL.md",
+  "teaches": "imatrix assigns n_parallel to its own sequence count; it is a different tool, not the llama-server listen/slot surface",
+  "anchor": "Tag b12177, line 1869, sha256 a1be01b2f39ac2a9879afc895c05e1b72356e39f19496d99dca093bcf104b8ab, opened2026-11-07: \"params.n_parallel = n_seq;\" (line 1869)",
+  "problems": [],
+  "quote": "params.n_parallel = n_seq;",
+  "stated_line": 1869,
+  "quote_words": 3,
+  "actual_at_stated_line": "        params.n_parallel = n_seq;",
+  "quote_found_at": [
+   1869
+  ],
+  "ranges": [
+   {
+    "range": "1869-1869",
+    "first": "        params.n_parallel = n_seq;",
+    "last": "        params.n_parallel = n_seq;"
+   },
+   {
+    "range": "1869-1869",
+    "first": "        params.n_parallel = n_seq;",
+    "last": "        params.n_parallel = n_seq;"
+   }
+  ]
+ },
+ {
+  "id": "S614",
+  "md_line": 369,
+  "path": "tools/perplexity/perplexity.cpp",
+  "scope": "That perplexity overrides n_parallel for its own run",
+  "usedby": "SKILL.md",
+  "teaches": "perplexity clamps n_parallel to at least 4 and to n_batch/n_ctx; a different tool, not llama-server",
+  "anchor": "Tag b12177, lines 2009 and 2012, sha256 42a39345830f9d0745e6e6da2bb35cc021210d5fd39f2224f6914327fc0088c0, opened2026-11-07: \"params.n_parallel = std::max(4, params.n_parallel);\" (line 2009)",
+  "problems": [],
+  "quote": "params.n_parallel = std::max(4, params.n_parallel);",
+  "stated_line": 2009,
+  "quote_words": 4,
+  "actual_at_stated_line": "        params.n_parallel = std::max(4, params.n_parallel);",
+  "quote_found_at": [
+   2009
+  ],
+  "ranges": [
+   {
+    "range": "2009-2009",
+    "first": "        params.n_parallel = std::max(4, params.n_parallel);",
+    "last": "        params.n_parallel = std::max(4, params.n_parallel);"
+   },
+   {
+    "range": "2009-2009",
+    "first": "        params.n_parallel = std::max(4, params.n_parallel);",
+    "last": "        params.n_parallel = std::max(4, params.n_parallel);"
+   }
+  ]
+ },
+ {
+  "id": "S615",
+  "md_line": 370,
+  "path": "tools/rpc/rpc-server.cpp",
+  "scope": "That rpc-server has its own port default and argv parser",
+  "usedby": "SKILL.md",
+  "teaches": "rpc-server defaults its own port to 50052 and parses its own -p/--port; not llama-server's listen port",
+  "anchor": "Tag b12177, lines 80, 132, 136, sha256 0bef22416395b1abe4e84046e7a1ffc0a89ab6bf04d3e6bf468f87a82f453ba0, opened2026-11-07: \"int                      port        = 50052;\" (line 80)",
+  "problems": [],
+  "quote": "int                      port        = 50052;",
+  "stated_line": 80,
+  "quote_words": 4,
+  "actual_at_stated_line": "    int                      port        = 50052;",
+  "quote_found_at": [
+   80
+  ],
+  "ranges": [
+   {
+    "range": "80-80",
+    "first": "    int                      port        = 50052;",
+    "last": "    int                      port        = 50052;"
+   },
+   {
+    "range": "80-80",
+    "first": "    int                      port        = 50052;",
+    "last": "    int                      port        = 50052;"
+   }
+  ]
+ }
+]

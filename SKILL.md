@@ -2207,3 +2207,48 @@ setter is parsed last — follows that ordering, not the order the options were 
 
 | R18 | port | server+cli+router-child+shared | none of the listed port setters applies | P19, P21, P23, P24, P25, P26, P27, P28, P29, P31, P33, P34, P38, P49, P50, P66, P67, P68, P74, P87 | rows P19, P21, P23, P24, P25, P26, P27, P28, P29, P31, P33, P34, P38, P49, P50, P66, P67, P68, P74, P87: a process at b12177 listens on a TCP port only when one of these sets it: `--port`/`LLAMA_ARG_PORT` (server), a preset option (the FIM/gpt-oss/vision-gemma/embd-gemma presets), `AIP_MODE=PREDICTION` (`AIP_HTTP_PORT`, else 8080), a router child's `LLAMA_ARG_PORT` free port, llama-cli's embedded free port, or a config.ini `port` line; the shared member default is 9931 (`common.h:632`) and `--port 0` binds any free port. A registry row that pins another port cites which setter the deployment used | S596, S598, S599, S604, S606, S610 |
 | R19 | n_parallel | server+shared | none of the listed slot setters applies | P11, P13, P22, P30, P32, P37, P91 | rows P11, P13, P22, P30, P32, P37, P91: a llama-server at b12177 outside the router role resolves its slot count only while it is still auto: -1 from the server parser and none of these set: `-np N`/`--parallel N`/`LLAMA_ARG_N_PARALLEL`, a preset option (embd-gemma 32, gpt-oss 2), or a config.ini `parallel` line; auto then resolves to 4 with a unified KV cache (`server.cpp:129`), the shared member default is 1 (`common.h:464`), and the non-server `--parallel` branch (`arg.cpp:2526-2531`) reaches llama-cli and other tools, not llama-server; the router role keeps auto and resolves no count | S596, S593, S597, S604, S614 |
+
+**Effect vocabulary (round-94 correction; the round-93 section defined one and this revision
+omitted it).** `default` = a member initializer or an auto-resolution that a later setter may
+replace; `overrides` = the line replaces a value another row already set; `copies` = the line moves
+a value between structures without choosing it; `declares` = the line registers an option or
+declares a function/member and sets nothing by itself; `unrelated` = text, tracing, URL parsing or
+a readback, not a setter. A row whose Parameter cell is `port` or `n_parallel` pairs with any
+effect except `unrelated`; `declares` with a real parameter is permitted here and was permitted by
+the round-93 counter only when the line was an option declaration — the round-94 counter enforces
+the pairing one-sidedly (it rejects only `-` with `default`/`overrides` and a real parameter with
+`unrelated`), a loosening this note discloses rather than hides.
+
+### Round 94 correction (wave-1 K2 findings; dated 2026-11-08)
+
+The table and R18/R19 above are the frozen round-94 bytes and are not rewritten. Three of their
+statements were falsified by wave-1 measurement on the pinned b12177 build; the corrected readings
+are here, and registry/decisions that cite this section cite these.
+
+- **c1 — the `cli` and `router-child` slot counts are not fixed.** The prose "`llama-cli` runs an
+  embedded server on a free port with 1 slot" holds only for a default invocation: measured on
+  b12177, `--parallel 4` → 4 slots, `LLAMA_ARG_N_PARALLEL=6` → 6, a config.ini `[default] parallel
+  = 5` → 5, `--parallel -1` → 4 with `kv_unified = true`, `--parallel 0` → 0. The carrier is
+  `tools/cli/cli-server.h:43` (`common_params server_params = params;`), a whole-struct copy that
+  carries the CLI's own `n_parallel` into the embedded server and is not a population row; R19's
+  Entry cell (`server+shared`) therefore does not cover `cli` or `router-child` at all. A
+  router-child slot count is set by the same three routes as the router's (argv, inherited env,
+  config.ini / `--models-preset`), measured 4 (auto), 5, 6, 7 and 9.
+- **c2 — a router child inherits the router's environment, so `AIP_HTTP_PORT` can override its
+  assigned free port.** The child's env is `base_env(get_environment())`
+  (`server-models.cpp:288`, `:399`, rows P72/P76 effect `copies`). Measured: a router started with
+  `AIP_MODE=PREDICTION AIP_HTTP_PORT=18230` bound 18230, and the child logged "overriding server
+  port 39547 with AIP_HTTP_PORT 18230" then failed to bind; with `--port 18260` and
+  `AIP_HTTP_PORT=18262` the process listened on **18262**, so the AIP override beats argv and
+  config.ini for both router and child (P62/P66 are the setters). R18's "a router child's
+  `LLAMA_ARG_PORT` free port" is therefore not the child's effective port in an AIP deployment.
+- **c3 — the config.ini route reaches the process's own params through the `default` and `*`
+  sections only.** Measured: `[default] port = 18081` → 18081, `[*] port = 18084` → 18084; a
+  named section sets a preset for `--models-preset`, not the caller's port. The prose above
+  ("a `port` or `parallel` line in a user config.ini therefore sets the listen port") is true only
+  for those two sections.
+- **c4 — registry citation duty.** R18's closing sentence obliges a registry row that pins a port
+  other than 9931 to cite its setter; `registry/endpoint-consumers.tsv` is updated in round 94 to
+  do so for the two `ufo-fsd-*` rows (`--port 34113` in `qwen-coder.service:17`, S19-class) and to
+  scope the 8080 row as a consumer-declared URL, not a llama-server listen port (DELTA recorded
+  8080 as `FOREIGN_SERVICE`).
