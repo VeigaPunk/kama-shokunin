@@ -3974,3 +3974,32 @@ C3 (depth, lowest axis 7) — `SKILL.md` §Round 97 correction states the six bo
 `5 + nd`, adds S619/S620/S621, refreshes the SCORECARD depth row and the `router-byte-decided` pointer,
 and mines `considerthese/2026-11-07.md` proposal 3 into QUALITY KQ152. Wave 1 (13 seats) attacks the
 frozen bytes; measurements, SCORECARD and the closure follow.
+
+**Round-97 wave 1 (13 seats, `w1-results.json`; attack 7 = RV01/RV02 reviewers, CR01/CR02 critics,
+MT01 mutation-tester, SN01 sentinel, RV03 revenger, CN01 connector; scouts SC01/SC02; executors
+EX01/EX02; scribe SB01).** Findings that changed the round: the live "three vs four" count in
+`SCORECARD.md`, `SKILL.md` §Round 97, the C2 docstring and the plan (RV01 §2.1, CR02 C1/C2, RV03 F1);
+false-shape passes of the v1 C1 audit — a "binding 1,000,000" line, a near-miss constant-6 sentence,
+ungraded counter docstrings, an any-ancestor capability pointer, last-wins S621, a deleted adjacency
+file (RV01 §2.2–§2.6); the hardcoded `5 + nd`/`PREAMBLE` in C3 and the class width (KV work charges
+steps; `nd > 4` is `invalid`) (CR01); the unenforced "six rows" (CR02); the fixed-point `nopreamble`
+patch that charged zero steps (RV02 F2, MT01 F2); `--runs 0 --allow-clock` printing the frozen summary
+with nothing graded (RV03 F2); receipts not echoing `--slow-files`/`runs` and `KILL` below the derived
+limit (RV02 F4/F7). SN01 measured 12/12 boundary flips and MT01 confirmed the four cell classes and the
+one-sided new-cell set; SC02 re-opened S619–S621 byte-exact; SC01 found the same defect classes in six
+sibling lanes; CN01 mapped the claims against rounds 93–96.
+
+**Round-97 amendment 2 (`be590351`).** `plans/round-97-amendment-2.md` + addendum: C1 grew to 18 checks
+(docstring constants, count statements, unique ids, the tensor-loop charge sites, both capability
+commits/paths, all five ceilings, the §Round 96 table recompute, revision-bound output); C3 enforces
+`rows == 6`, prints `rev=`, and requires the KV-free/`nd <= 4` caveat; C2 gained `--expect-cell`, refuses
+`--runs < 1`, echoes `slow_files`/`runs`/`entries`, fixes the `nopreamble` patch to a true 4-step drop,
+and raises `KILL` to 3600. The wave evidence, the 24-row falsification ledger and the re-run controls
+land with the amendment.
+
+**Round-97 measurements (post-wave).** C1 `SELF_ASSESS97 checks=18 mismatches=0 met=True rev=be590351`
+(base 10, exit 1); C2 `ROUTER_BUDGET97 cells=17 mismatches=0 positive_mismatches=0 load_cells=17
+load_stable=1 ... slow_files=72 runs=2 rev=be590351` (exit 0) with the four mutants surviving the 13
+legacy cells and each named new cell red; C3 `DEPTH_BOUNDARY97 rows=6 checks=10 mismatches=0 met=True
+rev=be590351` (base rows=0, exit 1). SCORECARD §Round 97 and the `probe-forgery-grading` capability
+row record them.

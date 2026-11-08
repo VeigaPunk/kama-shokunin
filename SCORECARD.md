@@ -6357,3 +6357,41 @@ verdict, the pass-level wrapper) are routed to round 97 rather than claimed. No 
 | `step-budget-graded` | grade whether the probe's step budget is load-bearing: W13-budget-kill flips `MODEL_OK`→`MODEL_UNLOADED` when `MAX_STEPS` is removed, while W11-700k grades the ceiling | `tools/round96-router-budget.py` (W13) at `f175a902`; `measured/c1.out`, `controls/c1-base.out` | 96 |
 | `step-cost-table` | decide a candidate's decidability from `5 + nd` and the per-rank ceiling without re-reading the parser | `SKILL.md` §Round 96 correction at `20317286`; `tools/round96-depth-audit.py` (`checks=14 mismatches=0`) | 96 |
 | `disclosure-consistency` | grade a repeated disclosure (probe comment, counter docstring, capability pointer) against the bytes beside it | `tools/round96-disclosure-audit.py` at `20317286`; `measured/c3.out` | 96 |
+
+## Round 97 — the graded self-assessments match the repo; four probe forgeries the 13-cell set misses; the boundary table (2026-11-08)
+
+L1 `KamaR97`. Base `40763bd2` (round-96 closure rejected-honest-stop); freeze `9e605d41`; amendments 1
+`e057166e` (C2 host-speed parameter) and 2 `be590351` (wave-1 repairs: the count, the charge-site check,
+`--expect-cell`, the class caveat, the true preamble mutant). Plans `plans/round-97-claims.md` +
+`plans/round-97-amendment-{1,2}.md`; wave evidence and the prefile ledger `be590351`.
+
+Measured commit: `be59035141d3dcc3075de67b431eaa995e0aded4`. C1 calibration 7 → 7 (no score move; the claimed
+improvement is the self-assessment's re-derivability): `SELF_ASSESS97 checks=18 mismatches=0 met=True
+rev=be590351 skill_sha256=863eb35d…`, exit 0 (`.ufo/waves/round-97/measured/c1.out`); base control
+`mismatches=10`, exit 1 (`controls/c1-base.out`) — the stale depth cells, the capability row's relative
+evidence path, the constant-6 sentence and missing ceilings, the missing S620/S621 rows, and the
+count/docstring surfaces. C2 operability 8 → 8: `ROUTER_BUDGET97 cells=17 mismatches=0 positive_mismatches=0
+load_cells=17 load_stable=1 budget=work probe=rev mutant=none slow_files=72 runs=2 probe_sha256=40ab387e…
+rev=be590351 w03_seconds=80.1`, exit 0 (`measured/c2.out`; `load1_nat=102.09` recorded — the natural leg ran
+under fleet load, and the loaded leg reports `load_stable=1`). The four mutants survive all 13 round-96 cells
+(`controls/c2-legacy-mutants.out`, `survived=1` each) and each named cell is red in the new set
+(`controls/c2-new-mutants.out`: flat6 → W15-700k-nd4, undercharge → W14-900k-nd1, maxmeta → W16-maxmeta,
+nopreamble → W17-833333-nd1). C3 depth 7 → 7 (no score move): `DEPTH_BOUNDARY97 rows=6 checks=10
+mismatches=0 met=True rev=be590351`, exit 0 (`measured/c3.out`); base `rows=0 mismatches=1`, exit 1
+(`controls/c3-base.out`).
+
+Wave 1 (13 seats, `w1-results.json`) falsified the freeze-time filings before filing: the live "three vs
+four" count (RV01 §2.1), the literal-presence probe checks (RV01 §2.2, CR02), the any-ancestor capability
+pointer (RV01 §2.4), the ungraded counter docstrings (RV01 §2.3), the hardcoded formula and class width
+(CR01), the unenforced six-row claim (CR02), the fixed-point `nopreamble` patch (RV02 F2, MT01 F2), and
+`--runs 0` (RV03 F2); amendment 2 answers each with a measurement. No axis is harmed: no score moves, and
+each claim replaces or corrects an instrument or self-description that could pass on a narrower property
+than it stated. Carried, not claimed: `round75-instruments` (`bad_rows=19`, L0 r87/r89), the
+`round78-instruments` red from the host's non-lane Ollama listener on 127.0.0.1:8080, the slow `/props`
+verdict (r94 SC02 F4), the pass-level wall-clock wrapper (SC01), and the unobservable ctime memo shape.
+
+### Capabilities added (round 97)
+
+| capability | what it can now do | evidence | first-working round |
+|---|---|---|---|
+| `probe-forgery-grading` | grade four probe forgeries the 13-cell set cannot see: per-header charging stopped (W14), a constant 6 steps/header (W15), `MAX_META` at 100 MiB (W16), and a true preamble-charge drop (W17) | `tools/round97-router-budget.py` at `be590351`; `--control --expect caught` receipts `.ufo/waves/round-97/controls/c2-new-mutants.out`; legacy survival `.ufo/waves/round-97/controls/c2-legacy-mutants.out` | 97 |
