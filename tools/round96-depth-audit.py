@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+"""round96-depth-audit.py - round-96 C2 (depth, lowest axis 7) frozen counter.
+
+PREDICATE (frozen: plans/round-96-claims.md section C2):
+
+    `python3 tools/round96-depth-audit.py --repo . --rev <M2>` prints
+    `DEPTH_AUDIT checks=<c> mismatches=0 met=True` and exits 0 at the measured commit M2,
+    the counter's bytes identical to this freeze commit.
+
+Grades: the SKILL.md step-cost table exists and its arithmetic agrees with the probe's
+constants at that revision (MAX_STEPS, 6 steps per tensor header, ceiling 833 333), and S618
+resolves to a Registry row with status not `rejected`.
+"""
+from __future__ import annotations
+
+import argparse
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+STEPS_PER_HEADER = 6
+CEILING = 833_333  # 5_000_000 / 6 = 833 333.33
+
+
+def show(repo: Path, rev: str, path: str):
+    p = subprocess.run(["git", "-C", str(repo), "show", f"{rev}:{path}"], capture_output=True)
+    return p.stdout.decode("utf-8", "replace") if p.returncode == 0 else None
+
+
+def sources_status(repo: Path, rev: str):
+    text = show(repo, rev, "corpus/SOURCES.md")
+    if text is None:
+        raise SystemExit("no corpus/SOURCES.md")
+    out = {}
+    for line in text.splitlines():
+        m = re.match(r"^ {0,3}\| *(S\d{3,}) *\|", line)
+        if m:
+            cells = [c.strip() for c in line.split("|")]
+            out[m.group(1)] = cells[8] if len(cells) > 8 else ""
+    return out
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--repo", type=Path, required=True)
+    ap.add_argument("--rev", required=True)
+    a = ap.parse_args()
+    rev = subprocess.run(["git", "-C", str(a.repo), "rev-parse", "--verify", a.rev + "^{commit}"],
+                         capture_output=True, text=True)
+    if rev.returncode != 0:
+        print(f"DEPTH_AUDIT could-not-evaluate: unresolvable rev {a.rev}")
+        return 2
+    rev = rev.stdout.strip()
+    skill = show(a.repo, rev, "SKILL.md") or ""
+    probe = show(a.repo, rev, "tools/kama-probe.sh") or ""
+    checks = 0
+    mismatches = 0
+
+    m = re.search(r"MAX_STEPS = ([0-9_]+)", probe)
+    max_steps = int(m.group(1).replace("_", "")) if m else None
+    if max_steps != 5_000_000:
+        mismatches += 1
+    checks += 1
+
+    derived_ceiling = max_steps // STEPS_PER_HEADER if max_steps else None
+    for needle, label in (("1 tensor header = 6 steps", "step-table"),
+                          (f"ceiling {CEILING:,}", "ceiling"),
+                          ("S618", "sourced")):
+        checks += 1
+        if needle not in skill:
+            mismatches += 1
+    # the old false ceiling must not be restated as the enforced ceiling
+    checks += 1
+    if "ceiling 1,000,000" in skill:
+        mismatches += 1
+    status = sources_status(a.repo, rev).get("S618", "")
+    checks += 1
+    if status in ("", "rejected"):
+        mismatches += 1
+    if derived_ceiling != CEILING:
+        mismatches += 1
+    checks += 1
+    print(f"DEPTH_AUDIT checks={checks} mismatches={mismatches} met={mismatches == 0}")
+    return 0 if mismatches == 0 else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

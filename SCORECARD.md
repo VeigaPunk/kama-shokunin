@@ -6317,6 +6317,6 @@ receipt, and the round-94 `round75-instruments` debt is carried, not claimed.
 
 | capability | what it can now do | evidence | first-working round |
 |---|---|---|---|
-| `router-byte-decided` | grade a router candidate's file state from its bytes alone — no wall clock in the verdict, pass limit derived from the candidate count | `tools/round95-router-budget.py` + `tools/kama-probe.sh` at `f6325660`; `measured/c1.out`, `controls/c1-base.out` | 95 |
+| `router-byte-decided` | grade a router candidate's file state from its bytes alone — no wall clock in the verdict, pass limit derived from the candidate count | `tools/round95-router-budget.py` + `tools/kama-probe.sh` at `c810f51e`; `measured/c1-m1b.out`, `controls/c1-base.out` | 95 |
 | `setter-per-entry` | decide `port`/`n_parallel` per entry point (server, cli, router-child, shared, other) over a population that admits whole-struct copies and realisation reads | `SKILL.md` §round 95 revision at `beef8922`; `measured/c2.out` | 95 |
 | `freeze-audit` | audit a round's own claims statement: named receipts exist, predicate tokens appear in the counter's bytes, cited S-rows resolve | `tools/round95-freeze-audit.py` at `c798e831`; `measured/c3-amended.out`, `controls/c3-base.out` | 95 |

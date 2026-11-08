@@ -3902,3 +3902,14 @@ Plan `plans/round-95-claims.md`; narrowing `plans/round-95-amendment-1.md`. Shap
   K2 harm suites plus a live GET identical at base and tip. The wave's `SC02LiveRouter` seat leaked 64 CPU burners
   from its own scratch (cwd `kama-r95/SC02LiveRouter`, PPID 1487); the L1 reaped all 64 and records it here as a
   seat-reaper defect.
+
+## round 96 — step-budget decidability (frozen; evidence pending measurement)
+
+Frozen plan `plans/round-96-claims.md` (this round). Base `5d43528b` (round-95 admitted). Three
+claims, causally separable: C1 (operability) — `MAX_STEPS` 4 000 000 → 5 000 000 so the 700 000-tensor
+file parses to `invalid` instead of `-`, the disclosed-limit sentence corrected to the arithmetic the
+code enforces, counters' `KILL` raised above the derived limit and `--skip-load` made structurally
+honest; C2 (depth) — the step-cost table (1 tensor header = 6 steps, ceiling 833 333) in SKILL.md §Round
+96 correction, sourced on S618; C3 (calibration) — the probe's ceiling comment, the frozen counter's
+formula and the `router-byte-decided` evidence pointer each consistent with the bytes beside them.
+Measurement follows the wave; verdicts land in SCORECARD.md.

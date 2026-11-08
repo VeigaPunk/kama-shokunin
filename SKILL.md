@@ -2425,3 +2425,7 @@ readings are here, and every registry row, decision or future row cites these.
   are `cli`; imatrix and perplexity register the same option and then overwrite the value with their own rows, which
   is why `R21 other` cites P52–P54 and not P16. A row's Entry cell is single-valued, so "reaches other tools" is not
   an entry: it is the reason those tools carry their own setter rows.
+
+### Round 96 correction (step-cost table; dated 2026-11-08)
+
+The binding tensor ceiling is the step budget, not the `MAX_TENSORS` constant. One tensor header costs **1 tensor header = 6 steps** (name `u64`+skip 2: u64 1 + skip 1; `nd` `u32` 1; dims `u64` 1; type `u32` + offset `u64` 2), priced read-by-read from `tools/kama-probe.sh` (`need()` charges one step per call). With `MAX_STEPS = 5 000 000` the ceiling is 5 000 000 / 6 = **833 333 tensor headers** (ceiling 833,333), and a 700 000-tensor file needed 4 200 000 steps — at 4 000 000 it graded `-` (undecidable → loadable) while the router oracle said failed. KV/string-array work also charges steps, so the effective tensor ceiling is slightly lower than 6-per-header alone. Sourced on S618 (`ggml/include/ggml.h` @ b12177, sha256 `590e00a5…67392`, opened 2026-11-08): "nb[0] = ggml_type_size(type)" (line 697).
