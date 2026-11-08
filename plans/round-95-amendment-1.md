@@ -36,7 +36,9 @@ Falsified wording, from this round's own run:
 
 Narrowed claim (this is what round 95 claims, and what the frozen counter enforces): the round's statement of its
 own instruments is auditable — at the round's landed tip, `tools/round95-freeze-audit.py` over the amended
-statement below reports `receipts=7 present=7 missing=0 tokens=6 matching=6 cited=8 unresolved=0 met=True`, exit 0;
+statement below reports `receipts=9 present=9 missing=0 tokens=24 matching=24 cited=14 unresolved=0 met=True`, exit 0
+(the first draft of this amendment guessed 7/6/8 before the run; the numbers here are the measured line, and the
+amend-2 commit replaces them);
 and the same seven receipt files are present at the freeze commit itself
 (`git -C . ls-tree -r --name-only c798e831 -- .ufo/waves/round-95/controls` lists all seven), so "the freeze
 carries the receipts it names" is shown by the tree, not by the audit's source arm.
@@ -56,6 +58,6 @@ Predicate lines (one per line so the frozen token arm reads them):
 
 C1: `python3 tools/round95-router-budget.py --repo . --rev <M1> --work <scratch>` prints `ROUTER_BUDGET95 cells=10 mismatches=0 positive_mismatches=0 load_cells=10 load_stable=1 budget=work probe=rev w03_seconds=81.7`
 C2: `python3 tools/round95-setter-sweep.py --repo . --rev <M2> --work <scratch>` prints `SETTER_SWEEP95 population=106 rows=106 bound=106 unbound=0 missing=0 duplicates=0 fabricated=0 derived_disagree=0 decisions=9 decisions_bound=9 met=True`
-C3: `python3 tools/round95-freeze-audit.py --repo . --rev <tip> --plan plans/round-95-amendment-1.md` prints `FREEZE_AUDIT receipts=7 present=7 missing=0 tokens=6 matching=6 cited=8 unresolved=0 met=True`
+C3: `python3 tools/round95-freeze-audit.py --repo . --rev <tip> --plan plans/round-95-amendment-1.md` prints `FREEZE_AUDIT receipts=9 present=9 missing=0 tokens=24 matching=24 cited=14 unresolved=0 met=True`
 
 Sources cited by the round: S593, S596, S604, S606, S613, S614, S615, S616, S617 (all resolve at the landed tip).
