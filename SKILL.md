@@ -2435,7 +2435,7 @@ The binding tensor ceiling is the step budget, not the `MAX_TENSORS` constant. O
 | 0 | 5 | 999,999 |
 | 1 | 6 | 833,332 |
 | 2 | 7 | 714,285 |
-| 3 | 8 | 625,000 |
+| 3 | 8 | 624,999 |
 | 4 | 9 | 555,555 |
 
 At the old `MAX_STEPS = 4 000 000` the `nd = 1` ceiling was 666,666, so a 700 000-tensor file (4 200 004 steps) graded `-` — undecidable → loadable, the round-89 rule, i.e. `MODEL_OK` for a file the router rejects. That file now decides `invalid` at `nd ≤ 2` and stays `-` at `nd ≥ 3`; a listing's real ceiling is the average rank of its headers. KV and string-array work also charges steps. Sourced on S618 (`ggml/include/ggml.h` @ b12177, sha256 `590e00a5…67392`, opened 2026-11-08): "nb[0] = ggml_type_size(type)" (line 697).

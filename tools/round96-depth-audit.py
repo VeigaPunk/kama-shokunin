@@ -8,7 +8,8 @@ PREDICATE (frozen: plans/round-96-claims.md section C2):
     the counter's bytes identical to this freeze commit.
 
 Grades: the SKILL.md step-cost table exists and its arithmetic agrees with the probe's
-constants at that revision (MAX_STEPS, 6 steps per tensor header, ceiling 833 333), and S618
+constants at that revision (MAX_STEPS, `5 + nd` steps per tensor header, per-rank ceilings
+from (MAX_STEPS - 4) // (5 + nd): 999,999 / 833,332 / 714,285 / 624,999 / 555,555), and S618
 resolves to a Registry row with status not `rejected`.
 """
 from __future__ import annotations
@@ -68,7 +69,7 @@ def main() -> int:
     for needle, label in (("`5 + nd` steps", "step-table"),
                           ("833,332", "ceiling"),
                           ("714,285", "nd2-ceiling"),
-                          ("625,000", "nd3-ceiling"),
+                          ("624,999", "nd3-ceiling"),
                           ("555,555", "nd4-ceiling"),
                           ("S618", "sourced")):
         checks += 1
@@ -82,6 +83,12 @@ def main() -> int:
     checks += 1
     if derived != CEILING:
         mismatches += 1
+    # every rank's stated ceiling must equal the arithmetic the parser enforces (RV01 F2/SC02 def.)
+    for nd, stated in ((0, 999_999), (1, 833_332), (2, 714_285), (3, 624_999), (4, 555_555)):
+        checks += 1
+        want = (max_steps - PREAMBLE) // (5 + nd) if max_steps else None
+        if want != stated or "{:,}".format(want) not in skill:
+            mismatches += 1
     print(f"DEPTH_AUDIT checks={checks} mismatches={mismatches} met={mismatches == 0}")
     return 0 if mismatches == 0 else 1
 
