@@ -8,7 +8,17 @@ wave-1 artifact falsified while its frozen counter still met its predicate.
 Amendment 59 rule applied: "(i) amend the frozen claim down to the enforceable property, citing the
 artifact, and then file; or (ii) file an honest stop whose deliverable IS the narrowing."
 
-## C1 operability — narrowed
+## C1 operability — **honest stop** (the deliverable is this narrowing)
+
+Filing verdict: **not verified**. The frozen predicate reproduces (below), but three independent wave
+seats (SC02 F1/F2/F3, CR01 F3/F6/F7/F8, MT01 BLOCKER-1 and its four survivor families) falsify the
+claim's stated property and the plan's own F1 control, and no measurement this round reddens the M02
+shape. Amendment 59 branch (ii) applies: the round's deliverable for C1 is this narrowing plus the
+routed coverage work, not an admission.
+
+The claim that would have been admitted, had the control fired, was: "the probe's file-state verdict
+is identical across the two host loads the frozen counter applies, on its frozen 19-cell fixture set"
+— with the residual classes named below excluded. It is not admitted this round.
 
 Falsified wording: "makes the router file-state verdict **load-stable**" (claims.json C1 `name`),
 and the plan's disclosed limit sentence that scopes the miss to "the counter's own 20 s cell budget,
@@ -48,7 +58,7 @@ load_stable=0 … load1_nat=197.96`, exit 0 (`PREFILE` receipt: the closing line
 report's Before → after section). The measured commit M1 reproduces the frozen receipt
 (`cells=19 mismatches=0 positive_mismatches=0 load_stable=1`, `load1_nat=141.70 burners=32`).
 
-## C2 depth — honest stop
+## C2 depth — **not verified**
 
 Falsified: the K2 condition in the frozen plan ("a non-author reviewer finds … an R18/R19 decision
 that states a port or slot count for an entry point another population row shows is set otherwise").

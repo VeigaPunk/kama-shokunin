@@ -6231,7 +6231,7 @@ census script).
 
 | Claim | Axis | Counting command | Before (base, this host) | Predicate | Verdict |
 |---|---|---|---|---|---|
-| C1 per-file GGUF parse budget, **as narrowed** | operability | `python3 tools/round94-router-budget.py --repo . --rev <M1> --work <scratch> --burners 32` | `ROUTER_BUDGET cells=19 mismatches=3 positive_mismatches=0 load_cells=19 load_stable=0 … load1_nat=197.96` (R04, T01 flip) | `cells=19 mismatches=0 positive_mismatches=0 load_cells=19 load_stable=1 probe=rev`, exit 0 | **predicate met, wording narrowed** (SC02 F2/F3/F4, CR01 F3/F6/F4c/F7/F8 routed) |
+| C1 per-file GGUF parse budget, **as narrowed** | operability | `python3 tools/round94-router-budget.py --repo . --rev <M1> --work <scratch> --burners 32` | `ROUTER_BUDGET cells=19 mismatches=3 positive_mismatches=0 load_cells=19 load_stable=0 … load1_nat=197.96` (R04, T01 flip) | `cells=19 mismatches=0 positive_mismatches=0 load_cells=19 load_stable=1 probe=rev`, exit 0 | **not verified (honest stop)** — predicate met on the frozen 19 cells (matched-load pair: base red, M1 green), but the claim's load-independence is not established: SC02 F1/F2/F3/F4, CR01 F3/F6/F4c/F7/F8, MT01 BLOCKER-1 (the plan's F1 control is false; the per-invocation shape M02 is green) |
 | C2 every port/slot setter per entry point | depth | `python3 tools/round94-setter-sweep.py --repo . --rev <M2> --work <scratch>` | `SETTER_SWEEP 92 0 0 0 0 92 0 0 derived_checked=0 … decisions=0/2 pop=92 met=False`, exit 0 (`c2-base.out` re-run) | `… 92 92 2 92 0 0 0 0 decisions=2/2 met=True` | **not verified** — K2 fired (SC01 F1/F2, CN01 F4); counter met |
 | C3 frontier census + lesson self-check | calibration | `scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama` | rows=343, exit 0 | rows=355, exit 0; `## Gate` + `## Mistakes` present; one new row cited by a claim | **verified** after S604 150→151 repair |
 
@@ -6239,11 +6239,11 @@ census script).
 
 | Claim | Measured commit | Counting command → output | Verdict |
 |---|---|---|---|
-| C1 | `a27656a454b1a2364f8b6e55f42fbca8c2e86ee4` | → `ROUTER_BUDGET cells=19 mismatches=0 positive_mismatches=0 load_cells=19 load_stable=1 probe=rev probe_sha256=27065a5c… base_sha256=36631d49… rev=a27656a4 load1_nat=141.70 burners=32`, exit 0 (`.ufo/waves/round-94/measured/c1.out`, `load1_nat=232.08 burners=96`) | narrowed, see below |
+| C1 | `a27656a454b1a2364f8b6e55f42fbca8c2e86ee4` | → `ROUTER_BUDGET cells=19 mismatches=0 positive_mismatches=0 load_cells=19 load_stable=1 probe=rev probe_sha256=27065a5c… rev=a27656a4 load1_nat=249.15 burners=0`, exit 0 (`measured/c1-M1-burners0.out`; frozen receipt `measured/c1.out` at `load1_nat=232.08 burners=96`); base at the same band `mismatches=3 positive_mismatches=0 load_stable=0`, exit 1 (`controls/c1-base.out`, `load1_nat=246.26`) | **not verified** — honest stop, see below |
 | C2 | `6aa5fa6bd9bbf44c4b2ca3f1e2158e7d5aa92623` | → `SETTER_SWEEP 92 92 2 92 0 0 0 0 derived_checked=47 derived_disagree=0 decisions=2/2 pop=92 met=True`, exit 0 (`.ufo/waves/round-94/measured/c2.out`) | not verified |
 | C3 | `6aa5fa6b…` | → `kama ok …/corpus/SOURCES.md`, exit 0; rows 343 → 355 | verified |
 
-**C1 narrowed** (`plans/round-94-amendment-1.md`). The frozen counter enforces verdict identity
+**C1 not verified — honest stop** (`plans/round-94-amendment-1.md`). The frozen counter enforces verdict identity
 across the two loads it applies **on its 19-cell fixture set**; it does not enforce load-stability
 for a single file whose parse straddles the 15 s slice (SC02 F2: 400 000-tensor file flips
 `invalid`/`-` at load1 418–443), for a listing of ≥~40 distinct slow files that exceeds the probe's
@@ -6259,7 +6259,8 @@ CN01 F4 (the lane's own registry violated R18's citation duty — repaired this 
 readings are in `SKILL.md` §Round 94 correction (c1–c4); R20/R21 routed.
 
 Score deltas: none claimed (operability stays 8, depth stays 7, calibration stays 7). Capability
-`router-file-budget` enters with its narrowed statement; `setter-entries` does not enter (C2 not
+`router-file-budget` enters as an instrument (it reproduces its 19 cells and separates base from M1 at
+a matched load band) with the claim filed **not verified**; `setter-entries` does not enter (C2 not
 verified).
 
 ### Capabilities added in round 94
