@@ -558,9 +558,16 @@ QSIZES = {0: (1, 4), 1: (1, 2), 2: (32, 18), 3: (32, 20), 6: (32, 22), 7: (32, 2
           41: (128, 18), 42: (64, 18), 43: (1, 1)}
 SCALAR = {0: 1, 1: 1, 2: 2, 3: 2, 4: 4, 5: 4, 6: 4, 7: 1, 10: 8, 11: 8, 12: 8}
 MAX_KV, MAX_ARR, MAX_TENSORS, MAX_META = 100_000, 50_000_000, 1_000_000, 512 * 1024 ** 2
-# read/seek budget per file and a wall-clock deadline for the whole call: a hostile or
-# odd header becomes "undecidable" (no verdict change), never a stall (r89 SN01 F1)
-MAX_STEPS, DEADLINE = 4_000_000, time.monotonic() + 4.0
+# read/seek budget per file and a wall-clock deadline PER FILE: a hostile or
+# odd header becomes "undecidable" (no verdict change), never a stall (r89 SN01 F1).
+# Round 94 (C1; r93 wave-1 SC02): the deadline is per gguf_parse call, not per ROUTER_PY
+# invocation. The former single 4 s deadline was shared by every candidate, so one slow
+# file spent the whole call's budget and left later candidates undecided (-), which the
+# round-89 rule grades loadable: the verdict flipped MODEL_UNLOADED -> MODEL_OK under host
+# load. Each file now gets its own slice; MAX_STEPS stays the deterministic work bound.
+MAX_STEPS = 4_000_000
+PER_FILE_SECONDS = 15.0
+DEADLINE = time.monotonic() + PER_FILE_SECONDS
 PATH_FLAGS = ("-m", "--model", "-mm", "--mmproj", "-md", "--model-draft")
 NO_OPEN = ("/proc/", "/sys/", "/dev/")
 
@@ -596,6 +603,8 @@ def gguf_state(path):
 
 
 def gguf_parse(path):
+    global DEADLINE
+    DEADLINE = time.monotonic() + PER_FILE_SECONDS
     try:
         st = os.stat(path)
     except FileNotFoundError:
@@ -804,8 +813,11 @@ router_entries() { # $1 body file
 router_file_states() { # $1 body file, $2... entry indexes -> "<index>\t<state>" lines
   [ "$HAVE_PY" -eq 1 ] || return 0
   local body=$1; shift
+  # Round 94 (C1): the wrapper must outlast PER_FILE_SECONDS per distinct candidate file, or
+  # it would re-impose the shared-budget starvation the per-file deadline removed. 60 s allows
+  # several slow files; a listing that still exceeds it fails open (undecidable stays loadable).
   if command -v timeout >/dev/null 2>&1; then
-    timeout 8 python3 -c "$ROUTER_PY" "$body" files "$@" 2>/dev/null || true
+    timeout 60 python3 -c "$ROUTER_PY" "$body" files "$@" 2>/dev/null || true
   else
     python3 -c "$ROUTER_PY" "$body" files "$@" 2>/dev/null || true
   fi
