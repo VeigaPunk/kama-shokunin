@@ -572,16 +572,18 @@ MAX_KV, MAX_ARR, MAX_TENSORS, MAX_META = 100_000, 50_000_000, 1_000_000, 512 * 1
 # derived from the candidate count in `router_file_states` (see the shell wrapper), not from
 # a constant. Disclosed, unchanged: a file whose declared tensor count exceeds MAX_TENSORS,
 # or that needs more than MAX_STEPS, is still `-` (undecidable -> loadable, round-89 rule).
-# The binding ceiling is 6 steps per tensor header: name u64+skip 2, nd u32 1, dims u64 1,
-# tensor type+offset 2 = 6, so MAX_STEPS = 5 000 000 puts the ceiling at ~833 333 tensor
-# headers. The old sentence named 1 000 000 (the MAX_TENSORS constant), which the code never
-# enforced as the binding ceiling (round-95 amendment 4, SC02 F1: a 700 000-tensor file
-# needed 4 200 000 steps and graded loadable); that sentence is replaced, not kept. KV and
-# string-array work also charges steps, so the effective tensor ceiling is slightly lower.
-MAX_STEPS = 5_000_000  # Round 96 (SC02 F1): 6 steps per tensor header made a 700 000-
-# tensor file decode as undecidable -> loadable at 4 000 000; at 5 000 000 the same
-# file parses to a decision (invariant: the disclosed ceiling is derived from this
-# value, never named independently)
+# The binding ceiling is `5 + nd` steps per tensor header: name u64+skip 2, nd u32 1, one
+# u64 dim per rank (`nd`), tensor type+offset 2 = 5 + nd. The preamble costs 4 steps, so
+# MAX_STEPS = 5 000 000 admits (5 000 000 - 4) // (5 + nd) tensor headers: 833,332 at nd=1,
+# 714,285 at nd=2, 624,999 at nd=3, 555,555 at nd=4 (S620; round-97 C1/C3). A constant
+# 6 steps/header is only the nd=1 case and misstates every rank-2+ file (round-96 closure
+# routed defect 1, CR02 B2-B5). The old 1 000 000 sentence (the MAX_TENSORS constant) was
+# never the binding ceiling (round-95 amendment 4, SC02 F1). KV and string-array work also
+# charges steps, so the effective tensor ceiling is slightly lower.
+MAX_STEPS = 5_000_000  # Round 96 (SC02 F1): a constant-6 budget made a 700 000-tensor
+# file decode as undecidable -> loadable at 4 000 000; at 5 000 000 the same nd=1 file
+# parses to a decision (invariant: every disclosed ceiling is derived from this value and
+# the rank, never named independently)
 MAX_STEP_BYTES = MAX_STEPS  # one need() call per bounded read/seek; kept for readers
 PATH_FLAGS = ("-m", "--model", "-mm", "--mmproj", "-md", "--model-draft")
 NO_OPEN = ("/proc/", "/sys/", "/dev/")

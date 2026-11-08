@@ -2439,3 +2439,32 @@ The binding tensor ceiling is the step budget, not the `MAX_TENSORS` constant. O
 | 4 | 9 | 555,555 |
 
 At the old `MAX_STEPS = 4 000 000` the `nd = 1` ceiling was 666,666, so a 700 000-tensor file (4 200 004 steps) graded `-` — undecidable → loadable, the round-89 rule, i.e. `MODEL_OK` for a file the router rejects. That file now decides `invalid` at `nd ≤ 2` and stays `-` at `nd ≥ 3`; a listing's real ceiling is the average rank of its headers. KV and string-array work also charges steps. Sourced on S618 (`ggml/include/ggml.h` @ b12177, sha256 `590e00a5…67392`, opened 2026-11-08): "nb[0] = ggml_type_size(type)" (line 697).
+
+### Round 97 correction (step-budget boundary table and the three graded forgeries; dated 2026-11-08)
+
+The round-96 table above is the arithmetic; this section is the boundary decision a reader can
+apply without re-parsing `tools/kama-probe.sh`. A file pays `4 + T x (5 + nd)` steps, where `T`
+is its declared tensor count and `nd` its rank; `MAX_STEPS = 5,000,000` decides it (`invalid`)
+when that sum fits and leaves it `-` (undecidable → loadable, the round-89 rule) when it does
+not. The six rows below are the two boundary classes the round-96 table does not name:
+
+| tensors T | rank nd | steps = 4 + T x (5 + nd) | vs MAX_STEPS | verdict |
+|---|---|---|---|---|
+| 833,332 | nd=1 | 4,999,996 | <= budget | invalid |
+| 833,333 | nd=1 | 5,000,002 | > budget | - |
+| 900,000 | nd=1 | 5,400,004 | > budget | - |
+| 700,000 | nd=4 | 6,300,004 | > budget | - |
+| 555,555 | nd=4 | 4,999,999 | <= budget | invalid |
+| 555,556 | nd=4 | 5,000,008 | > budget | - |
+
+Read it as one rule: the ceiling is `(5,000,000 - 4) / (5 + nd)` per rank, so a 900,000-tensor
+`nd=1` file and a 700,000-tensor `nd=4` file are both `-` (loadable) even though the first is
+under `MAX_TENSORS`, and a 700,000-tensor `nd=1` file decides `invalid`. A green round-96
+receipt does not prove this arithmetic is enforced: three probe variants survive all 13 of its
+cells — one that stopped charging per header (parses 900,000 headers fully), one that charges
+a constant 6 steps per header regardless of rank (decides the 700,000 `nd=4` file), and one
+whose `MAX_META` is 100 MiB instead of 512 MiB (grades the 160 MiB-header file `-`). The
+round-97 counter `tools/round97-router-budget.py` grades each with W14, W15 and W16
+respectively. Sourced on S620 (GGUF spec, ggml `57e2c2ca`: `gguf_tensor_info_t` carries `name`,
+`n_dimensions`, `dimensions[n_dimensions]`, `type`, `offset` — the five fields the probe prices)
+and S621 (supersedes S618's constant-6 cell; the `5 + nd` arithmetic above).

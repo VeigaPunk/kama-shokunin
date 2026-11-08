@@ -3959,3 +3959,18 @@ DISCLOSURE_AUDIT checks=6 mismatches=0 met=True                                 
 Census: `scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama` → `kama ok`, exit 0;
 rows 357 → 358 (S618 admitted, S619 rejected, `ggml/src/gguf.cpp` rejected as S129's duplicate). Lesson:
 `corpus/lessons/round-96.md` (`## Gate`, `## Mistakes` M1–M5).
+
+## round 97 — the self-assessment the lane repeats (frozen; measurement follows the wave)
+
+Frozen plan `plans/round-97-claims.md`. Base `40763bd2` (round-96 closure rejected-honest-stop; routed
+defects 1–7 read). Three claims, causally separable: C1 (calibration, lowest axis 7) — the lane's
+re-derivable self-assessments match the repo: SCORECARD `depth`/`adjacency` cells, the probe's ceiling
+comment and S618/S621/S620, the round-96 identity and its quoted receipts (`SELF_ASSESS97 checks=14`;
+base `mismatches=9`); C2 (operability) — `tools/round97-router-budget.py` adds W14 (900 000 headers at
+nd=1), W15 (700 000 at nd=4) and W16 (160 MiB header position), three probe forgeries that survive all
+13 round-96 cells (`--control --expect survived`) and are caught by the new cells (`--expect caught`);
+C3 (depth, lowest axis 7) — `SKILL.md` §Round 97 correction states the six boundary rows with recomputed
+`4 + T x (5 + nd)` arithmetic (`DEPTH_BOUNDARY97 rows=6`). Freeze also corrects the probe comment to
+`5 + nd`, adds S619/S620/S621, refreshes the SCORECARD depth row and the `router-byte-decided` pointer,
+and mines `considerthese/2026-11-07.md` proposal 3 into QUALITY KQ152. Wave 1 (13 seats) attacks the
+frozen bytes; measurements, SCORECARD and the closure follow.
