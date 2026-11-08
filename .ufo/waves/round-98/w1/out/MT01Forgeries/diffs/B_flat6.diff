@@ -1,0 +1,13 @@
+--- /fast/scratch/hyaku/kama-r98/MT01Forgeries/repo/tools/kama-probe.sh	2026-11-08 10:28:20.794435606 -0300
++++ mutants/B_flat6.sh	2026-11-08 10:31:06.166188563 -0300
+@@ -749,7 +749,9 @@
+                 nd = u32()
+                 if nd > 4:
+                     return "invalid"
+-                ne = [u64() for _ in range(nd)] or [1]
++                _dims = rd(8 * nd) if nd else b""
++                ne = [int.from_bytes(_dims[8 * i:8 * i + 8], "little")
++                      for i in range(nd)] or [1]
+                 tt, off = u32(), u64()
+                 if tt not in QSIZES:
+                     return "-"

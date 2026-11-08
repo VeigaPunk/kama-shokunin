@@ -1,0 +1,16 @@
+--- /fast/scratch/hyaku/kama-r98/MT01Forgeries/repo/tools/kama-probe.sh	2026-11-08 10:28:20.794435606 -0300
++++ mutants/A_kv2x.sh	2026-11-08 10:31:06.165619932 -0300
+@@ -669,6 +669,13 @@
+         u64 = lambda: struct.unpack("<Q", rd(8))[0]
+ 
+         def skip_value(t, depth=0):
++            _s0 = steps[0]
++            try:
++                _skip_value(t, depth)
++            finally:
++                steps[0] += steps[0] - _s0
++
++        def _skip_value(t, depth=0):
+             if t in SCALAR:
+                 skip(SCALAR[t])
+             elif t == 8:

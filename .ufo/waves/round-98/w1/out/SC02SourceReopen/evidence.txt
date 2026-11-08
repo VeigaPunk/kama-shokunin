@@ -1,0 +1,59 @@
+=== A. gguf_header_t member count (the row's own anchor range 277-300) ===
+7:    uint32_t magic;
+14:    uint32_t version;
+18:    uint64_t tensor_count;
+20:    uint64_t metadata_kv_count;
+22:    gguf_metadata_kv_t metadata_kv[metadata_kv_count];
+members: 5
+
+=== B. S622 scope/teaches cells as written ===
+scope  : That the GGUF header is four fields — magic, version, tensor_count, metadata_kv_count — so a parser pays four preamble steps before the first tensor header 
+teaches: the header cost a parser pays before the first tensor is the four struct fields, grounding the boundary table's preamble term 
+
+=== C. probe preamble charged reads (kama-probe.sh 719-726) ===
+        try:
+            if rd(4) != b"GGUF":
+                return "invalid"
+            ver = u32()
+            if ver == 1 or ver > 3 or (ver & 0xFFFF) == 0:
+                return "invalid"
+            n_tensors, n_kv = u64(), u64()
+            # every KV takes >= 13 bytes (u64 key length, u32 type, 1-byte value) and every
+
+=== D. naming-convention section extent ===
+21:### GGUF Naming Convention
+56:#### Validating Above Naming Convention
+142:### File Structure
+
+=== E. S619 URL uniqueness / W04 precedent ===
+gguf-py README occurrences in registry: 1
+S619 W04 lines in round-97 census-end: 0
+rows sharing gguf.md 57e2c2ca URL: 4
+
+=== F. HEAD vs base census ===
+HEAD	rows	363
+HEAD	tier.A	345
+HEAD	tier.B	11
+HEAD	tier.C	7
+HEAD	status.mined	325
+HEAD	status.queued	8
+HEAD	status.rejected	30
+BASE	rows	361
+BASE	tier.A	344
+BASE	tier.B	11
+BASE	tier.C	6
+BASE	status.mined	324
+BASE	status.queued	8
+BASE	status.rejected	29
+
+=== G. lesson census sentence (corpus/lessons/round-98.md:25-30) ===
+Census before → after: 361 → 363 rows,
+`/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama`
+exit 0 at round start (`.ufo/waves/round-98/controls/census-start.out`) and at round end
+(`controls/census-end.out`); tiers measured with the census at HEAD (361 rows: A 344, B 11, C 6;
+mined 324, queued 8, rejected 29) against base (361: A 344, B 11, C 6; mined 324, queued 8,
+rejected 29).
+
+=== H. S622 mentions ===
+SKILL.md: 0
+lesson: 2

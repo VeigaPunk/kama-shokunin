@@ -1,0 +1,116 @@
+# SC02SourceReopen receipts (read-only re-open of S622/S623)
+
+## 1. fetch the spec URL
+$ curl -sS -o gguf.md -w ... https://raw.githubusercontent.com/ggml-org/ggml/57e2c2ca2a7cae756b1c4dfafa0cdfef9051d234/docs/gguf.md
+http_code=200 size=43175
+url_effective=https://raw.githubusercontent.com/ggml-org/ggml/57e2c2ca2a7cae756b1c4dfafa0cdfef9051d234/docs/gguf.md
+1dead27b6a522709f0127d194e58c21dbbbf00ba1c64fe37c54d1a9048b05020  /fast/scratch/hyaku/kama-r98/SC02SourceReopen/gguf.md
+
+## 2. S622 quote at line 277
+struct gguf_header_t {
+struct gguf_header_t {
+MATCH: line 277 == quote verbatim (whole-line equality)
+occurrences: 1
+
+## 3. S623 quote at line 23 (substring of the paragraph line)
+GGUF follow a naming convention of `[<Sidecar>]<BaseName><SizeLabel><FineTune><Version><Encoding><Type><Shard>.gguf` where each component is delimitated by a `-` if present. Ultimately this is intended to make it easier for humans to at a glance get the most important details of a model. It is not intended to be perfectly parsable in the field due to the diversity of existing gguf filenames.
+occurrences of the quote in the file: 1
+S620 precedent (fragment quote at line 310):
+    // Currently at most 4, but this may change in the future.
+
+## 4. gguf_header_t members, lines 277-299 (the row's own anchor range)
+277: struct gguf_header_t {
+283:     uint32_t magic;
+290:     uint32_t version;
+294:     uint64_t tensor_count;
+296:     uint64_t metadata_kv_count;
+298:     gguf_metadata_kv_t metadata_kv[metadata_kv_count];
+299: };
+300: 
+member declarations: 5
+
+## 5. naming-convention section extent (S623 anchor)
+21:### GGUF Naming Convention
+56:#### Validating Above Naming Convention
+142:### File Structure
+flip-condition scan of section 21-141:
+(no hits => reject holds)
+
+## 6. census at HEAD and at base
+HEAD	rows	363
+HEAD	tier.A	345
+HEAD	tier.B	11
+HEAD	tier.C	7
+HEAD	status.mined	325
+HEAD	status.queued	8
+HEAD	status.rejected	30
+BASE	rows	361
+BASE	tier.A	344
+BASE	tier.B	11
+BASE	tier.C	6
+BASE	status.mined	324
+BASE	status.queued	8
+BASE	status.rejected	29
+
+## 7. validate at HEAD: delta vs freeze-time census-start.out
+121a122,123
+> kama	W04	S622 duplicate url raw.githubusercontent.com/ggml-org/ggml/57e2c2ca2a7cae756b1c4dfafa0cdfef9051d234/docs/gguf.md across scopes
+> kama	W04	S623 duplicate url raw.githubusercontent.com/ggml-org/ggml/57e2c2ca2a7cae756b1c4dfafa0cdfef9051d234/docs/gguf.md across scopes
+123d124
+< census_exit=0
+(diff exit=1)
+E-codes at HEAD: 0  (validate exit was 0)
+
+## 8. append-only base..HEAD
+{
+  "from": "681c80a4e3c745c22559f74b2c2a1917bdc66fc6",
+  "to": "HEAD",
+  "path": "corpus/SOURCES.md",
+  "violations": [],
+  "added": [
+    "S622",
+    "S623"
+  ],
+  "ok": true
+}
+
+## 9. SOURCES.md diff shape
+2	0	corpus/SOURCES.md
+S620/S621 identical base vs HEAD:
+IDENTICAL
+
+## 10. column / pipe / id checks
+line 377: content cells=11; any pipe inside a cell: False
+line 378: content cells=11; any pipe inside a cell: False
+malformed rows (NF!=13): 0
+duplicate ids: 
+
+## 11. probe preamble charge sites (4 reads)
+        try:
+            if rd(4) != b"GGUF":
+                return "invalid"
+            ver = u32()
+            if ver == 1 or ver > 3 or (ver & 0xFFFF) == 0:
+                return "invalid"
+            n_tensors, n_kv = u64(), u64()
+            # every KV takes >= 13 bytes (u64 key length, u32 type, 1-byte value) and every
+734:            for _ in range(n_kv):
+584:MAX_STEPS = 5_000_000  # Round 96 (SC02 F1): a constant-6 budget made a 700 000-tensor
+
+## 12. S622 mentions / lesson census sentence
+SKILL.md S622 count: 0
+lesson round-98.md S622 count: 2
+Census before → after: 361 → 363 rows,
+`/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama`
+exit 0 at round start (`.ufo/waves/round-98/controls/census-start.out`) and at round end
+(`controls/census-end.out`); tiers measured with the census at HEAD (361 rows: A 344, B 11, C 6;
+mined 324, queued 8, rejected 29) against base (361: A 344, B 11, C 6; mined 324, queued 8,
+rejected 29).
+
+## 13. controls dir listing (census-end.out absent)
+c1-base.out
+c2-legacy-mutants.out
+c2-new-mutants.out
+c3-base.out
+census-start.out
+sources-opened.out
